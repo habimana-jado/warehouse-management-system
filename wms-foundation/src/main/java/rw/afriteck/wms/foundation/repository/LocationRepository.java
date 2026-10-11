@@ -2,14 +2,17 @@ package rw.afriteck.wms.foundation.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import rw.afriteck.wms.foundation.entity.Item;
 import rw.afriteck.wms.foundation.entity.Location;
 import rw.afriteck.wms.foundation.enums.LocationType;
 import rw.afriteck.wms.foundation.enums.LocationUsage;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,6 +33,10 @@ public interface LocationRepository extends JpaRepository<Location, UUID>, JpaSp
 
     List<Location> findByWarehouseIdAndTypeAndUsageAndActiveTrueOrderByCode(
             UUID warehouseId, LocationType type, LocationUsage usage);
+
+
+    @EntityGraph(attributePaths = "warehouse")
+    List<Location> findByIdIn(Collection<UUID> ids);
 
     @Query("""
             select l from Location l

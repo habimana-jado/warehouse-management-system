@@ -9,6 +9,7 @@ import rw.afriteck.wms.foundation.dtos.LocationTreeResponse;
 import rw.afriteck.wms.foundation.dtos.UpdateLocationRequest;
 import rw.afriteck.wms.foundation.enums.LocationUsage;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,6 +33,8 @@ public interface LocationService {
     LocationResponse getByBarcode(UUID warehouseId, String barcode);
 
     List<LocationResponse> findBinsByUsage(UUID warehouseId, LocationUsage usage);
+
+    List<LocationResponse> findAllByIds(Collection<UUID> ids);
 
     /**
      * Stock may only be posted to active BIN locations. Throws BusinessException otherwise.

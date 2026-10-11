@@ -24,6 +24,7 @@ import rw.afriteck.wms.foundation.repository.WarehouseRepository;
 import rw.afriteck.wms.foundation.service.LocationService;
 import rw.afriteck.wms.foundation.support.Codes;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -164,6 +165,12 @@ public class LocationServiceImpl implements LocationService {
         return locations.findByWarehouseIdAndTypeAndUsageAndActiveTrueOrderByCode(
                         warehouseId, LocationType.BIN, usage)
                 .stream().map(LocationMapper::toResponse).toList();
+    }
+
+    @Override @Transactional(readOnly = true)
+    public List<LocationResponse> findAllByIds(Collection<UUID> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        return locations.findByIdIn(ids).stream().map(LocationMapper::toResponse).toList();
     }
 
     @Override @Transactional(readOnly = true)

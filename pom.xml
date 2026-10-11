@@ -26,7 +26,8 @@
 		<module>wms-common</module>
 		<module>wms-auth</module>
 		<module>wms-foundation</module>
-	</modules>
+        <module>wms-operations</module>
+    </modules>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
