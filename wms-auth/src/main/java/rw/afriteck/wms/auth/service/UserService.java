@@ -55,7 +55,8 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public Page<UserResponse> search(String q, Pageable pageable) {
-        return users.search(q, pageable).map(UserResponse::from);
+        String pattern = (q == null || q.isBlank()) ? "%" : "%" + q.trim().toLowerCase() + "%";
+        return users.search(pattern, pageable).map(UserResponse::from);
     }
 
     @Transactional(readOnly = true)

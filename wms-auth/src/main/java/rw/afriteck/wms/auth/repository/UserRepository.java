@@ -18,12 +18,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByUsernameIgnoreCase(String username);
 
     @Query("""
-           select u from User u
-           where :q is null
-              or lower(u.username) like lower(concat('%', :q, '%'))
-              or lower(u.fullName) like lower(concat('%', :q, '%'))
-           """)
-    Page<User> search(@Param("q") String q, Pageable pageable);
+       select u from User u
+       where lower(u.username) like :pattern or lower(u.fullName) like :pattern
+       """)
+    Page<User> search(@Param("pattern") String pattern, Pageable pageable);
 
     @Query("select count(u) from User u join u.roles r where r = :role and u.active = true")
     long countActiveWithRole(@Param("role") RoleName role);

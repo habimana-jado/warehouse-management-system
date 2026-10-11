@@ -1,0 +1,9 @@
+package rw.afriteck.wms.foundation.dtos;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record UpdateWarehouseRequest(
+        @NotBlank @Size(max = 120) String name,
+        String addressLine, String city, String country) {
+}

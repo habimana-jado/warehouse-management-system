@@ -1,5 +1,6 @@
 package rw.afriteck.wms.common.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -43,6 +44,12 @@ public class GlobalExceptionHandler {
     ResponseEntity<ErrorResponse> locking(ObjectOptimisticLockingFailureException e) {
         return build(HttpStatus.CONFLICT, new ConflictException("CONCURRENT_UPDATE",
                 "The record was changed by someone else. Reload and retry."));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ResponseEntity<ErrorResponse> integrity(DataIntegrityViolationException e) {
+        return build(HttpStatus.CONFLICT, new ConflictException("DATA_INTEGRITY",
+                "The operation conflicts with existing data (duplicate or still referenced)."));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
