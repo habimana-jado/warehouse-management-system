@@ -29,6 +29,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.FORBIDDEN, e);
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    ResponseEntity<ErrorResponse> unauthorized(UnauthorizedException e) {
+        return build(HttpStatus.UNAUTHORIZED, e);
+    }
+
     @ExceptionHandler(BusinessException.class)
     ResponseEntity<ErrorResponse> business(BusinessException e) {
         return build(HttpStatus.UNPROCESSABLE_CONTENT, e);

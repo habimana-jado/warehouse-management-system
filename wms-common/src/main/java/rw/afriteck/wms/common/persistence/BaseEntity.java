@@ -31,11 +31,11 @@ public abstract class BaseEntity {
 
     @CreatedBy
     @Column(updatable = false)
-    private String createdBy;
+    private UUID createdBy;
 
     @LastModifiedDate
     private Instant updatedAt;
 
     @LastModifiedBy
-    private String updatedBy;
+    private UUID updatedBy;
 }
