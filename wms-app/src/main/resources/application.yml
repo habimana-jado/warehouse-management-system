@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: warehouse-management-system
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+  profiles:
+    active: local
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+
+app:
+  jwt:
+    secret: "@SecurelyAndRandomlyGeneratedSecretKeyOfAtLeast32BytesLength@!"
+    access-token-validity-ms: 900000
+    refresh-token-validity-ms: 604800000
