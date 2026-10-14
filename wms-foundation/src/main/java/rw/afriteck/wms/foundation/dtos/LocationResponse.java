@@ -10,6 +10,7 @@ public record LocationResponse(
         UUID id,
         UUID warehouseId,
         UUID parentId,
+        String name,
         String code,
         LocationType type,
         LocationUsage usage,

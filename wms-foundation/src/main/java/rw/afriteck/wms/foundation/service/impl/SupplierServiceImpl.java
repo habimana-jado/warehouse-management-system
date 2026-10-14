@@ -30,6 +30,7 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     public SupplierResponse create(CreateSupplierRequest r) {
+        //TODO: Generate this supplier code by the system not by user
         String code = Codes.normalize(r.code());
         if (suppliers.existsByCodeIgnoreCase(code)) {
             throw new ConflictException("SUPPLIER_CODE_EXISTS", "Supplier code already exists: " + code);

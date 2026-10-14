@@ -14,7 +14,7 @@ public final class LocationMapper {
     public static LocationResponse toResponse(Location l) {
         return new LocationResponse(l.getId(), l.getWarehouse().getId(),
                 l.getParent() == null ? null : l.getParent().getId(),
-                l.getCode(), l.getType(), l.getUsage(),
+                l.getName(), l.getCode(), l.getType(), l.getUsage(),
                 l.getBarcode(), l.getMaxCapacity(), l.isActive());
     }
 

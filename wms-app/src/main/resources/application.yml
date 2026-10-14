@@ -19,7 +19,7 @@ wms:
   security:
     jwt:
       secret: ${WMS_JWT_SECRET}          # >= 32 chars, never commit it
-      access-ttl: 15m
+      access-ttl: 60m
       refresh-ttl: 7d
     lockout:
       max-attempts: 5

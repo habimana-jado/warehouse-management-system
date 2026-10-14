@@ -148,6 +148,17 @@ public class LocationServiceImpl implements LocationService {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<LocationResponse> findBinsUnder(UUID locationId) {
+        if (!locations.existsById(locationId)) {
+            throw new NotFoundException("Location", locationId);
+        }
+        return locations.findActiveBinsUnder(locationId).stream()
+                .map(LocationMapper::toResponse)
+                .toList();
+    }
+
     @Override @Transactional(readOnly = true)
     public LocationResponse getById(UUID id) {
         return LocationMapper.toResponse(find(id));

@@ -22,7 +22,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/wms/operations/tasks")
+@RequestMapping("/api/v1/wms/operation/tasks")
 @RequiredArgsConstructor
 public class TaskController {
 

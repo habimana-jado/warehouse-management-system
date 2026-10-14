@@ -47,4 +47,17 @@ public interface LocationRepository extends JpaRepository<Location, UUID>, JpaSp
             """)
     Page<Location> search(@Param("warehouseId") UUID warehouseId,
                           @Param("pattern") String pattern, Pageable pageable);
+
+    /** The location itself and all its descendants, filtered to active BINs, in one round trip. */
+    @Query(value = """
+        with recursive subtree as (
+            select id from location where id = :rootId
+            union all
+            select c.id from location c join subtree s on c.parent_id = s.id
+        )
+        select l.* from location l
+        join subtree s on s.id = l.id
+        where l.type = 'BIN' and l.active = true
+        order by l.code""", nativeQuery = true)
+    List<Location> findActiveBinsUnder(@Param("rootId") UUID rootId);
 }

@@ -2,17 +2,14 @@ package rw.afriteck.wms.foundation.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import rw.afriteck.wms.common.dtos.PageResponse;
 import rw.afriteck.wms.common.security.AnyAuthenticatedUser;
 import rw.afriteck.wms.common.security.ManagerOrAbove;
 import rw.afriteck.wms.foundation.dtos.*;
 import rw.afriteck.wms.foundation.service.ItemCategoryService;
-import rw.afriteck.wms.foundation.service.ItemService;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -33,6 +30,12 @@ public class ItemCategoryController {
     @AnyAuthenticatedUser
     public ItemCategoryResponse get(@PathVariable UUID id) {
         return service.getById(id);
+    }
+
+    @GetMapping
+    @AnyAuthenticatedUser
+    public List<ItemCategoryResponse> getAllActive() {
+        return service.findAllActive();
     }
 
     @PutMapping("/{id}")

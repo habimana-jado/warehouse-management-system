@@ -1,7 +1,4 @@
 -- wms-foundation: warehouses, locations, item categories, items, item UOMs, suppliers, customers
--- Standards: see backbone.md section 2 (audit block identical to BaseEntity, uq_/ck_/fk_/ix_ names,
--- quantities numeric(19,4), enums stored as varchar without check constraints except where a business
--- invariant needs one, no foreign keys across modules).
 -- No seed rows: foundation has no reference data.
 
 -- ---------------------------------------------------------------------------

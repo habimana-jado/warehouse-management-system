@@ -40,4 +40,6 @@ public interface LocationService {
      * Stock may only be posted to active BIN locations. Throws BusinessException otherwise.
      */
     LocationResponse requireStorableBin(UUID id);
+
+    List<LocationResponse> findBinsUnder(UUID locationId);
 }

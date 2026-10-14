@@ -18,7 +18,7 @@ public record CreateItemRequest(
         UUID categoryId,
         @NotBlank String baseUom,
         @NotNull TrackingType trackingType,
-        boolean expiryTracked,
+        @NotNull boolean expiryTracked,
         BigDecimal unitCost,
         @PositiveOrZero BigDecimal weightKg,
         List<ItemUomRequest> uoms) {

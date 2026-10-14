@@ -1,6 +1,4 @@
 -- wms-auth: users, roles, warehouse access, refresh tokens
--- Standards: see backbone.md section 2 (audit block identical to BaseEntity, uq_/ck_/fk_/ix_ names,
--- enums stored as varchar without check constraints, no foreign keys across modules).
 
 -- ---------------------------------------------------------------------------
 -- users
@@ -61,12 +59,6 @@ create index ix_user_warehouses_warehouse on user_warehouses (warehouse_id);
 -- ---------------------------------------------------------------------------
 create table refresh_tokens (
     id          uuid         primary key,
-    version     bigint       not null default 0,
-    created_at  timestamptz  not null,
-    created_by  uuid,
-    updated_at  timestamptz  not null,
-    updated_by  uuid,
-
     user_id     uuid         not null,
     token_hash  varchar(64)  not null,
     family_id   varchar(36)  not null,

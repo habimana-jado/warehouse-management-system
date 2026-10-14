@@ -30,6 +30,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public CustomerResponse create(CreateCustomerRequest r) {
+        //TODO: Generate this customer code by the system not by user
         String code = Codes.normalize(r.code());
         if (customers.existsByCodeIgnoreCase(code)) {
             throw new ConflictException("CUSTOMER_CODE_EXISTS", "Customer code already exists: " + code);
