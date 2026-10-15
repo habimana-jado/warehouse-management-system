@@ -1,6 +1,6 @@
 package rw.afriteck.wms.inventory.support;
 
-import rw.afriteck.wms.foundation.support.Codes;
+import rw.afriteck.wms.common.support.Codes;
 
 public final class InventoryCodes {
 

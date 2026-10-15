@@ -9,7 +9,7 @@ create sequence transfer_number_seq   start 1 increment 1;   -- TRF-000123
 create sequence count_number_seq      start 1 increment 1;   -- CNT-000123
 
 -- ============================================================ lot
-create table lot (
+create table lots (
     id          uuid        primary key,
     version     bigint      not null default 0,
     created_at  timestamptz not null,
@@ -23,10 +23,10 @@ create table lot (
 
     constraint uq_lot_item_number unique (item_id, lot_number)
 );
-create index ix_lot_expiry on lot (expiry_date);
+create index ix_lot_expiry on lots (expiry_date);
 
 -- ============================================================ stock_balance
-create table stock_balance (
+create table stock_balances (
     id            uuid          primary key,
     version       bigint        not null default 0,
     created_at    timestamptz   not null,
@@ -54,15 +54,15 @@ create unique index uq_balance_key on stock_balance
      coalesce(serial_number, ''));
 
 -- A serial can be in stock in only one place at a time.
-create unique index uq_balance_serial_in_stock on stock_balance (item_id, serial_number)
+create unique index uq_balance_serial_in_stock on stock_balances (item_id, serial_number)
     where serial_number is not null and quantity > 0;
 
-create index ix_balance_wh_item  on stock_balance (warehouse_id, item_id);
-create index ix_balance_location on stock_balance (location_id);
-create index ix_balance_item_lot on stock_balance (item_id, lot_id);
+create index ix_balance_wh_item  on stock_balances (warehouse_id, item_id);
+create index ix_balance_location on stock_balances (location_id);
+create index ix_balance_item_lot on stock_balances (item_id, lot_id);
 
 -- ============================================================ stock_movement (append-only ledger)
-create table stock_movement (
+create table stock_movements (
     id               uuid          primary key,
     version          bigint        not null default 0,
     created_at       timestamptz   not null,
@@ -86,7 +86,7 @@ create table stock_movement (
     reference_number varchar(64),
     note             varchar(500),
 
-    constraint fk_movement_lot      foreign key (lot_id) references lot (id),
+    constraint fk_movement_lot      foreign key (lot_id) references lots (id),
     constraint ck_movement_quantity check (quantity <> 0),
     constraint ck_movement_balance  check (balance_after >= 0),
     constraint ck_movement_cost     check (unit_cost is null or unit_cost >= 0),
@@ -96,10 +96,10 @@ create table stock_movement (
         or (type in ('ISSUE', 'TRANSFER_OUT')  and quantity < 0)
         or  type in ('ADJUSTMENT', 'COUNT_ADJUSTMENT'))
 );
-create index ix_movement_wh_item_time on stock_movement (warehouse_id, item_id, occurred_at);
-create index ix_movement_location     on stock_movement (location_id);
-create index ix_movement_reference    on stock_movement (reference_type, reference_id);
-create index ix_movement_transaction  on stock_movement (transaction_id);
+create index ix_movement_wh_item_time on stock_movements (warehouse_id, item_id, occurred_at);
+create index ix_movement_location     on stock_movements (location_id);
+create index ix_movement_reference    on stock_movements (reference_type, reference_id);
+create index ix_movement_transaction  on stock_movements (transaction_id);
 
 -- The ledger is the source of truth: refuse any update or delete, whatever the application does.
 -- (truncate is not blocked by a row trigger, so test resets still work.)
@@ -110,11 +110,11 @@ end;
 $$ language plpgsql;
 
 create trigger trg_stock_movement_append_only
-    before update or delete on stock_movement
+    before update or delete on stock_movements
     for each row execute function wms_forbid_ledger_change();
 
 -- ============================================================ adjustments
-create table adjustment_reason (
+create table adjustment_reasons (
     id                uuid         primary key,
     version           bigint       not null default 0,
     created_at        timestamptz  not null,
@@ -131,7 +131,7 @@ create table adjustment_reason (
     constraint uq_adjustment_reason_code unique (code)
 );
 
-create table stock_adjustment (
+create table stock_adjustments (
     id                uuid         primary key,
     version           bigint       not null default 0,
     created_at        timestamptz  not null,
@@ -150,12 +150,12 @@ create table stock_adjustment (
     rejection_reason  varchar(500),
 
     constraint uq_adjustment_number unique (adjustment_number),
-    constraint fk_adjustment_reason foreign key (reason_id) references adjustment_reason (id)
+    constraint fk_adjustment_reason foreign key (reason_id) references adjustment_reasons (id)
 );
-create index ix_adjustment_wh_status on stock_adjustment (warehouse_id, status);
-create index ix_adjustment_requester on stock_adjustment (warehouse_id, requested_by);
+create index ix_adjustment_wh_status on stock_adjustments (warehouse_id, status);
+create index ix_adjustment_requester on stock_adjustments (warehouse_id, requested_by);
 
-create table stock_adjustment_line (
+create table stock_adjustment_lines (
     id             uuid          primary key,
     version        bigint        not null default 0,
     created_at     timestamptz   not null,
@@ -173,14 +173,14 @@ create table stock_adjustment_line (
     quantity_delta numeric(19,4) not null,           -- signed, non-zero, base UOM
 
     constraint uq_adjustment_line_no         unique (adjustment_id, line_no),
-    constraint fk_adjustment_line_adjustment foreign key (adjustment_id) references stock_adjustment (id),
+    constraint fk_adjustment_line_adjustment foreign key (adjustment_id) references stock_adjustments (id),
     constraint ck_adjustment_line_delta      check (quantity_delta <> 0)
 );
-create index ix_adjustment_line_item     on stock_adjustment_line (item_id);
-create index ix_adjustment_line_location on stock_adjustment_line (location_id);
+create index ix_adjustment_line_item     on stock_adjustment_lines (item_id);
+create index ix_adjustment_line_location on stock_adjustment_lines (location_id);
 
 -- ============================================================ transfers
-create table stock_transfer (
+create table stock_transfers (
     id                       uuid         primary key,
     version                  bigint       not null default 0,
     created_at               timestamptz  not null,
@@ -204,10 +204,10 @@ create table stock_transfer (
     constraint ck_transfer_inter_other_warehouse
         check (type <> 'INTER_WAREHOUSE' or source_warehouse_id <> destination_warehouse_id)
 );
-create index ix_transfer_source on stock_transfer (source_warehouse_id, status);
-create index ix_transfer_dest   on stock_transfer (destination_warehouse_id, status);
+create index ix_transfer_source on stock_transfers (source_warehouse_id, status);
+create index ix_transfer_dest   on stock_transfers (destination_warehouse_id, status);
 
-create table stock_transfer_line (
+create table stock_transfer_lines (
     id               uuid          primary key,
     version          bigint        not null default 0,
     created_at       timestamptz   not null,
@@ -228,18 +228,18 @@ create table stock_transfer_line (
     short_reason     varchar(500),                   -- line closed short (pick, bin move, or close-short on receive)
 
     constraint uq_transfer_line_no       unique (transfer_id, line_no),
-    constraint fk_transfer_line_transfer foreign key (transfer_id) references stock_transfer (id),
-    constraint fk_transfer_line_lot      foreign key (lot_id)      references lot (id),
+    constraint fk_transfer_line_transfer foreign key (transfer_id) references stock_transfers (id),
+    constraint fk_transfer_line_lot      foreign key (lot_id)      references lots (id),
     constraint ck_transfer_line_quantity check (quantity > 0),
     constraint ck_transfer_line_shipped  check (shipped_qty >= 0 and shipped_qty <= quantity),
     constraint ck_transfer_line_received check (received_qty >= 0 and received_qty <= shipped_qty)
 );
-create index ix_transfer_line_item on stock_transfer_line (item_id);
-create index ix_transfer_line_from on stock_transfer_line (from_location_id);
-create index ix_transfer_line_to   on stock_transfer_line (to_location_id);
+create index ix_transfer_line_item on stock_transfer_lines (item_id);
+create index ix_transfer_line_from on stock_transfer_lines (from_location_id);
+create index ix_transfer_line_to   on stock_transfer_lines (to_location_id);
 
 -- ============================================================ cycle counts
-create table stock_count (
+create table stock_counts (
     id               uuid         primary key,
     version          bigint       not null default 0,
     created_at       timestamptz  not null,
@@ -259,9 +259,9 @@ create table stock_count (
 
     constraint uq_count_number unique (count_number)
 );
-create index ix_count_wh_status on stock_count (warehouse_id, status);
+create index ix_count_wh_status on stock_counts (warehouse_id, status);
 
-create table stock_count_line (
+create table stock_count_lines (
     id            uuid          primary key,
     version       bigint        not null default 0,
     created_at    timestamptz   not null,
@@ -284,8 +284,8 @@ create table stock_count_line (
     task_line_id  uuid,
 
     constraint uq_count_line_no       unique (count_id, line_no),
-    constraint fk_count_line_count    foreign key (count_id) references stock_count (id),
-    constraint fk_count_line_lot      foreign key (lot_id)   references lot (id),
+    constraint fk_count_line_count    foreign key (count_id) references stock_counts (id),
+    constraint fk_count_line_lot      foreign key (lot_id)   references lots (id),
     constraint ck_count_line_expected check (expected_qty >= 0),
     constraint ck_count_line_counted  check (counted_qty is null or counted_qty >= 0),
     -- a line is COUNTED exactly when it has a counted quantity
@@ -295,17 +295,17 @@ create table stock_count_line (
 );
 
 -- The same bin/item/lot/serial cannot appear twice in one count (addLine relies on this to reject duplicates).
-create unique index uq_count_line_key on stock_count_line
+create unique index uq_count_line_key on stock_count_lines
     (count_id, location_id, item_id,
      coalesce(lot_id, '00000000-0000-0000-0000-000000000000'::uuid),
      coalesce(serial_number, ''));
 
-create index ix_count_line_status   on stock_count_line (count_id, status);
-create index ix_count_line_item     on stock_count_line (item_id);
-create index ix_count_line_location on stock_count_line (location_id);
+create index ix_count_line_status   on stock_count_lines (count_id, status);
+create index ix_count_line_item     on stock_count_lines (item_id);
+create index ix_count_line_location on stock_count_lines (location_id);
 
 -- ============================================================ reorder policies
-create table reorder_policy (
+create table reorder_policies (
     id           uuid          primary key,
     version      bigint        not null default 0,
     created_at   timestamptz   not null,
@@ -327,7 +327,7 @@ create table reorder_policy (
 );
 
 -- ============================================================ seed data: default adjustment reasons
-insert into adjustment_reason (id, version, created_at, updated_at, code, name, direction, requires_approval, active)
+insert into adjustment_reasons (id, version, created_at, updated_at, code, name, direction, requires_approval, active)
 values
     (gen_random_uuid(), 0, now(), now(), 'DAMAGED',    'Damaged goods',    'DECREASE', true, true),
     (gen_random_uuid(), 0, now(), now(), 'EXPIRED',    'Expired goods',    'DECREASE', true, true),

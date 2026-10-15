@@ -16,7 +16,7 @@ import rw.afriteck.wms.foundation.guard.DeactivationGuards;
 import rw.afriteck.wms.foundation.mapper.PartnerMapper;
 import rw.afriteck.wms.foundation.repository.SupplierRepository;
 import rw.afriteck.wms.foundation.service.SupplierService;
-import rw.afriteck.wms.foundation.support.Codes;
+import rw.afriteck.wms.common.support.Codes;
 
 import java.util.UUID;
 

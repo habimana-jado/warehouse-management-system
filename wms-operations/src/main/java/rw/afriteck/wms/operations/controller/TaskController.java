@@ -80,7 +80,16 @@ public class TaskController {
     public ResponseEntity<TaskResponse> claimNext(@RequestParam UUID warehouseId,
                                                   @RequestParam(required = false) Set<TaskType> types) {
         userContext.requireWarehouseAccess(warehouseId);
-        return taskService.claimNext(warehouseId, types, userContext.currentUserId())
+
+        Set<TaskType> effective = EnumSet.noneOf(TaskType.class);
+        effective.addAll(claimableTypes(userContext));          // what this caller's roles allow
+        if (types != null && !types.isEmpty()) {
+            effective.retainAll(types);                         // the client may only narrow it
+        }
+        if (effective.isEmpty()) {
+            return ResponseEntity.noContent().build();          // never pass an empty set to the query
+        }
+        return taskService.claimNext(warehouseId, effective, userContext.currentUserId())
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }
@@ -160,5 +169,15 @@ public class TaskController {
             }
         });
         return pageable;
+    }
+
+    private Set<TaskType> claimableTypes(UserContext ctx) {
+        if (ctx.isAdmin() || ctx.hasRole("WAREHOUSE_MANAGER")) {
+            return EnumSet.allOf(TaskType.class);
+        }
+        Set<TaskType> allowed = EnumSet.noneOf(TaskType.class);
+        if (ctx.hasRole("RECEIVER")) allowed.addAll(EnumSet.of(TaskType.PUTAWAY, TaskType.TRANSFER, TaskType.COUNT, TaskType.OTHER));
+        if (ctx.hasRole("PICKER"))   allowed.addAll(EnumSet.of(TaskType.PICK,    TaskType.TRANSFER, TaskType.COUNT, TaskType.OTHER));
+        return allowed;
     }
 }

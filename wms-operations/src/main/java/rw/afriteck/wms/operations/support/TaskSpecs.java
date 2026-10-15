@@ -2,7 +2,7 @@ package rw.afriteck.wms.operations.support;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import rw.afriteck.wms.foundation.support.Codes;
+import rw.afriteck.wms.common.support.Codes;
 import rw.afriteck.wms.operations.dtos.TaskFilter;
 import rw.afriteck.wms.operations.entity.Task;
 

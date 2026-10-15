@@ -1,4 +1,4 @@
-package rw.afriteck.wms.inventory.support;
+package rw.afriteck.wms.common.support;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

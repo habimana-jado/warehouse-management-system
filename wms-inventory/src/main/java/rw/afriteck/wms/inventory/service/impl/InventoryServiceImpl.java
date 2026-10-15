@@ -9,7 +9,7 @@ import rw.afriteck.wms.foundation.dtos.ItemResponse;
 import rw.afriteck.wms.foundation.dtos.LocationResponse;
 import rw.afriteck.wms.foundation.service.ItemService;
 import rw.afriteck.wms.foundation.service.LocationService;
-import rw.afriteck.wms.foundation.support.Codes;
+import rw.afriteck.wms.common.support.Codes;
 import rw.afriteck.wms.inventory.dtos.MovementResponse;
 import rw.afriteck.wms.inventory.dtos.PostStockLine;
 import rw.afriteck.wms.inventory.dtos.PostStockRequest;

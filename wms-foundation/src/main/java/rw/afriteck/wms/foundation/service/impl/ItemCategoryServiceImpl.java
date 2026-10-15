@@ -11,7 +11,7 @@ import rw.afriteck.wms.foundation.dtos.UpdateItemCategoryRequest;
 import rw.afriteck.wms.foundation.entity.ItemCategory;
 import rw.afriteck.wms.foundation.repository.ItemCategoryRepository;
 import rw.afriteck.wms.foundation.service.ItemCategoryService;
-import rw.afriteck.wms.foundation.support.Codes;
+import rw.afriteck.wms.common.support.Codes;
 
 import java.util.List;
 import java.util.UUID;

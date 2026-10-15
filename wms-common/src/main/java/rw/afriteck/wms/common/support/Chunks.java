@@ -1,4 +1,4 @@
-package rw.afriteck.wms.inventory.support;
+package rw.afriteck.wms.common.support;
 
 import java.util.ArrayList;
 import java.util.Collection;

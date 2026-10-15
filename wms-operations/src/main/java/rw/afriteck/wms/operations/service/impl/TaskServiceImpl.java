@@ -18,7 +18,7 @@ import rw.afriteck.wms.foundation.enums.LocationType;
 import rw.afriteck.wms.foundation.service.ItemService;
 import rw.afriteck.wms.foundation.service.LocationService;
 import rw.afriteck.wms.foundation.service.WarehouseService;
-import rw.afriteck.wms.foundation.support.Codes;
+import rw.afriteck.wms.common.support.Codes;
 import rw.afriteck.wms.operations.dtos.*;
 import rw.afriteck.wms.operations.entity.Task;
 import rw.afriteck.wms.operations.entity.TaskEvent;

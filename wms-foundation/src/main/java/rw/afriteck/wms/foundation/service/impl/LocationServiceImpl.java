@@ -22,7 +22,7 @@ import rw.afriteck.wms.foundation.mapper.LocationMapper;
 import rw.afriteck.wms.foundation.repository.LocationRepository;
 import rw.afriteck.wms.foundation.repository.WarehouseRepository;
 import rw.afriteck.wms.foundation.service.LocationService;
-import rw.afriteck.wms.foundation.support.Codes;
+import rw.afriteck.wms.common.support.Codes;
 
 import java.util.Collection;
 import java.util.List;

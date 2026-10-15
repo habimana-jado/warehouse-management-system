@@ -13,7 +13,7 @@ import rw.afriteck.wms.foundation.dtos.LocationResponse;
 import rw.afriteck.wms.foundation.enums.LocationUsage;
 import rw.afriteck.wms.foundation.service.ItemService;
 import rw.afriteck.wms.foundation.service.LocationService;
-import rw.afriteck.wms.foundation.support.Codes;
+import rw.afriteck.wms.common.support.Codes;
 import rw.afriteck.wms.inventory.dtos.MovementFilter;
 import rw.afriteck.wms.inventory.dtos.MovementHistoryResponse;
 import rw.afriteck.wms.inventory.dtos.StockFilter;
@@ -27,7 +27,7 @@ import rw.afriteck.wms.inventory.repository.StockMovementRepository;
 import rw.afriteck.wms.inventory.service.InventoryQueryService;
 import rw.afriteck.wms.inventory.support.InventoryCodes;
 import rw.afriteck.wms.inventory.support.MovementSpecs;
-import rw.afriteck.wms.inventory.support.PageRules;
+import rw.afriteck.wms.common.support.PageRules;
 import rw.afriteck.wms.inventory.support.StockBalanceSpecs;
 
 import java.math.BigDecimal;

@@ -13,7 +13,7 @@ CREATE SEQUENCE task_number_seq START WITH 1 INCREMENT BY 1 NO CYCLE;
 -- ---------------------------------------------------------------------------
 -- task: header of a unit of work
 -- ---------------------------------------------------------------------------
-CREATE TABLE task (
+CREATE TABLE tasks (
     id                uuid         PRIMARY KEY,
     version           bigint       NOT NULL DEFAULT 0,
     created_at        timestamptz  NOT NULL,
@@ -46,21 +46,21 @@ CREATE TABLE task (
 );
 
 -- Task board: warehouse + status + type (+ priority)
-CREATE INDEX ix_task_board     ON task (warehouse_id, status, type, priority);
+CREATE INDEX ix_task_board     ON tasks (warehouse_id, status, type, priority);
 -- "My tasks"
-CREATE INDEX ix_task_assignee  ON task (assignee_id, status);
+CREATE INDEX ix_task_assignee  ON tasks (assignee_id, status);
 -- findByReference / cancelByReference
-CREATE INDEX ix_task_reference ON task (reference_type, reference_id);
+CREATE INDEX ix_task_reference ON tasks (reference_type, reference_id);
 
 -- claimNext (FOR UPDATE SKIP LOCKED): small index over open tasks only
-CREATE INDEX ix_task_open_claim ON task (warehouse_id, type) WHERE status = 'OPEN';
+CREATE INDEX ix_task_open_claim ON tasks (warehouse_id, type) WHERE status = 'OPEN';
 -- productivity: completed tasks by completion date
-CREATE INDEX ix_task_completed  ON task (warehouse_id, completed_at) WHERE status = 'COMPLETED';
+CREATE INDEX ix_task_completed  ON tasks (warehouse_id, completed_at) WHERE status = 'COMPLETED';
 
 -- ---------------------------------------------------------------------------
 -- task_line: one instruction inside a task
 -- ---------------------------------------------------------------------------
-CREATE TABLE task_line (
+CREATE TABLE task_lines (
     id                 uuid           PRIMARY KEY,
     version            bigint         NOT NULL DEFAULT 0,
     created_at         timestamptz    NOT NULL,
@@ -85,7 +85,7 @@ CREATE TABLE task_line (
     reference_line_id  uuid,                     -- PO line, SO line, ... (no FK)
     short_reason       varchar(255),
 
-    CONSTRAINT fk_task_line_task      FOREIGN KEY (task_id) REFERENCES task (id),
+    CONSTRAINT fk_task_line_task      FOREIGN KEY (task_id) REFERENCES tasks (id),
     CONSTRAINT uq_task_line_no        UNIQUE (task_id, line_no),
     -- business invariants (also validated in the service)
     CONSTRAINT ck_task_line_planned   CHECK (planned_qty > 0),
@@ -97,7 +97,7 @@ CREATE TABLE task_line (
 -- ---------------------------------------------------------------------------
 -- task_event: append-only history of a task
 -- ---------------------------------------------------------------------------
-CREATE TABLE task_event (
+CREATE TABLE task_events (
     id              uuid         PRIMARY KEY,
     version         bigint       NOT NULL DEFAULT 0,
     created_at      timestamptz  NOT NULL,
@@ -117,4 +117,4 @@ CREATE TABLE task_event (
     CONSTRAINT fk_task_event_task FOREIGN KEY (task_id) REFERENCES task (id)
 );
 
-CREATE INDEX ix_task_event_task ON task_event (task_id, occurred_at);
+CREATE INDEX ix_task_event_task ON task_events (task_id, occurred_at);

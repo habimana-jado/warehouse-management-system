@@ -9,7 +9,7 @@ import rw.afriteck.wms.common.dtos.PageResponse;
 import rw.afriteck.wms.common.exception.BusinessException;
 import rw.afriteck.wms.common.exception.ConflictException;
 import rw.afriteck.wms.common.exception.NotFoundException;
-import rw.afriteck.wms.foundation.support.Codes;
+import rw.afriteck.wms.common.support.Codes;
 import rw.afriteck.wms.inventory.dtos.AdjustmentReasonResponse;
 import rw.afriteck.wms.inventory.dtos.CreateAdjustmentReasonRequest;
 import rw.afriteck.wms.inventory.dtos.UpdateAdjustmentReasonRequest;
@@ -18,7 +18,7 @@ import rw.afriteck.wms.inventory.enums.AdjustmentDirection;
 import rw.afriteck.wms.inventory.mapper.AdjustmentReasonMapper;
 import rw.afriteck.wms.inventory.repository.AdjustmentReasonRepository;
 import rw.afriteck.wms.inventory.service.AdjustmentReasonService;
-import rw.afriteck.wms.inventory.support.PageRules;
+import rw.afriteck.wms.common.support.PageRules;
 
 import java.util.Set;
 import java.util.UUID;

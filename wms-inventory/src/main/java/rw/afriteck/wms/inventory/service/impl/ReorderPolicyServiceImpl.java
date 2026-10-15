@@ -22,7 +22,7 @@ import rw.afriteck.wms.inventory.mapper.ReorderPolicyMapper;
 import rw.afriteck.wms.inventory.repository.ReorderPolicyRepository;
 import rw.afriteck.wms.inventory.service.InventoryQueryService;
 import rw.afriteck.wms.inventory.service.ReorderPolicyService;
-import rw.afriteck.wms.inventory.support.PageRules;
+import rw.afriteck.wms.common.support.PageRules;
 import rw.afriteck.wms.inventory.support.StockLineRules;
 
 import java.math.BigDecimal;

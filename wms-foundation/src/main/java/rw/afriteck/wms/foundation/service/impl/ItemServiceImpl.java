@@ -21,7 +21,7 @@ import rw.afriteck.wms.foundation.repository.ItemRepository;
 import rw.afriteck.wms.foundation.repository.ItemUomRepository;
 import rw.afriteck.wms.foundation.service.ItemService;
 import rw.afriteck.wms.foundation.specifications.ItemSpecs;
-import rw.afriteck.wms.foundation.support.Codes;
+import rw.afriteck.wms.common.support.Codes;
 
 import java.math.BigDecimal;
 import java.util.*;

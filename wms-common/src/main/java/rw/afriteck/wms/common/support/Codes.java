@@ -1,4 +1,4 @@
-package rw.afriteck.wms.foundation.support;
+package rw.afriteck.wms.common.support;
 
 import java.util.Locale;
 
