@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
-@Table(name = "stock_adjustment_line",
+@Table(name = "stock_adjustment_lines",
         uniqueConstraints = @UniqueConstraint(name = "uq_adjustment_line_no", columnNames = {"adjustment_id", "line_no"}))
 @Getter
 @Setter

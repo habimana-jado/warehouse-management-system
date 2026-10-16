@@ -114,7 +114,7 @@ CREATE TABLE task_events (
     occurred_at     timestamptz  NOT NULL,
     note            varchar(255),
 
-    CONSTRAINT fk_task_event_task FOREIGN KEY (task_id) REFERENCES task (id)
+    CONSTRAINT fk_task_event_task FOREIGN KEY (task_id) REFERENCES tasks (id)
 );
 
 CREATE INDEX ix_task_event_task ON task_events (task_id, occurred_at);

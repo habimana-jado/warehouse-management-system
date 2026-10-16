@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "task", indexes = {
+@Table(name = "tasks", indexes = {
         @Index(name = "ix_task_board", columnList = "warehouse_id, status, type, priority"),
         @Index(name = "ix_task_assignee", columnList = "assignee_id, status"),
         @Index(name = "ix_task_reference", columnList = "reference_type, reference_id")

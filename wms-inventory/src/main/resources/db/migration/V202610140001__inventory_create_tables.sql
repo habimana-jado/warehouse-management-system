@@ -41,14 +41,14 @@ create table stock_balances (
     serial_number varchar(64),                       -- only for SERIAL tracked items
     quantity      numeric(19,4) not null default 0,  -- base UOM; serial rows hold 0 or 1
 
-    constraint fk_balance_lot           foreign key (lot_id) references lot (id),
+    constraint fk_balance_lot           foreign key (lot_id) references lots (id),
     constraint ck_balance_quantity      check (quantity >= 0),
     constraint ck_balance_lot_or_serial check (lot_id is null or serial_number is null),
     constraint ck_balance_serial_qty    check (serial_number is null or quantity <= 1)
 );
 
 -- One row per (bin, item, lot, serial). Nulls are folded with coalesce so the key is unique on every PostgreSQL version.
-create unique index uq_balance_key on stock_balance
+create unique index uq_balance_key on stock_balances
     (location_id, item_id,
      coalesce(lot_id, '00000000-0000-0000-0000-000000000000'::uuid),
      coalesce(serial_number, ''));

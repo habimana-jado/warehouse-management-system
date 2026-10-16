@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
-@Table(name = "task_line", uniqueConstraints =
+@Table(name = "task_lines", uniqueConstraints =
 @UniqueConstraint(name = "uq_task_line_no", columnNames = {"task_id", "line_no"}))
 @Getter
 @Setter

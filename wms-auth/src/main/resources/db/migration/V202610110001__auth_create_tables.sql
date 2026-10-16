@@ -62,6 +62,7 @@ create table refresh_tokens (
     user_id     uuid         not null,
     token_hash  varchar(64)  not null,
     family_id   varchar(36)  not null,
+    created_at  timestamptz  not null,
     expires_at  timestamptz  not null,
     revoked_at  timestamptz,
     user_agent  varchar(255),

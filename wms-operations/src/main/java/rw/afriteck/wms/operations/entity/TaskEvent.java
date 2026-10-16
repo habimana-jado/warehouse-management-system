@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "task_event", indexes =
+@Table(name = "task_events", indexes =
 @Index(name = "ix_task_event_task", columnList = "task_id, occurred_at"))
 @Getter
 @Setter
