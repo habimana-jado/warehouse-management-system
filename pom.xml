@@ -30,6 +30,7 @@
 		<module>wms-inventory</module>
 		<module>wms-inbound</module>
         <module>wms-outbound</module>
+        <module>wms-reporting</module>
     </modules>
 	<dependencyManagement>
 		<dependencies>
@@ -71,6 +72,11 @@
 			<dependency>
 				<groupId>rw.afriteck.wms</groupId>
 				<artifactId>wms-outbound</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>rw.afriteck.wms</groupId>
+				<artifactId>wms-reporting</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
