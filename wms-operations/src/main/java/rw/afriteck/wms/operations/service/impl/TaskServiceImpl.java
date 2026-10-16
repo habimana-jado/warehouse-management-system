@@ -47,6 +47,10 @@ public class TaskServiceImpl implements TaskService {
     private static final int MAX_PAGE_SIZE = 100;
     private static final Set<TaskStatus> ASSIGNABLE = EnumSet.of(TaskStatus.OPEN, TaskStatus.ASSIGNED);
     private static final Set<TaskStatus> HELD = EnumSet.of(TaskStatus.ASSIGNED, TaskStatus.IN_PROGRESS);
+    /** Task types whose lines may leave the lot open for a LOT-tracked item: the worker chooses the lot on the floor. */
+    private static final Set<TaskType> LOT_OPTIONAL_TYPES = EnumSet.of(TaskType.PICK);
+    /** Task types whose lines may leave the serial open for a SERIAL-tracked item (the worker scans the units). */
+    private static final Set<TaskType> SERIAL_OPTIONAL_TYPES = EnumSet.of(TaskType.PICK);
 
     private final TaskRepository taskRepository;
     private final TaskEventRepository eventRepository;
@@ -108,7 +112,7 @@ public class TaskServiceImpl implements TaskService {
             }
             String lot = code(lr.lotNumber());
             String serial = code(lr.serialNumber());
-            checkTracking(item, lot, serial, lr.plannedQty());
+            checkTracking(r.type(), item, lot, serial, lr.plannedQty());
 
             requireBin(locations, lr.fromLocationId(), r.warehouseId());
             requireBin(locations, lr.toLocationId(), r.warehouseId());
@@ -425,7 +429,7 @@ public class TaskServiceImpl implements TaskService {
                 "Task " + t.getTaskNumber() + " is " + t.getStatus() + " and cannot be " + action);
     }
 
-    private static void checkTracking(ItemResponse item, String lot, String serial, BigDecimal qty) {
+    private static void checkTracking(TaskType type, ItemResponse item, String lot, String serial, BigDecimal qty) {
         switch (item.trackingType()) {
             case NONE -> {
                 if (lot != null || serial != null) {
@@ -434,8 +438,10 @@ public class TaskServiceImpl implements TaskService {
                 }
             }
             case LOT -> {
-                if (lot == null) {
-                    throw new BusinessException("LOT_REQUIRED", "Lot number required for " + item.sku());
+                if (lot == null && !LOT_OPTIONAL_TYPES.contains(type)) {
+                    throw new BusinessException("LOT_REQUIRED",
+                            "Lot number required for " + item.sku()
+                                    + " (only PICK tasks may leave the lot open)");
                 }
                 if (serial != null) {
                     throw new BusinessException("TRACKING_MISMATCH",
@@ -443,16 +449,27 @@ public class TaskServiceImpl implements TaskService {
                 }
             }
             case SERIAL -> {
-                if (serial == null) {
-                    throw new BusinessException("SERIAL_REQUIRED", "Serial number required for " + item.sku());
-                }
                 if (lot != null) {
                     throw new BusinessException("TRACKING_MISMATCH",
                             "Item " + item.sku() + " is serial tracked, not lot tracked");
                 }
-                if (qty.compareTo(BigDecimal.ONE) != 0) {
-                    throw new BusinessException("SERIAL_QTY_MUST_BE_ONE",
-                            "Serial tracked line quantity must be 1 for " + item.sku());
+                if (serial != null) {
+                    // a named unit: exactly one
+                    if (qty.compareTo(BigDecimal.ONE) != 0) {
+                        throw new BusinessException("SERIAL_QTY_MUST_BE_ONE",
+                                "Serial tracked line quantity must be 1 for " + item.sku());
+                    }
+                } else {
+                    // serial left open: only PICK lines, and then a whole number of units
+                    if (!SERIAL_OPTIONAL_TYPES.contains(type)) {
+                        throw new BusinessException("SERIAL_REQUIRED",
+                                "Serial number required for " + item.sku()
+                                        + " (only PICK tasks may leave the serial open)");
+                    }
+                    if (qty.stripTrailingZeros().scale() > 0) {
+                        throw new BusinessException("QTY_INVALID",
+                                "Quantity must be a whole number of units for " + item.sku());
+                    }
                 }
             }
         }
