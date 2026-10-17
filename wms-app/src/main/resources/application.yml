@@ -29,6 +29,11 @@ wms:
     bootstrap:
       admin-username: ${WMS_ADMIN_USER:admin}
       admin-password: ${WMS_ADMIN_PASSWORD:password123}   # only used when the users table is empty
+  reporting:
+    zone: Africa/Kigali        # zone for all date ranges and daily series
+    currency: RWF              # label on the valuation report (the ledger has no currency column)
+    export-max-rows: 20000     # CSV exports above this are refused with EXPORT_TOO_LARGE
+    default-expiry-days: 30    # expiry report horizon when `days` is not sent
 
 server:
   forward-headers-strategy: framework      # correct client IP behind a proxy
