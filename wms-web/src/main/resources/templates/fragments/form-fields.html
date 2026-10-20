@@ -1,0 +1,18 @@
+<!-- fragments/form-fields.html : one Bootstrap form-group with validation display -->
+<div class="form-group" th:fragment="input(field, labelKey, type, required, autocomplete)">
+    <label th:for="${field}">
+        <span th:text="#{${labelKey}}">Label</span><span class="text-warning" th:if="${required}"> *</span>
+    </label>
+    <input th:type="${type}" class="form-control" th:field="*{__${field}__}" th:errorclass="is-invalid"
+           th:required="${required}" th:attr="autocomplete=${autocomplete}">
+    <div class="invalid-feedback" th:errors="*{__${field}__}">error</div>
+</div>
+
+<div class="form-group" th:fragment="checkboxes(field, labelKey, options, optionPrefix)">
+    <label th:text="#{${labelKey}}">Label</label>
+    <div class="icheck-material-white" th:each="o : ${options}">
+        <input type="checkbox" th:field="*{__${field}__}" th:value="${o}"/>
+        <label th:for="${#ids.prev(field)}" th:text="#{${optionPrefix + o}}">Option</label>
+    </div>
+    <div class="invalid-feedback d-block" th:errors="*{__${field}__}">error</div>
+</div>

@@ -1,0 +1,13 @@
+<!-- fragments/scripts.html -->
+<th:block th:fragment="core(withShell)">
+    <script th:src="@{/assets/js/jquery.min.js}"></script>
+    <script th:src="@{/assets/js/popper.min.js}"></script>
+    <script th:src="@{/assets/js/bootstrap.min.js}"></script>
+    <th:block th:if="${withShell}">
+        <script th:src="@{/assets/plugins/simplebar/js/simplebar.js}"></script>
+        <script th:src="@{/assets/js/sidebar-menu.js}"></script>
+    </th:block>
+    <script th:src="@{/assets/js/app-script.js}"></script>
+    <script th:src="@{/assets/js/htmx.min.js}"></script>
+    <script th:src="@{/assets/js/wms.js}"></script>
+</th:block>

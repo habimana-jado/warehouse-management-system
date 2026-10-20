@@ -1,0 +1,6 @@
+<!-- fragments/flash.html -->
+<div th:fragment="flash" th:if="${flash != null}" class="alert alert-dismissible"
+     th:classappend="|alert-${flash.type()}|" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>
+    <div class="alert-message" th:text="${#messages.msgWithParams(flash.key(), flash.args())}">Saved</div>
+</div>

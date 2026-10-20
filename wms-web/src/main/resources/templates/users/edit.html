@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'users')}">
+<head><title th:text="#{users.edit.title}">Edit User</title></head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title">
+                        <span th:text="#{users.edit.title}">Edit User</span>: <span th:text="${username}">admin</span>
+                    </div>
+                    <hr>
+                    <ul class="nav nav-tabs nav-tabs-primary top-icon nav-justified">
+                        <li class="nav-item"><a href="javascript:void(0);" data-target="#tab-profile" data-toggle="pill" class="nav-link active">
+                            <i class="icon-user"></i> <span th:text="#{users.tab.profile}">Profile</span></a></li>
+                        <li class="nav-item"><a href="javascript:void(0);" data-target="#tab-access" data-toggle="pill" class="nav-link">
+                            <i class="icon-key"></i> <span th:text="#{users.tab.access}">Access</span></a></li>
+                        <li class="nav-item"><a href="javascript:void(0);" data-target="#tab-account" data-toggle="pill" class="nav-link">
+                            <i class="icon-settings"></i> <span th:text="#{users.tab.account}">Account</span></a></li>
+                    </ul>
+                    <div class="tab-content p-3">
+                        <div class="tab-pane active" id="tab-profile"><th:block th:replace="~{::profileCard}"></th:block></div>
+                        <div class="tab-pane" id="tab-access"><th:block th:replace="~{::accessCard}"></th:block></div>
+                        <div class="tab-pane" id="tab-account"><th:block th:replace="~{::accountCard}"></th:block></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- ============ profile card ============ -->
+<div id="profile-card" th:fragment="profileCard">
+    <form th:object="${profileForm}" method="post"
+          th:action="@{/users/{id}/profile(id=${userId})}"
+          th:hx-post="@{/users/{id}/profile(id=${userId})}"
+          hx-target="#profile-card" hx-swap="outerHTML">
+        <div class="alert alert-success" th:if="${saved}" th:text="#{common.saved}">Saved</div>
+        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+        </div>
+        <div th:replace="~{fragments/form-fields :: input('fullName', 'users.field.fullName', 'text', true, 'off')}"></div>
+        <div th:replace="~{fragments/form-fields :: input('email', 'users.field.email', 'email', false, 'off')}"></div>
+        <button type="submit" class="btn btn-light px-5" th:text="#{users.update}">Update profile</button>
+    </form>
+</div>
+
+<!-- ============ access card: roles (checkboxes) and warehouses ============ -->
+<div id="access-card" th:fragment="accessCard">
+    <form th:object="${accessForm}" method="post"
+          th:action="@{/users/{id}/access(id=${userId})}"
+          th:hx-post="@{/users/{id}/access(id=${userId})}"
+          hx-target="#access-card" hx-swap="outerHTML">
+        <div class="alert alert-success" th:if="${saved}" th:text="#{common.saved}">Saved</div>
+        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+        </div>
+
+        <div th:replace="~{fragments/form-fields :: checkboxes('roles', 'users.field.roles', ${roles}, 'role.')}"></div>
+
+        <div class="form-group">
+            <label for="warehouseIds" th:text="#{users.field.warehouses}">Warehouses</label>
+            <select id="warehouseIds" class="form-control" th:field="*{warehouseIds}" th:errorclass="is-invalid" multiple>
+                <option th:each="w : ${warehouseOptions}" th:value="${w.id()}"
+                        th:text="${w.code()} + ' · ' + ${w.name()}">A-01 · Main</option>
+            </select>
+            <div class="invalid-feedback" th:errors="*{warehouseIds}">error</div>
+            <small class="wms-muted" th:text="#{users.field.warehouses.hint}">Admins can access every warehouse</small>
+        </div>
+
+        <button type="submit" class="btn btn-light px-5" th:text="#{users.update.access}">Update access</button>
+    </form>
+</div>
+
+<!-- ============ account card: status and password reset ============ -->
+<div id="account-card" th:fragment="accountCard">
+    <div class="alert alert-success" th:if="${statusSaved}" th:text="#{common.saved}">Saved</div>
+    <div class="alert alert-danger" th:if="${statusError != null}" th:text="${statusError}">error</div>
+
+    <h6 th:text="#{users.account.status}">Account status</h6>
+    <p>
+        <span class="badge badge-success" th:if="${active}" th:text="#{common.active}">Active</span>
+        <span class="badge badge-danger" th:unless="${active}" th:text="#{common.inactive}">Inactive</span>
+    </p>
+    <form method="post"
+          th:action="@{/users/{id}/account/status(id=${userId})}"
+          th:hx-post="@{/users/{id}/account/status(id=${userId})}"
+          th:attr="hx-confirm=${active} ? #{users.confirm.deactivate} : null"
+          hx-target="#account-card" hx-swap="outerHTML">
+        <input type="hidden" name="active" th:value="${!active}">
+        <button type="submit" class="btn px-4" th:classappend="${active} ? 'btn-danger' : 'btn-success'"
+                th:text="${active} ? #{users.account.deactivate} : #{users.account.activate}">Deactivate account</button>
+    </form>
+
+    <hr>
+
+    <h6 th:text="#{users.account.resetPassword}">Reset password</h6>
+    <div class="alert alert-success" th:if="${passwordReset}" th:text="#{users.passwordReset}">Password reset</div>
+    <form th:object="${resetForm}" method="post"
+          th:action="@{/users/{id}/reset-password(id=${userId})}"
+          th:hx-post="@{/users/{id}/reset-password(id=${userId})}"
+          hx-target="#account-card" hx-swap="outerHTML">
+        <div th:replace="~{fragments/form-fields :: input('newPassword', 'users.field.newPassword', 'password', true, 'new-password')}"></div>
+        <small class="d-block mb-3 wms-muted" th:text="#{users.field.password.hint}">At least 10 characters, with letters and digits</small>
+        <button type="submit" class="btn btn-light px-5" th:text="#{users.resetPassword}">Reset password</button>
+    </form>
+</div>
+
+</body>
+</html>

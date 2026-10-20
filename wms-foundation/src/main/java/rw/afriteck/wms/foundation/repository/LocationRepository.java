@@ -51,11 +51,11 @@ public interface LocationRepository extends JpaRepository<Location, UUID>, JpaSp
     /** The location itself and all its descendants, filtered to active BINs, in one round trip. */
     @Query(value = """
         with recursive subtree as (
-            select id from location where id = :rootId
+            select id from locations where id = :rootId
             union all
-            select c.id from location c join subtree s on c.parent_id = s.id
+            select c.id from locations c join subtree s on c.parent_id = s.id
         )
-        select l.* from location l
+        select l.* from locations l
         join subtree s on s.id = l.id
         where l.type = 'BIN' and l.active = true
         order by l.code""", nativeQuery = true)

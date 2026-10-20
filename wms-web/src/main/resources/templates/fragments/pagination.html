@@ -1,0 +1,19 @@
+<!-- fragments/pagination.html : used inside an htmx "results" fragment -->
+<nav th:fragment="pager(page)" th:if="${page.totalPages() > 1}">
+    <ul class="pagination pagination-sm justify-content-end mb-0">
+        <li class="page-item" th:classappend="${!page.hasPrevious()} ? 'disabled'">
+            <a class="page-link" th:href="${@uiLinks.page(page.page() - 1)}"
+               th:attr="hx-get=${@uiLinks.page(page.page() - 1)}">&laquo;</a>
+        </li>
+        <th:block th:each="n : ${page.pages()}">
+            <li class="page-item disabled" th:if="${n == -1}"><span class="page-link">&hellip;</span></li>
+            <li class="page-item" th:unless="${n == -1}" th:classappend="${n == page.page()} ? 'active'">
+                <a class="page-link" th:href="${@uiLinks.page(n)}" th:attr="hx-get=${@uiLinks.page(n)}" th:text="${n + 1}">1</a>
+            </li>
+        </th:block>
+        <li class="page-item" th:classappend="${!page.hasNext()} ? 'disabled'">
+            <a class="page-link" th:href="${@uiLinks.page(page.page() + 1)}"
+               th:attr="hx-get=${@uiLinks.page(page.page() + 1)}">&raquo;</a>
+        </li>
+    </ul>
+</nav>

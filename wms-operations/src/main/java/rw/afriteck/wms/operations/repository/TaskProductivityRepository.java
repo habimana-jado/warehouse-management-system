@@ -17,7 +17,7 @@ public interface TaskProductivityRepository extends JpaRepository<Task, UUID> {
                    COUNT(*) AS tasksCompleted,
                    CAST(AVG(EXTRACT(EPOCH FROM (t.completed_at - t.started_at))) AS double precision)
                        AS avgTaskSeconds
-            FROM task t
+            FROM tasks t
             WHERE t.warehouse_id = :warehouseId
               AND t.status = 'COMPLETED'
               AND t.assignee_id IS NOT NULL
@@ -35,8 +35,8 @@ public interface TaskProductivityRepository extends JpaRepository<Task, UUID> {
                    COUNT(*) FILTER (WHERE l.status IN ('DONE', 'SHORT')) AS linesCompleted,
                    COUNT(*) FILTER (WHERE l.status = 'SHORT') AS shortLines,
                    COALESCE(SUM(l.done_qty), 0) AS totalQtyDone
-            FROM task_line l
-            JOIN task t ON t.id = l.task_id
+            FROM task_lines l
+            JOIN tasks t ON t.id = l.task_id
             WHERE t.warehouse_id = :warehouseId
               AND t.status = 'COMPLETED'
               AND t.assignee_id IS NOT NULL

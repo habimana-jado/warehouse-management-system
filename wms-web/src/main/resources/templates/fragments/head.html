@@ -1,0 +1,23 @@
+<!-- fragments/head.html -->
+<th:block th:fragment="meta">
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link rel="icon" th:href="@{/assets/images/favicon.ico}" type="image/x-icon">
+    <link th:href="@{/assets/css/pace.min.css}" rel="stylesheet"/>
+    <script th:src="@{/assets/js/pace.min.js}"></script>
+</th:block>
+
+<th:block th:fragment="styles(withShell)">
+    <link th:href="@{/assets/css/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/assets/css/animate.css}" rel="stylesheet" type="text/css"/>
+    <link th:href="@{/assets/css/icons.css}" rel="stylesheet" type="text/css"/>
+    <th:block th:if="${withShell}">
+        <link th:href="@{/assets/plugins/simplebar/css/simplebar.css}" rel="stylesheet"/>
+        <link th:href="@{/assets/css/sidebar-menu.css}" rel="stylesheet"/>
+    </th:block>
+    <link th:href="@{/assets/css/app-style.css}" rel="stylesheet"/>
+    <link th:href="@{/assets/css/wms.css}" rel="stylesheet"/>
+</th:block>

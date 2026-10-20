@@ -1,0 +1,15 @@
+<!-- layout/auth.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}" th:fragment="layout(title, content)">
+<head>
+    <th:block th:replace="~{fragments/head :: meta}"/>
+    <title th:replace="${title}">WMS</title>
+    <th:block th:replace="~{fragments/head :: styles(false)}"/>
+</head>
+<body class="bg-theme bg-theme1">
+<div id="wrapper">
+    <th:block th:replace="${content}"></th:block>
+</div>
+<th:block th:replace="~{fragments/scripts :: core(false)}"/>
+</body>
+</html>

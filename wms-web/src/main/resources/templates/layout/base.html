@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}"
+      th:fragment="layout(title, content, scripts, menu)">
+<head>
+    <th:block th:replace="~{fragments/head :: meta}"/>
+    <title th:replace="${title}">WMS</title>
+    <th:block th:replace="~{fragments/head :: styles(true)}"/>
+</head>
+<body class="bg-theme bg-theme1">
+
+<div id="pageloader-overlay" class="visible incoming">
+    <div class="loader-wrapper-outer">
+        <div class="loader-wrapper-inner">
+            <div class="loader"></div>
+        </div>
+    </div>
+</div>
+
+<div id="wrapper">
+    <div th:replace="~{fragments/sidebar :: sidebar(${menu})}"></div>
+    <header th:replace="~{fragments/topbar :: topbar}"></header>
+    <div class="clearfix"></div>
+
+    <div class="content-wrapper">
+        <div class="container-fluid">
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div th:replace="~{fragments/flash :: flash}"></div>
+                    <div id="toast-area" class="wms-toast-area" aria-live="polite"></div>
+                </div>
+            </div>
+
+            <th:block th:replace="${content}"></th:block>
+
+            <div class="overlay toggle-menu"></div>
+        </div>
+    </div>
+
+    <a href="javascript:void(0);" class="back-to-top"><i class="fa fa-angle-double-up"></i></a>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <div th:replace="~{fragments/theme-switcher :: switcher}"></div>
+</div>
+
+<th:block th:replace="~{fragments/scripts :: core(true)}"/>
+<th:block th:replace="${scripts}"/>
+</body>
+</html>

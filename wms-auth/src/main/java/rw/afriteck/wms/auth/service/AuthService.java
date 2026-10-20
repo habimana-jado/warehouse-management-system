@@ -44,28 +44,8 @@ public class AuthService {
     /** noRollbackFor: failed-attempt counters must be saved even though we throw. */
     @Transactional(noRollbackFor = UnauthorizedException.class)
     public TokenResponse login(LoginRequest req, ClientInfo client) {
-        Instant now = clock.instant();
-
-        User user = users.findByUsernameIgnoreCase(req.username().trim()).orElse(null);
-        if (user == null) {
-            encoder.matches(req.password(), dummyHash);
-            throw badCredentials();
-        }
-        if (user.isLocked(now)) {
-            throw new UnauthorizedException("ACCOUNT_LOCKED",
-                    "Too many failed attempts. Try again later.");
-        }
-        if (!encoder.matches(req.password(), user.getPasswordHash())) {
-            var lockout = props.lockout();
-            user.registerFailedLogin(lockout.maxAttempts(), lockout.duration(), now);
-            throw badCredentials();
-        }
-        if (!user.isActive()) {
-            // checked after the password on purpose
-            throw new UnauthorizedException("ACCOUNT_DISABLED", "Account is disabled");
-        }
-
-        user.registerSuccessfulLogin(now);
+        User user = verifyCredentials(req.username(), req.password());
+        user.registerSuccessfulLogin(clock.instant());
         return buildResponse(user, refreshTokens.issueNewFamily(user.getId(), client));
     }
 
@@ -80,6 +60,14 @@ public class AuthService {
             throw new UnauthorizedException("ACCOUNT_DISABLED", "Account is disabled");
         }
         return buildResponse(user, rotated.next());      // roles/warehouses are re-read here, so changes apply
+    }
+
+    @Transactional(noRollbackFor = UnauthorizedException.class)
+    public AuthenticatedUser authenticate(String username, String password) {
+        User user = verifyCredentials(username, password);   // the checks currently inside login()
+        user.registerSuccessfulLogin(clock.instant());
+        return new AuthenticatedUser(user.getId(), user.getUsername(),
+                Set.copyOf(user.getRoles()), Set.copyOf(user.getWarehouseIds()));
     }
 
     @Transactional
@@ -113,6 +101,30 @@ public class AuthService {
         refreshTokens.revokeAllForUser(user.getId());    // all devices must log in again
     }
 
+    private User verifyCredentials(String username, String password){
+        Instant now = clock.instant();
+
+        User user = users.findByUsernameIgnoreCase(username.trim()).orElse(null);
+        if (user == null) {
+            encoder.matches(password, dummyHash);
+            throw badCredentials();
+        }
+        if (user.isLocked(now)) {
+            throw new UnauthorizedException("ACCOUNT_LOCKED",
+                    "Too many failed attempts. Try again later.");
+        }
+        if (!encoder.matches(password, user.getPasswordHash())) {
+            var lockout = props.lockout();
+            user.registerFailedLogin(lockout.maxAttempts(), lockout.duration(), now);
+            throw badCredentials();
+        }
+        if (!user.isActive()) {
+            // checked after the password on purpose
+            throw new UnauthorizedException("ACCOUNT_DISABLED", "Account is disabled");
+        }
+
+        return user;
+    }
     private TokenResponse buildResponse(User user, RefreshTokenService.Issued refresh) {
         var principal = new AuthenticatedUser(user.getId(), user.getUsername(),
                 Set.copyOf(user.getRoles()), Set.copyOf(user.getWarehouseIds()));

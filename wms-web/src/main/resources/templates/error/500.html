@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/auth :: layout(~{::title}, ~{::content})}">
+<head><title th:text="#{error.500.title}">Internal Server Error</title></head>
+<body>
+<th:block th:fragment="content">
+    <div class="card card-authentication1 mx-auto my-5"><div class="card-body">
+        <div class="card-content p-2 text-center">
+            <div class="card-title text-uppercase py-3" th:text="#{error.500.title}">Internal Server Error</div>
+            <p th:text="#{error.500.text}">The server encountered an unexpected condition that stopped it from fulfilling your request.</p>
+            <a class="btn btn-light btn-block" th:href="@{/}" th:text="#{error.back}">Back</a>
+        </div>
+    </div></div>
+</th:block>
+</body>
+</html>

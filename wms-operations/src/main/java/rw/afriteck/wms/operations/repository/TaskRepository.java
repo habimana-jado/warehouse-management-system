@@ -40,7 +40,7 @@ public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificat
 
     // ---- claim next (scanner flow) ----
     @Query(value = """
-        SELECT * FROM task
+        SELECT * FROM tasks
         WHERE warehouse_id = :warehouseId
           AND status = 'OPEN'
           AND type IN (:types)
@@ -58,7 +58,7 @@ public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificat
             SELECT l.task_id AS taskId,
                    COUNT(*) AS total,
                    COUNT(*) FILTER (WHERE l.status <> 'PENDING') AS done
-            FROM task_line l
+            FROM task_lines l
             WHERE l.task_id IN (:taskIds)
             GROUP BY l.task_id
             """, nativeQuery = true)

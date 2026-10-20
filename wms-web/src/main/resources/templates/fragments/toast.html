@@ -1,0 +1,5 @@
+<!-- fragments/toast.html (returned by WebExceptionHandler for htmx requests) -->
+<div th:fragment="error" class="alert alert-danger alert-dismissible wms-toast" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>
+    <div class="alert-message" th:text="${message}">Error</div>
+</div>

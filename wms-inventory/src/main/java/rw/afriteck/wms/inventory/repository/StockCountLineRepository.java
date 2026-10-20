@@ -28,7 +28,7 @@ public interface StockCountLineRepository extends JpaRepository<StockCountLine, 
     @Query(value = """
             select count_id as countId, count(*) as total,
                    count(*) filter (where status = 'COUNTED') as counted
-            from stock_count_line where count_id in (:ids) group by count_id""", nativeQuery = true)
+            from stock_count_lines where count_id in (:ids) group by count_id""", nativeQuery = true)
     List<LineStats> stats(@Param("ids") Collection<UUID> ids);
 
     @Query("""

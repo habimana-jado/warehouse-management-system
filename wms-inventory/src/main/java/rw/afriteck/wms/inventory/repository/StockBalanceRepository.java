@@ -70,7 +70,7 @@ public interface StockBalanceRepository extends JpaRepository<StockBalance, UUID
     List<StockBalance> findAvailable(@Param("warehouseId") UUID warehouseId, @Param("itemId") UUID itemId);
 
     @Query(value = """
-            select coalesce(sum(quantity), 0) from stock_balance
+            select coalesce(sum(quantity), 0) from stock_balances
             where warehouse_id = :warehouseId and item_id = :itemId""", nativeQuery = true)
     BigDecimal sumQuantity(@Param("warehouseId") UUID warehouseId, @Param("itemId") UUID itemId);
 
@@ -78,7 +78,7 @@ public interface StockBalanceRepository extends JpaRepository<StockBalance, UUID
      * itemIds must not be empty. Items without stock are simply absent from the result.
      */
     @Query(value = """
-            select item_id as itemId, sum(quantity) as quantity from stock_balance
+            select item_id as itemId, sum(quantity) as quantity from stock_balances
             where warehouse_id = :warehouseId and item_id in (:itemIds) and quantity > 0
             group by item_id""", nativeQuery = true)
     List<ItemQuantity> sumByItems(@Param("warehouseId") UUID warehouseId, @Param("itemIds") Collection<UUID> itemIds);
@@ -87,7 +87,7 @@ public interface StockBalanceRepository extends JpaRepository<StockBalance, UUID
      * Same, restricted to given bins (e.g. STORAGE bins only, for availability). Neither list may be empty.
      */
     @Query(value = """
-            select item_id as itemId, sum(quantity) as quantity from stock_balance
+            select item_id as itemId, sum(quantity) as quantity from stock_balances
             where location_id in (:locationIds) and item_id in (:itemIds) and quantity > 0
             group by item_id""", nativeQuery = true)
     List<ItemQuantity> sumByItemsInLocations(@Param("locationIds") Collection<UUID> locationIds,

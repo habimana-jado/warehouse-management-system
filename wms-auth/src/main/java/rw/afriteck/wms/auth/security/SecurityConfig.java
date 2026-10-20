@@ -3,6 +3,7 @@ package rw.afriteck.wms.auth.security;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -21,10 +22,12 @@ import rw.afriteck.wms.auth.config.SecurityProperties;
 public class SecurityConfig {
 
     @Bean
+    @Order(1)
     SecurityFilterChain filterChain(HttpSecurity http, JwtService jwt,
                                     RestAuthenticationEntryPoint entryPoint,
                                     RestAccessDeniedHandler deniedHandler) throws Exception {
         return http
+                .securityMatcher("/api/v1/wms/**")
                 .csrf(AbstractHttpConfigurer::disable)           // stateless, Bearer header, no cookies
                 .cors(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

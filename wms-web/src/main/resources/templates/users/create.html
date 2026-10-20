@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'users')}">
+<head><title th:text="#{users.new.title}">New User</title></head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title" th:text="#{users.new.title}">New User</div>
+                    <hr>
+                    <form th:action="@{/users}" th:object="${form}" method="post" novalidate>
+                        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+                        </div>
+
+                        <div th:replace="~{fragments/form-fields :: input('fullName', 'users.field.fullName', 'text', true, 'off')}"></div>
+                        <div th:replace="~{fragments/form-fields :: input('email', 'users.field.email', 'email', false, 'off')}"></div>
+                        <div th:replace="~{fragments/form-fields :: input('username', 'users.field.username', 'text', true, 'off')}"></div>
+                        <div th:replace="~{fragments/form-fields :: input('password', 'users.field.password', 'password', true, 'new-password')}"></div>
+                        <small class="d-block mb-3 wms-muted" th:text="#{users.field.password.hint}">At least 10
+                            characters, with letters and digits</small>
+
+                        <div th:replace="~{fragments/form-fields :: checkboxes('roles', 'users.field.roles', ${roles}, 'role.')}"></div>
+
+                        <div class="form-group">
+                            <label for="warehouseIds" th:text="#{users.field.warehouses}">Warehouses</label>
+                            <select id="warehouseIds" class="form-control" th:field="*{warehouseIds}"
+                                    th:errorclass="is-invalid" multiple>
+                                <option th:each="w : ${warehouseOptions}" th:value="${w.id()}"
+                                        th:text="${w.code()} + ' · ' + ${w.name()}">A-01 · Main
+                                </option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{warehouseIds}">error</div>
+                            <small class="wms-muted" th:text="#{users.field.warehouses.hint}">Admins can access every
+                                warehouse</small>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-light px-5"><i class="icon-lock"></i> <span
+                                    th:text="#{users.save}">Save</span></button>
+                            <a class="btn btn-secondary px-4" th:href="@{/users}" th:text="#{common.cancel}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

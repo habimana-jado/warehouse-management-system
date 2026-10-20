@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'users')}">
+<head><title th:text="#{users.list.title}">Users</title></head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{users.list.title}">Users</div>
+                        <a class="btn btn-light px-4" th:href="@{/users/new}">
+                            <i class="zmdi zmdi-plus"></i> <span th:text="#{users.new}">New user</span></a>
+                    </div>
+                    <hr>
+
+                    <form id="user-filters" method="get" th:action="@{/users}" class="mb-3"
+                          th:attr="hx-get=@{/users}" hx-target="#users-results" hx-swap="outerHTML"
+                          hx-push-url="true" hx-trigger="input delay:400ms, submit">
+                        <div class="position-relative has-icon-right">
+                            <input type="search" name="q" class="form-control input-shadow" th:value="${q}"
+                                   th:placeholder="#{users.search.placeholder}" autocomplete="off">
+                            <div class="form-control-position"><i class="icon-magnifier"></i></div>
+                        </div>
+                    </form>
+
+                    <div id="users-results" th:fragment="results">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <a class="wms-sort"
+                                           th:classappend="${sortFullNameClass}"
+                                           th:href="${sortFullNameUrl}"
+                                           th:hx-get="${sortFullNameUrl}"
+                                           th:text="#{users.col.user}">User</a></th>
+                                    <th scope="col" th:text="#{users.col.role}">Role</th>
+                                    <th scope="col" th:text="#{users.col.warehouse}">Warehouse</th>
+                                    <th scope="col" th:text="#{users.col.active}">Active</th>
+                                    <th scope="col" th:text="#{users.col.lastActive}">Last active</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="u : ${page.content()}">
+                                    <tr th:replace="~{::row}"></tr>
+                                </th:block>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="6" class="text-center wms-muted" th:text="#{common.noResults}">No users
+                                        found
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}">Showing
+                                1-15 of 142</small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- one row; also returned alone after activate / deactivate (variable "u") -->
+<table>
+    <tbody>
+    <tr th:fragment="row" th:id="|user-${u.id()}|">
+        <td>
+            <div class="font-weight-bold" th:text="${u.fullName()}">Sara Kim</div>
+            <small class="wms-muted" th:text="${u.email()} ?: ${u.username()}">sara.kim@example.com</small>
+        </td>
+        <td><span class="badge badge-primary mr-1" th:each="r : ${u.roles()}" th:text="#{'role.' + ${r}}">Admin</span>
+        </td>
+        <td>
+            <span th:if="${u.allWarehouses()}" th:text="#{users.allWarehouses}">All warehouses</span>
+            <th:block th:unless="${u.allWarehouses()}">
+                <span th:each="w, st : ${u.warehouses()}"
+                      th:text="${w} + (${st.last} ? '' : ', ')">Warehouse A-01</span>
+                <span th:if="${u.warehouses().isEmpty()}">&mdash;</span>
+            </th:block>
+        </td>
+        <td>
+            <span class="badge badge-success" th:if="${u.active()}" th:text="#{common.active}">Active</span>
+            <span class="badge badge-danger" th:unless="${u.active()}" th:text="#{common.inactive}">Inactive</span>
+        </td>
+        <td th:text="${@uiFormat.dateTime(u.lastLoginAt())}">Apr 22 · 09:42</td>
+        <td class="text-right text-nowrap">
+            <a class="btn btn-sm btn-light" th:href="@{/users/{id}/edit(id=${u.id()})}" th:title="#{common.edit}">
+                <i class="zmdi zmdi-edit"></i></a>
+            <button type="button" class="btn btn-sm btn-danger" th:if="${u.active()}"
+                    th:attr="hx-post=@{/users/{id}/deactivate(id=${u.id()})}, hx-confirm=#{users.confirm.deactivate}"
+                    hx-target="closest tr" hx-swap="outerHTML" th:title="#{users.deactivate}">
+                <i class="zmdi zmdi-block"></i></button>
+            <button type="button" class="btn btn-sm btn-success" th:unless="${u.active()}"
+                    th:attr="hx-post=@{/users/{id}/activate(id=${u.id()})}"
+                    hx-target="closest tr" hx-swap="outerHTML" th:title="#{users.activate}">
+                <i class="zmdi zmdi-check"></i></button>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

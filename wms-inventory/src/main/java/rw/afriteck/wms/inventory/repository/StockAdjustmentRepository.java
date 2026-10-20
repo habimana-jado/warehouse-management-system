@@ -50,7 +50,7 @@ public interface StockAdjustmentRepository extends JpaRepository<StockAdjustment
     interface LineCount { UUID getAdjustmentId(); long getLineCount(); }
 
     @Query(value = """
-            select adjustment_id as adjustmentId, count(*) as lineCount from stock_adjustment_line
+            select adjustment_id as adjustmentId, count(*) as lineCount from stock_adjustment_lines
             where adjustment_id in (:ids) group by adjustment_id""", nativeQuery = true)
     List<LineCount> countLines(@Param("ids") Collection<UUID> ids);
 

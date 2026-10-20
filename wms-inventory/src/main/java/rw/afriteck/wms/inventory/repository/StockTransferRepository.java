@@ -40,7 +40,7 @@ public interface StockTransferRepository extends JpaRepository<StockTransfer, UU
     interface LineCount { UUID getTransferId(); long getLineCount(); }
 
     @Query(value = """
-            select transfer_id as transferId, count(*) as lineCount from stock_transfer_line
+            select transfer_id as transferId, count(*) as lineCount from stock_transfer_lines
             where transfer_id in (:ids) group by transfer_id""", nativeQuery = true)
     List<LineCount> countLines(@Param("ids") Collection<UUID> ids);
 
