@@ -86,7 +86,7 @@ class SupplierReturnServiceImplTest {
         activeSupplier = new SupplierResponse(supplierId, "SUP001", "Supplier 1", "Contact", "123", "sup@test.com", "Addr", "Kigali", "Rwanda", true);
         activeWarehouse = new WarehouseResponse(warehouseId, "WH001", "Main WH", "Addr", "Kigali", "Rwanda", true);
         activeItem = new ItemResponse(itemId, "SKU001", "Item 1", "BAR001", null, "Category", "PCS", TrackingType.NONE, false, true);
-        activeLocation = new LocationResponse(locationId, warehouseId, "BIN-01", "BIN-01", LocationType.BIN, LocationUsage.STORAGE, true, true);
+        activeLocation = new LocationResponse(locationId, warehouseId, null, "Location 1", "BIN-01", LocationType.BIN, LocationUsage.STORAGE, "BAR1", BigDecimal.valueOf(100), true);
 
         fixedInstant = Instant.parse("2026-01-01T10:00:00Z");
         lenient().when(clock.instant()).thenReturn(fixedInstant);
@@ -103,6 +103,7 @@ class SupplierReturnServiceImplTest {
         when(warehouses.getById(warehouseId)).thenReturn(activeWarehouse);
         when(numbers.nextReturn()).thenReturn("RTV-000001");
         when(items.findAllByIds(Set.of(itemId))).thenReturn(List.of(activeItem));
+        when(items.toBaseQuantity(eq(itemId), eq("PCS"), eq(BigDecimal.TEN))).thenReturn(BigDecimal.TEN);
         when(locations.findAllByIds(Set.of(locationId))).thenReturn(List.of(activeLocation));
         when(returns.saveAndFlush(any(SupplierReturn.class))).thenAnswer(i -> {
             SupplierReturn rtv = i.getArgument(0);

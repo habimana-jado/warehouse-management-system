@@ -90,13 +90,14 @@ class SalesOrderServiceImplTest {
     void create_Success() {
         CreateSalesOrderRequest req = new CreateSalesOrderRequest(
                 customerId, warehouseId, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 10),
-                "PO-123", "USD", "Order notes",
+                "USD", "PO-123", "Order notes",
                 List.of(new SalesOrderLineRequest(itemId, BigDecimal.TEN, "PCS", BigDecimal.valueOf(50), "Line note")));
 
         when(customers.getById(customerId)).thenReturn(activeCustomer);
         when(warehouses.getById(warehouseId)).thenReturn(activeWarehouse);
         when(numbers.nextSalesOrder()).thenReturn("SO-000001");
         when(items.findAllByIds(Set.of(itemId))).thenReturn(List.of(activeItem));
+        when(items.toBaseQuantity(eq(itemId), eq("PCS"), eq(BigDecimal.TEN))).thenReturn(BigDecimal.TEN);
         when(orders.saveAndFlush(any(SalesOrder.class))).thenAnswer(invocation -> {
             SalesOrder so = invocation.getArgument(0);
             so.setId(UUID.randomUUID());
@@ -146,10 +147,11 @@ class SalesOrderServiceImplTest {
         when(orders.findByIdForUpdate(orderId)).thenReturn(Optional.of(so));
         when(customers.getById(customerId)).thenReturn(activeCustomer);
         when(items.findAllByIds(anySet())).thenReturn(List.of(activeItem));
+        when(items.toBaseQuantity(eq(itemId), eq("PCS"), eq(BigDecimal.valueOf(5)))).thenReturn(BigDecimal.valueOf(5));
         when(orders.saveAndFlush(any(SalesOrder.class))).thenAnswer(i -> i.getArgument(0));
 
         UpdateSalesOrderRequest req = new UpdateSalesOrderRequest(
-                LocalDate.of(2026, 1, 2), LocalDate.of(2026, 1, 15), "REF-UPDATED", "USD", "Updated notes",
+                LocalDate.of(2026, 1, 2), LocalDate.of(2026, 1, 15), "USD", "REF-UPDATED", "Updated notes",
                 List.of(new SalesOrderLineRequest(itemId, BigDecimal.valueOf(5), "PCS", BigDecimal.valueOf(45), null)));
 
         SalesOrderResponse response = service.update(orderId, req);

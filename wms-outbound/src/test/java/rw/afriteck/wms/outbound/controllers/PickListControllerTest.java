@@ -11,7 +11,6 @@ import rw.afriteck.wms.common.dtos.PageResponse;
 import rw.afriteck.wms.common.exception.ForbiddenException;
 import rw.afriteck.wms.common.security.UserContext;
 import rw.afriteck.wms.operations.dtos.TaskAccessInfo;
-import rw.afriteck.wms.operations.enums.TaskStatus;
 import rw.afriteck.wms.operations.service.TaskService;
 import rw.afriteck.wms.outbound.dtos.CancelPickListRequest;
 import rw.afriteck.wms.outbound.dtos.ConfirmPickRequest;
@@ -57,7 +56,7 @@ class PickListControllerTest {
         userId = UUID.randomUUID();
 
         dummyResponse = new PickListResponse(
-                pickListId, "PCK-000001", UUID.randomUUID(), "SO-000001", UUID.randomUUID(), "Customer 1",
+                pickListId, 1L, "PCK-000001", UUID.randomUUID(), "SO-000001", UUID.randomUUID(), "Customer 1",
                 warehouseId, PickListStatus.RELEASED, taskId, Instant.now(), null, null, List.of()
         );
     }
@@ -78,7 +77,7 @@ class PickListControllerTest {
     void get_PrivilegedUser_ReturnsPickList() {
         when(pickLists.warehouseIdOf(pickListId)).thenReturn(warehouseId);
         when(pickLists.getById(pickListId)).thenReturn(dummyResponse);
-        when(userContext.hasAnyRole("ADMIN", "MANAGER", "SUPERVISOR")).thenReturn(true);
+        when(userContext.isAdmin()).thenReturn(true);
 
         PickListResponse res = controller.get(pickListId);
 
@@ -91,10 +90,11 @@ class PickListControllerTest {
     void get_PickerAssigned_ReturnsPickList() {
         when(pickLists.warehouseIdOf(pickListId)).thenReturn(warehouseId);
         when(pickLists.getById(pickListId)).thenReturn(dummyResponse);
-        when(userContext.hasAnyRole("ADMIN", "MANAGER", "SUPERVISOR")).thenReturn(false);
+        when(userContext.isAdmin()).thenReturn(false);
+        when(userContext.hasRole("WAREHOUSE_MANAGER")).thenReturn(false);
         when(userContext.hasRole("VIEWER")).thenReturn(false);
         when(userContext.currentUserId()).thenReturn(userId);
-        when(taskService.accessInfo(taskId)).thenReturn(new TaskAccessInfo(taskId, warehouseId, userId, TaskStatus.ASSIGNED));
+        when(taskService.accessInfo(taskId)).thenReturn(new TaskAccessInfo(warehouseId, userId));
 
         PickListResponse res = controller.get(pickListId);
 
@@ -106,10 +106,11 @@ class PickListControllerTest {
         UUID otherUserId = UUID.randomUUID();
         when(pickLists.warehouseIdOf(pickListId)).thenReturn(warehouseId);
         when(pickLists.getById(pickListId)).thenReturn(dummyResponse);
-        when(userContext.hasAnyRole("ADMIN", "MANAGER", "SUPERVISOR")).thenReturn(false);
+        when(userContext.isAdmin()).thenReturn(false);
+        when(userContext.hasRole("WAREHOUSE_MANAGER")).thenReturn(false);
         when(userContext.hasRole("VIEWER")).thenReturn(false);
         when(userContext.currentUserId()).thenReturn(userId);
-        when(taskService.accessInfo(taskId)).thenReturn(new TaskAccessInfo(taskId, warehouseId, otherUserId, TaskStatus.ASSIGNED));
+        when(taskService.accessInfo(taskId)).thenReturn(new TaskAccessInfo(warehouseId, otherUserId));
 
         ForbiddenException ex = assertThrows(ForbiddenException.class, () -> controller.get(pickListId));
         assertEquals("This pick list is assigned to another user", ex.getMessage());
@@ -118,7 +119,7 @@ class PickListControllerTest {
     @Test
     void byTask_CallsServiceAndChecksAccess() {
         when(pickLists.getByTaskId(taskId)).thenReturn(dummyResponse);
-        when(userContext.hasAnyRole("ADMIN", "MANAGER", "SUPERVISOR")).thenReturn(true);
+        when(userContext.isAdmin()).thenReturn(true);
 
         PickListResponse res = controller.byTask(taskId);
 
@@ -133,7 +134,7 @@ class PickListControllerTest {
         ConfirmPickRequest req = new ConfirmPickRequest(List.of(), null, false);
         when(pickLists.warehouseIdOf(pickListId)).thenReturn(warehouseId);
         when(userContext.currentUserId()).thenReturn(userId);
-        when(userContext.hasAnyRole("ADMIN", "MANAGER", "SUPERVISOR")).thenReturn(true);
+        when(userContext.isAdmin()).thenReturn(true);
         when(pickLists.confirmPick(eq(pickListId), eq(lineId), eq(req), eq(userId), eq(true)))
                 .thenReturn(dummyResponse);
 

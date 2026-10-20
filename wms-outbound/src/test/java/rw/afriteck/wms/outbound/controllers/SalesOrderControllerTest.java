@@ -54,9 +54,9 @@ class SalesOrderControllerTest {
         customerId = UUID.randomUUID();
 
         dummyResponse = new SalesOrderResponse(
-                orderId, "SO-000001", customerId, "Customer 1", warehouseId, SalesOrderStatus.DRAFT,
-                LocalDate.now(), null, "USD", null, null, null, null,
-                List.of(), BigDecimal.TEN, BigDecimal.valueOf(500), Instant.now(), null
+                orderId, 1L, "SO-000001", customerId, "Customer 1", warehouseId, SalesOrderStatus.DRAFT,
+                LocalDate.now(), null, "USD", null, null, null,
+                null, null, Instant.now(), BigDecimal.valueOf(500), List.of()
         );
     }
 
