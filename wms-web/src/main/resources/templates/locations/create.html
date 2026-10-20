@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'locations')}">
+<head><title th:text="#{locations.new.title}">New Location</title></head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title mb-0" th:text="#{locations.new.title}">New Location</div>
+                    <small class="wms-muted" th:text="#{locations.subtitle(${warehouseLabel})}">Warehouse A-01</small>
+                    <hr>
+                    <form th:action="@{/locations}" th:object="${form}" method="post" novalidate>
+                        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+                        </div>
+                        <p class="wms-muted" th:text="#{locations.hierarchy.hint}">A location must sit lower than its parent.</p>
+
+                        <div class="form-group">
+                            <label for="parentId" th:text="#{locations.field.parent}">Parent location</label>
+                            <select id="parentId" class="form-control" th:field="*{parentId}" th:errorclass="is-invalid">
+                                <option value="" th:text="#{locations.field.parent.none}">No parent (top level)</option>
+                                <option th:each="p : ${parentOptions}" th:value="${p.id()}" th:text="${p.label()}">A</option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{parentId}">error</div>
+                        </div>
+
+                        <div th:replace="~{fragments/form-fields :: enumSelect('type', 'locations.field.type', ${types}, 'location.type.')}"></div>
+                        <div th:replace="~{fragments/form-fields :: input('code', 'locations.field.code', 'text', true, 'off')}"></div>
+                        <div th:replace="~{fragments/form-fields :: input('name', 'locations.field.name', 'text', false, 'off')}"></div>
+                        <div th:replace="~{fragments/form-fields :: enumSelect('usage', 'locations.field.usage', ${usages}, 'location.usage.')}"></div>
+                        <small class="d-block mb-3 wms-muted" th:text="#{locations.field.usage.hint}">Only bins can have a usage other than Storage.</small>
+                        <div th:replace="~{fragments/form-fields :: input('barcode', 'locations.field.barcode', 'text', false, 'off')}"></div>
+                        <small class="d-block mb-3 wms-muted" th:text="#{locations.field.barcode.hint}">Leave empty to generate it.</small>
+                        <div th:replace="~{fragments/form-fields :: input('maxCapacity', 'locations.field.maxCapacity', 'text', false, 'off')}"></div>
+                        <small class="d-block mb-3 wms-muted" th:text="#{locations.field.maxCapacity.hint}">Optional, informational only.</small>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-light px-5"><i class="icon-lock"></i> <span th:text="#{locations.save}">Save</span></button>
+                            <a class="btn btn-secondary px-4" th:href="@{/locations}" th:text="#{common.cancel}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

@@ -29,3 +29,19 @@
     color: inherit;
     text-decoration: none;
 }
+
+.wms-indent-0 {
+    margin-left: 0;
+}
+
+.wms-indent-1 {
+    margin-left: 1.5rem;
+}
+
+.wms-indent-2 {
+    margin-left: 3rem;
+}
+
+.wms-indent-3 {
+    margin-left: 4.5rem;
+}

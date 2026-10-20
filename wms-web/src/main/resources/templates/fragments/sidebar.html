@@ -24,7 +24,10 @@
             <li th:if="${@uiUser.isAdmin()}" th:classappend="${active == 'warehouses'} ? 'active'">
                 <a th:href="@{/warehouses}"><i class="zmdi zmdi-store"></i> <span th:text="#{menu.warehouses}">Warehouses</span></a>
             </li>
-            <!-- locations, categories, items, suppliers, customers are added in the next steps -->
+            <li th:classappend="${active == 'locations'} ? 'active'">
+                <a th:href="@{/locations}"><i class="zmdi zmdi-view-comfy"></i> <span th:text="#{menu.locations}">Locations</span></a>
+            </li>
+            <!-- categories, items, suppliers, customers are added in the next steps -->
         </th:block>
     </ul>
 </div>

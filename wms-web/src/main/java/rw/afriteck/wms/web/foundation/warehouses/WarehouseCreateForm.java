@@ -7,8 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 import rw.afriteck.wms.common.support.Codes;
 import rw.afriteck.wms.foundation.dtos.CreateWarehouseRequest;
-import rw.afriteck.wms.foundation.dtos.UpdateWarehouseRequest;
-import rw.afriteck.wms.foundation.dtos.WarehouseResponse;
 
 @Getter
 @Setter

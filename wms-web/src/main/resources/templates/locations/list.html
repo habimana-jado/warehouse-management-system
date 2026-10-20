@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'locations')}">
+<head><title th:text="#{locations.list.title}">Locations</title></head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="card-title mb-0" th:text="#{locations.list.title}">Locations</div>
+                            <small class="wms-muted" th:text="#{locations.subtitle(${warehouseLabel})}">Warehouse
+                                A-01</small>
+                        </div>
+                        <div>
+                            <a class="btn btn-secondary px-3" th:href="@{/locations/tree}">
+                                <i class="zmdi zmdi-view-list-alt"></i> <span
+                                    th:text="#{locations.tree}">Tree view</span></a>
+                            <a class="btn btn-light px-4" th:if="${canManage}" th:href="@{/locations/new}">
+                                <i class="zmdi zmdi-plus"></i> <span th:text="#{locations.new}">New location</span></a>
+                        </div>
+                    </div>
+                    <hr>
+
+                    <form id="location-filters" method="get" th:action="@{/locations}" class="mb-3"
+                          th:hx-get="@{/locations}" hx-target="#locations-results" hx-swap="outerHTML"
+                          hx-push-url="true" hx-trigger="input delay:400ms, submit">
+                        <div class="position-relative has-icon-right">
+                            <input type="search" name="q" class="form-control input-shadow" th:value="${q}"
+                                   th:placeholder="#{locations.search.placeholder}" autocomplete="off">
+                            <div class="form-control-position"><i class="icon-magnifier"></i></div>
+                        </div>
+                    </form>
+
+                    <div id="locations-results" th:fragment="results">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sorts['code'].cssClass()}"
+                                           th:href="${sorts['code'].url()}" th:hx-get="${sorts['code'].url()}"
+                                           th:text="#{locations.col.code}">Code</a></th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sorts['name'].cssClass()}"
+                                           th:href="${sorts['name'].url()}" th:hx-get="${sorts['name'].url()}"
+                                           th:text="#{locations.col.name}">Name</a></th>
+                                    <th scope="col" th:text="#{locations.col.type}">Type</th>
+                                    <th scope="col" th:text="#{locations.col.usage}">Usage</th>
+                                    <th scope="col" th:text="#{locations.col.parent}">Parent</th>
+                                    <th scope="col" th:text="#{locations.col.barcode}">Barcode</th>
+                                    <th scope="col" th:text="#{locations.col.status}">Status</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="loc : ${page.content()}">
+                                    <tr th:replace="~{::row}"></tr>
+                                </th:block>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="8" class="text-center wms-muted" th:text="#{common.noResults}">No
+                                        results found
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}">Showing
+                                1-15 of 3</small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- one row; also returned alone after activate / deactivate (variable "loc", flag "canManage") -->
+<tr th:fragment="row" th:id="|location-${loc.id()}|">
+    <td class="font-weight-bold" th:text="${loc.code()}">A-01-01</td>
+    <td th:text="${loc.name()} ?: '-'">Bin 1</td>
+    <td><span class="badge badge-primary" th:text="#{'location.type.' + ${loc.type()}}">Bin</span></td>
+    <td th:text="#{'location.usage.' + ${loc.usage()}}">Storage</td>
+    <td th:text="${loc.parentCode()} ?: '-'">A-01</td>
+    <td th:text="${loc.barcode()} ?: '-'">W1-A-01-01</td>
+    <td>
+        <span class="badge badge-success" th:if="${loc.active()}" th:text="#{common.active}">Active</span>
+        <span class="badge badge-danger" th:unless="${loc.active()}" th:text="#{common.inactive}">Inactive</span>
+    </td>
+    <td class="text-right text-nowrap">
+        <th:block th:if="${canManage}">
+            <a class="btn btn-sm btn-light" th:href="@{/locations/{id}/edit(id=${loc.id()})}" th:title="#{common.edit}">
+                <i class="zmdi zmdi-edit"></i></a>
+            <button type="button" class="btn btn-sm btn-danger" th:if="${loc.active()}"
+                    th:hx-post="@{/locations/{id}/deactivate(id=${loc.id()})}"
+                    th:hx-confirm="#{locations.confirm.deactivate}"
+                    hx-target="closest tr" hx-swap="outerHTML" th:title="#{locations.deactivate}">
+                <i class="zmdi zmdi-block"></i></button>
+            <button type="button" class="btn btn-sm btn-success" th:unless="${loc.active()}"
+                    th:hx-post="@{/locations/{id}/activate(id=${loc.id()})}"
+                    hx-target="closest tr" hx-swap="outerHTML" th:title="#{locations.activate}">
+                <i class="zmdi zmdi-check"></i></button>
+        </th:block>
+    </td>
+</tr>
+
+</body>
+</html>

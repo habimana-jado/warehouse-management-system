@@ -33,14 +33,15 @@ public class WarehouseContext {
         return new WarehouseSelection(current, options);
     }
 
-    /** For warehouse-scoped screens. Access is already checked. */
-    public UUID require() {
+    public WarehouseOption requireCurrent() {
         WarehouseOption current = selection().current();
         if (current == null) {
             throw new BusinessException("NO_WAREHOUSE", "No warehouse is assigned to your account");
         }
-        return current.id();
+        return current;
     }
+
+    public UUID require() { return requireCurrent().id(); }
 
     public void select(UUID warehouseId) {
         boolean allowed = selection().options().stream().anyMatch(o -> o.id().equals(warehouseId));

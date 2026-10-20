@@ -27,7 +27,9 @@
                 <ul class="dropdown-menu dropdown-menu-right">
                     <li class="dropdown-item user-details">
                         <div class="media">
-                            <div class="avatar"><img class="align-self-start mr-3" th:src="@{/assets/images/avatar.png}" alt="user"></div>
+                            <div class="avatar">
+                                <img class="align-self-start mr-3" th:src="@{/assets/images/avatar.png}" alt="user">
+                            </div>
                             <div class="media-body"><h6 class="mt-2 user-title" th:text="${@uiUser.name()}">admin</h6></div>
                         </div>
                     </li>
