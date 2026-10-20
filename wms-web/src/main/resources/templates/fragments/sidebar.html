@@ -9,7 +9,8 @@
     <ul class="sidebar-menu do-nicescrol">
         <li class="sidebar-header" th:text="#{menu.main}">MAIN NAVIGATION</li>
         <li th:classappend="${active == 'dashboard'} ? 'active'">
-            <a th:href="@{/}"><i class="zmdi zmdi-view-dashboard"></i> <span th:text="#{menu.dashboard}">Dashboard</span></a>
+            <a th:href="@{/}"><i class="zmdi zmdi-view-dashboard"></i> <span
+                    th:text="#{menu.dashboard}">Dashboard</span></a>
         </li>
 
         <th:block th:if="${@uiUser.isAdmin()}">
@@ -24,10 +25,23 @@
             <li th:if="${@uiUser.isAdmin()}" th:classappend="${active == 'warehouses'} ? 'active'">
                 <a th:href="@{/warehouses}"><i class="zmdi zmdi-store"></i> <span th:text="#{menu.warehouses}">Warehouses</span></a>
             </li>
-            <li th:classappend="${active == 'locations'} ? 'active'">
+            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"
+                th:classappend="${active == 'locations'} ? 'active'">
                 <a th:href="@{/locations}"><i class="zmdi zmdi-view-comfy"></i> <span th:text="#{menu.locations}">Locations</span></a>
             </li>
-            <!-- categories, items, suppliers, customers are added in the next steps -->
+            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"
+                th:classappend="${active == 'categories'} ? 'active'">
+                <a th:href="@{/categories}"><i class="zmdi zmdi-labels"></i> <span th:text="#{menu.categories}">Categories</span></a>
+            </li>
+            <li th:classappend="${active == 'items'} ? 'active'">
+                <a th:href="@{/items}"><i class="zmdi zmdi-label"></i> <span th:text="#{menu.items}">Items</span></a>
+            </li>
+            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}" th:classappend="${active == 'suppliers'} ? 'active'">
+                <a th:href="@{/suppliers}"><i class="zmdi zmdi-truck"></i> <span th:text="#{menu.suppliers}">Suppliers</span></a>
+            </li>
+            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}" th:classappend="${active == 'customers'} ? 'active'">
+                <a th:href="@{/customers}"><i class="zmdi zmdi-account-box"></i> <span th:text="#{menu.customers}">Customers</span></a>
+            </li>
         </th:block>
     </ul>
 </div>

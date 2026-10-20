@@ -62,6 +62,11 @@ public class ItemCategoryServiceImpl implements ItemCategoryService {
         return categories.findByActiveTrueOrderByName().stream().map(this::toResponse).toList();
     }
 
+    @Override @Transactional(readOnly = true)
+    public List<ItemCategoryResponse> findAll() {
+        return categories.findAllByOrderByName().stream().map(this::toResponse).toList();
+    }
+
     private ItemCategory find(UUID id) {
         return categories.findById(id).orElseThrow(() -> new NotFoundException("Item category", id));
     }

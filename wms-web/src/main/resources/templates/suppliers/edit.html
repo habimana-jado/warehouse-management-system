@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'suppliers')}">
+<head><title th:text="#{suppliers.edit.title}">Edit Supplier</title></head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title">
+                        <span th:text="#{suppliers.edit.title}">Edit Supplier</span>: <span th:text="${code}">SUP-001</span>
+                    </div>
+                    <hr>
+                    <th:block th:replace="~{::detailsCard}"></th:block>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<div id="details-card" th:fragment="detailsCard">
+    <form th:object="${form}" method="post"
+          th:action="@{/suppliers/{id}/details(id=${supplierId})}"
+          th:hx-post="@{/suppliers/{id}/details(id=${supplierId})}"
+          hx-target="#details-card" hx-swap="outerHTML">
+        <div class="alert alert-success" th:if="${saved}" th:text="#{common.saved}">Saved</div>
+        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+        </div>
+
+        <div th:replace="~{fragments/form-fields :: input('name', 'suppliers.field.name', 'text', true, 'off')}"></div>
+
+        <div class="form-row">
+            <div class="col-md-4">
+                <div th:replace="~{fragments/form-fields :: input('contactPerson', 'suppliers.field.contactPerson', 'text', false, 'off')}"></div>
+            </div>
+            <div class="col-md-4">
+                <div th:replace="~{fragments/form-fields :: input('phone', 'suppliers.field.phone', 'text', false, 'off')}"></div>
+            </div>
+            <div class="col-md-4">
+                <div th:replace="~{fragments/form-fields :: input('email', 'suppliers.field.email', 'email', false, 'off')}"></div>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/form-fields :: input('addressLine', 'suppliers.field.addressLine', 'text', false, 'off')}"></div>
+        <div class="form-row">
+            <div class="col-md-6">
+                <div th:replace="~{fragments/form-fields :: input('city', 'suppliers.field.city', 'text', false, 'off')}"></div>
+            </div>
+            <div class="col-md-6">
+                <div th:replace="~{fragments/form-fields :: input('country', 'suppliers.field.country', 'text', false, 'off')}"></div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-light px-5" th:text="#{suppliers.update}">Update supplier</button>
+        <a class="btn btn-secondary px-4" th:href="@{/suppliers}" th:text="#{common.cancel}">Cancel</a>
+    </form>
+</div>
+
+</body>
+</html>

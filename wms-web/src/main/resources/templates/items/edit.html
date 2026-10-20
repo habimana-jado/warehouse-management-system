@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'items')}">
+<head><title th:text="#{items.edit.title}">Edit Item</title></head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title">
+                        <span th:text="#{items.edit.title}">Edit Item</span>: <span th:text="${item.sku()}">BOLT-8</span>
+                    </div>
+                    <hr>
+                    <ul class="nav nav-tabs nav-tabs-primary top-icon nav-justified">
+                        <li class="nav-item"><a href="javascript:void(0);" data-target="#tab-details" data-toggle="pill" class="nav-link active">
+                            <i class="zmdi zmdi-edit"></i> <span th:text="#{items.tab.details}">Details</span></a></li>
+                        <li class="nav-item"><a href="javascript:void(0);" data-target="#tab-units" data-toggle="pill" class="nav-link">
+                            <i class="zmdi zmdi-ruler"></i> <span th:text="#{items.tab.units}">Units of measure</span></a></li>
+                    </ul>
+                    <div class="tab-content p-3">
+                        <div class="tab-pane active" id="tab-details"><th:block th:replace="~{::detailsCard}"></th:block></div>
+                        <div class="tab-pane" id="tab-units"><th:block th:replace="~{::unitsCard}"></th:block></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- ============ details card ============ -->
+<div id="details-card" th:fragment="detailsCard">
+    <form th:object="${form}" method="post"
+          th:action="@{/items/{id}/details(id=${itemId})}"
+          th:hx-post="@{/items/{id}/details(id=${itemId})}"
+          hx-target="#details-card" hx-swap="outerHTML">
+        <div class="alert alert-success" th:if="${saved}" th:text="#{common.saved}">Saved</div>
+        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-md-3">
+                <label th:text="#{items.field.sku}">SKU</label>
+                <input type="text" class="form-control" th:value="${item.sku()}" readonly>
+            </div>
+            <div class="form-group col-md-3">
+                <label th:text="#{items.field.baseUom}">Base unit</label>
+                <input type="text" class="form-control" th:value="${item.baseUom()}" readonly>
+            </div>
+            <div class="form-group col-md-3">
+                <label th:text="#{items.field.tracking}">Tracking</label>
+                <input type="text" class="form-control" th:value="#{'item.tracking.' + ${item.trackingType()}}" readonly>
+            </div>
+            <div class="form-group col-md-3">
+                <label th:text="#{items.field.expiry}">Expiry</label>
+                <input type="text" class="form-control"
+                       th:value="${item.expiryTracked()} ? #{common.yes} : #{common.no}" readonly>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/form-fields :: input('name', 'items.field.name', 'text', true, 'off')}"></div>
+
+        <div class="form-group">
+            <label for="description" th:text="#{items.field.description}">Description</label>
+            <textarea id="description" class="form-control" rows="3" th:field="*{description}" th:errorclass="is-invalid"></textarea>
+            <div class="invalid-feedback" th:errors="*{description}">error</div>
+        </div>
+
+        <div class="form-row">
+            <div class="col-md-6">
+                <div th:replace="~{fragments/form-fields :: input('barcode', 'items.field.barcode', 'text', false, 'off')}"></div>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="categoryId" th:text="#{items.field.category}">Category</label>
+                <select id="categoryId" class="form-control" th:field="*{categoryId}" th:errorclass="is-invalid">
+                    <option value="" th:text="#{items.field.category.none}">No category</option>
+                    <option th:each="c : ${categoryOptions}" th:value="${c.id()}" th:text="${c.name()}">Fasteners</option>
+                </select>
+                <div class="invalid-feedback" th:errors="*{categoryId}">error</div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="col-md-6">
+                <div th:replace="~{fragments/form-fields :: input('unitCost', 'items.field.unitCost', 'text', false, 'off')}"></div>
+            </div>
+            <div class="col-md-6">
+                <div th:replace="~{fragments/form-fields :: input('weightKg', 'items.field.weightKg', 'text', false, 'off')}"></div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-light px-5" th:text="#{items.update}">Update item</button>
+        <a class="btn btn-secondary px-4" th:href="@{/items}" th:text="#{common.cancel}">Cancel</a>
+    </form>
+</div>
+
+<!-- ============ units of measure card ============ -->
+<div id="units-card" th:fragment="unitsCard">
+    <form th:object="${uomsForm}" method="post"
+          th:action="@{/items/{id}/uoms(id=${itemId})}"
+          th:hx-post="@{/items/{id}/uoms(id=${itemId})}"
+          hx-target="#units-card" hx-swap="outerHTML">
+        <div class="alert alert-success" th:if="${saved}" th:text="#{common.saved}">Saved</div>
+        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+        </div>
+
+        <p class="wms-muted" th:text="#{items.units.editHint(${item.baseUom()})}">Other units besides the base unit.</p>
+        <div th:replace="~{items/uom-rows :: rows}"></div>
+
+        <button type="submit" class="btn btn-light px-5" th:text="#{items.units.update}">Update units</button>
+    </form>
+</div>
+
+</body>
+</html>

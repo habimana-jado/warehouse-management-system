@@ -18,4 +18,6 @@ public interface ItemCategoryService {
     ItemCategoryResponse getById(UUID id);
 
     List<ItemCategoryResponse> findAllActive();
+
+    List<ItemCategoryResponse> findAll();
 }

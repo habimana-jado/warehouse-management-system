@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'items')}">
+<head><title th:text="#{items.list.title}">Items</title></head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{items.list.title}">Items</div>
+                        <a class="btn btn-light px-4" th:if="${canManage}" th:href="@{/items/new}">
+                            <i class="zmdi zmdi-plus"></i> <span th:text="#{items.new}">New item</span></a>
+                    </div>
+                    <hr>
+
+                    <form id="item-filters" method="get" th:action="@{/items}" class="mb-3"
+                          th:hx-get="@{/items}" hx-target="#items-results" hx-swap="outerHTML"
+                          hx-push-url="true" hx-trigger="input delay:400ms, submit">
+                        <div class="form-row">
+                            <div class="col-md-4 mb-2">
+                                <div class="position-relative has-icon-right">
+                                    <input type="search" name="q" class="form-control input-shadow"
+                                           th:value="${filter.q()}"
+                                           th:placeholder="#{items.search.placeholder}" autocomplete="off">
+                                    <div class="form-control-position"><i class="icon-magnifier"></i></div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <select name="categoryId" class="form-control" th:aria-label="#{items.col.category}">
+                                    <option value="" th:text="#{items.filter.allCategories}">All categories</option>
+                                    <option th:each="c : ${categoryOptions}" th:value="${c.id()}" th:text="${c.name()}"
+                                            th:selected="${filter.categoryId() != null and c.id() == filter.categoryId()}">
+                                        Fasteners
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <select name="trackingType" class="form-control" th:aria-label="#{items.col.tracking}">
+                                    <option value="" th:text="#{items.filter.allTracking}">All tracking</option>
+                                    <option th:each="t : ${trackingTypes}" th:value="${t}"
+                                            th:text="#{'item.tracking.' + ${t}}"
+                                            th:selected="${filter.trackingType() == t}">Lot
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <select name="expiryTracked" class="form-control" th:aria-label="#{items.col.expiry}">
+                                    <option value="" th:text="#{items.filter.allExpiry}">Any expiry</option>
+                                    <option value="true" th:selected="${filter.expiryTracked() == true}"
+                                            th:text="#{items.filter.expiryYes}">With expiry
+                                    </option>
+                                    <option value="false" th:selected="${filter.expiryTracked() == false}"
+                                            th:text="#{items.filter.expiryNo}">Without expiry
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <select name="active" class="form-control" th:aria-label="#{items.col.status}">
+                                    <option value="" th:text="#{items.filter.allStatus}">All status</option>
+                                    <option value="true" th:selected="${filter.active() == true}"
+                                            th:text="#{common.active}">Active
+                                    </option>
+                                    <option value="false" th:selected="${filter.active() == false}"
+                                            th:text="#{common.inactive}">Inactive
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="items-results" th:fragment="results">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sorts['sku'].cssClass()}"
+                                           th:href="${sorts['sku'].url()}" th:hx-get="${sorts['sku'].url()}"
+                                           th:text="#{items.col.sku}">SKU</a></th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sorts['name'].cssClass()}"
+                                           th:href="${sorts['name'].url()}" th:hx-get="${sorts['name'].url()}"
+                                           th:text="#{items.col.name}">Name</a></th>
+                                    <th scope="col" th:text="#{items.col.category}">Category</th>
+                                    <th scope="col" th:text="#{items.col.baseUom}">Base unit</th>
+                                    <th scope="col" th:text="#{items.col.tracking}">Tracking</th>
+                                    <th scope="col" th:text="#{items.col.expiry}">Expiry</th>
+                                    <th scope="col" th:text="#{items.col.status}">Status</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="item : ${page.content()}">
+                                    <tr th:replace="~{::row}"></tr>
+                                </th:block>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="8" class="text-center wms-muted" th:text="#{common.noResults}">No
+                                        results found
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}">Showing
+                                1-15 of 3</small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- one row; also returned alone after activate / deactivate (variable "item", flag "canManage") -->
+<tr th:fragment="row" th:id="|item-${item.id()}|">
+    <td class="font-weight-bold" th:text="${item.sku()}">BOLT-8</td>
+    <td>
+        <div th:text="${item.name()}">Bolt 8 mm</div>
+        <small class="wms-muted" th:if="${item.barcode() != null}" th:text="${item.barcode()}">6001234567890</small>
+    </td>
+    <td th:text="${item.categoryName()} ?: '-'">Fasteners</td>
+    <td th:text="${item.baseUom()}">EA</td>
+    <td><span class="badge badge-primary" th:text="#{'item.tracking.' + ${item.trackingType()}}">No tracking</span></td>
+    <td>
+        <i class="zmdi zmdi-check" th:if="${item.expiryTracked()}"></i>
+        <span th:unless="${item.expiryTracked()}">-</span>
+    </td>
+    <td>
+        <span class="badge badge-success" th:if="${item.active()}" th:text="#{common.active}">Active</span>
+        <span class="badge badge-danger" th:unless="${item.active()}" th:text="#{common.inactive}">Inactive</span>
+    </td>
+    <td class="text-right text-nowrap">
+        <th:block th:if="${canManage}">
+            <a class="btn btn-sm btn-light" th:href="@{/items/{id}/edit(id=${item.id()})}" th:title="#{common.edit}">
+                <i class="zmdi zmdi-edit"></i></a>
+            <button type="button" class="btn btn-sm btn-danger" th:if="${item.active()}"
+                    th:hx-post="@{/items/{id}/deactivate(id=${item.id()})}"
+                    th:hx-confirm="#{items.confirm.deactivate}"
+                    hx-target="closest tr" hx-swap="outerHTML" th:title="#{items.deactivate}">
+                <i class="zmdi zmdi-block"></i></button>
+            <button type="button" class="btn btn-sm btn-success" th:unless="${item.active()}"
+                    th:hx-post="@{/items/{id}/activate(id=${item.id()})}"
+                    hx-target="closest tr" hx-swap="outerHTML" th:title="#{items.activate}">
+                <i class="zmdi zmdi-check"></i></button>
+        </th:block>
+    </td>
+</tr>
+
+</body>
+</html>

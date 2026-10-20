@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'suppliers')}">
+<head><title th:text="#{suppliers.list.title}">Suppliers</title></head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{suppliers.list.title}">Suppliers</div>
+                        <a class="btn btn-light px-4" th:if="${canManage}" th:href="@{/suppliers/new}">
+                            <i class="zmdi zmdi-plus"></i> <span th:text="#{suppliers.new}">New supplier</span></a>
+                    </div>
+                    <hr>
+
+                    <form id="supplier-filters" method="get" th:action="@{/suppliers}" class="mb-3"
+                          th:hx-get="@{/suppliers}" hx-target="#suppliers-results" hx-swap="outerHTML"
+                          hx-push-url="true" hx-trigger="input delay:400ms, submit">
+                        <div class="position-relative has-icon-right">
+                            <input type="search" name="q" class="form-control input-shadow" th:value="${q}"
+                                   th:placeholder="#{suppliers.search.placeholder}" autocomplete="off">
+                            <div class="form-control-position"><i class="icon-magnifier"></i></div>
+                        </div>
+                    </form>
+
+                    <div id="suppliers-results" th:fragment="results">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sorts['code'].cssClass()}"
+                                           th:href="${sorts['code'].url()}" th:hx-get="${sorts['code'].url()}"
+                                           th:text="#{suppliers.col.code}">Code</a></th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sorts['name'].cssClass()}"
+                                           th:href="${sorts['name'].url()}" th:hx-get="${sorts['name'].url()}"
+                                           th:text="#{suppliers.col.name}">Name</a></th>
+                                    <th scope="col" th:text="#{suppliers.col.contact}">Contact</th>
+                                    <th scope="col" th:text="#{suppliers.col.email}">Email</th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sorts['city'].cssClass()}"
+                                           th:href="${sorts['city'].url()}" th:hx-get="${sorts['city'].url()}"
+                                           th:text="#{suppliers.col.city}">City</a></th>
+                                    <th scope="col" th:text="#{suppliers.col.status}">Status</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="s : ${page.content()}">
+                                    <tr th:replace="~{::row}"></tr>
+                                </th:block>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="7" class="text-center wms-muted" th:text="#{common.noResults}">No
+                                        results found
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}">Showing
+                                1-15 of 3</small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- one row; also returned alone after activate / deactivate (variable "s", flag "canManage") -->
+<tr th:fragment="row" th:id="|supplier-${s.id()}|">
+    <td class="font-weight-bold" th:text="${s.code()}">SUP-001</td>
+    <td th:text="${s.name()}">Acme Industrial Ltd</td>
+    <td>
+        <div th:text="${s.contactPerson()} ?: '-'">Jane Doe</div>
+        <small class="wms-muted" th:if="${s.phone() != null}" th:text="${s.phone()}">+250 788 000 000</small>
+    </td>
+    <td th:text="${s.email()} ?: '-'">orders@acme.example</td>
+    <td th:text="${s.city()} ?: '-'">Kigali</td>
+    <td>
+        <span class="badge badge-success" th:if="${s.active()}" th:text="#{common.active}">Active</span>
+        <span class="badge badge-danger" th:unless="${s.active()}" th:text="#{common.inactive}">Inactive</span>
+    </td>
+    <td class="text-right text-nowrap">
+        <th:block th:if="${canManage}">
+            <a class="btn btn-sm btn-light" th:href="@{/suppliers/{id}/edit(id=${s.id()})}" th:title="#{common.edit}">
+                <i class="zmdi zmdi-edit"></i></a>
+            <button type="button" class="btn btn-sm btn-danger" th:if="${s.active()}"
+                    th:hx-post="@{/suppliers/{id}/deactivate(id=${s.id()})}"
+                    th:hx-confirm="#{suppliers.confirm.deactivate}"
+                    hx-target="closest tr" hx-swap="outerHTML" th:title="#{suppliers.deactivate}">
+                <i class="zmdi zmdi-block"></i></button>
+            <button type="button" class="btn btn-sm btn-success" th:unless="${s.active()}"
+                    th:hx-post="@{/suppliers/{id}/activate(id=${s.id()})}"
+                    hx-target="closest tr" hx-swap="outerHTML" th:title="#{suppliers.activate}">
+                <i class="zmdi zmdi-check"></i></button>
+        </th:block>
+    </td>
+</tr>
+
+</body>
+</html>

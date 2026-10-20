@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'customers')}">
+<head><title th:text="#{customers.new.title}">New Customer</title></head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title" th:text="#{customers.new.title}">New Customer</div>
+                    <hr>
+                    <form th:action="@{/customers}" th:object="${form}" method="post" novalidate>
+                        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="col-md-4">
+                                <div th:replace="~{fragments/form-fields :: input('code', 'customers.field.code', 'text', true, 'off')}"></div>
+                            </div>
+                            <div class="col-md-8">
+                                <div th:replace="~{fragments/form-fields :: input('name', 'customers.field.name', 'text', true, 'off')}"></div>
+                            </div>
+                        </div>
+                        <small class="d-block mb-3 wms-muted" th:text="#{customers.field.code.hint}">Letters, digits, dots and dashes. Stored in uppercase and cannot be changed later.</small>
+
+                        <div class="form-row">
+                            <div class="col-md-4">
+                                <div th:replace="~{fragments/form-fields :: input('contactPerson', 'customers.field.contactPerson', 'text', false, 'off')}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div th:replace="~{fragments/form-fields :: input('phone', 'customers.field.phone', 'text', false, 'off')}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div th:replace="~{fragments/form-fields :: input('email', 'customers.field.email', 'email', false, 'off')}"></div>
+                            </div>
+                        </div>
+
+                        <div th:replace="~{fragments/form-fields :: input('addressLine', 'customers.field.addressLine', 'text', false, 'off')}"></div>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/form-fields :: input('city', 'customers.field.city', 'text', false, 'off')}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/form-fields :: input('country', 'customers.field.country', 'text', false, 'off')}"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-2">
+                            <button type="submit" class="btn btn-light px-5"><i class="icon-lock"></i> <span th:text="#{customers.save}">Save</span></button>
+                            <a class="btn btn-secondary px-4" th:href="@{/customers}" th:text="#{common.cancel}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

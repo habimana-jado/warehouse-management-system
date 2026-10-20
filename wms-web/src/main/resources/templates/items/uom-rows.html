@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="rows">
+    <div class="form-row wms-muted mb-1">
+        <div class="col-md-3" th:text="#{items.uom.uom}">Unit</div>
+        <div class="col-md-3" th:text="#{items.uom.factor}">Base units in one</div>
+        <div class="col-md-6" th:text="#{items.uom.barcode}">Barcode</div>
+    </div>
+    <div class="form-row" th:each="r, i : *{uoms}">
+        <div class="form-group col-md-3">
+            <input type="text" class="form-control" th:field="*{uoms[__${i.index}__].uom}" th:errorclass="is-invalid"
+                   maxlength="10" autocomplete="off">
+            <div class="invalid-feedback" th:errors="*{uoms[__${i.index}__].uom}">error</div>
+        </div>
+        <div class="form-group col-md-3">
+            <input type="text" inputmode="decimal" class="form-control" th:field="*{uoms[__${i.index}__].factorToBase}"
+                   th:errorclass="is-invalid" autocomplete="off">
+            <div class="invalid-feedback" th:errors="*{uoms[__${i.index}__].factorToBase}">error</div>
+        </div>
+        <div class="form-group col-md-6">
+            <input type="text" class="form-control" th:field="*{uoms[__${i.index}__].barcode}"
+                   th:errorclass="is-invalid"
+                   maxlength="60" autocomplete="off">
+            <div class="invalid-feedback" th:errors="*{uoms[__${i.index}__].barcode}">error</div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

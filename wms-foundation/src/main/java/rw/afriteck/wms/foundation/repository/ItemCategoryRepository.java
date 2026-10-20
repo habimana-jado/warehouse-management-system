@@ -12,4 +12,6 @@ public interface ItemCategoryRepository extends JpaRepository<ItemCategory, UUID
     boolean existsByNameIgnoreCaseAndIdNot(String name, UUID id);
 
     List<ItemCategory> findByActiveTrueOrderByName();
+
+    List<ItemCategory> findAllByOrderByName();
 }

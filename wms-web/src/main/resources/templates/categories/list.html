@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'categories')}">
+<head><title th:text="#{categories.list.title}">Item Categories</title></head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{categories.list.title}">Item Categories</div>
+                        <a class="btn btn-light px-4" th:if="${canManage}" th:href="@{/categories/new}">
+                            <i class="zmdi zmdi-plus"></i> <span th:text="#{categories.new}">New category</span></a>
+                    </div>
+                    <hr>
+
+                    <form id="category-filters" method="get" th:action="@{/categories}" class="mb-3"
+                          th:hx-get="@{/categories}" hx-target="#categories-results" hx-swap="outerHTML"
+                          hx-push-url="true" hx-trigger="input delay:400ms, submit">
+                        <div class="position-relative has-icon-right">
+                            <input type="search" name="q" class="form-control input-shadow" th:value="${q}"
+                                   th:placeholder="#{categories.search.placeholder}" autocomplete="off">
+                            <div class="form-control-position"><i class="icon-magnifier"></i></div>
+                        </div>
+                    </form>
+
+                    <div id="categories-results" th:fragment="results">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col" th:text="#{categories.col.name}">Name</th>
+                                    <th scope="col" th:text="#{categories.col.description}">Description</th>
+                                    <th scope="col" th:text="#{categories.col.status}">Status</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="cat : ${categories}">
+                                    <tr th:replace="~{::row}"></tr>
+                                </th:block>
+                                <tr th:if="${categories.isEmpty()}">
+                                    <td colspan="4" class="text-center wms-muted" th:text="#{common.noResults}">No
+                                        results found
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <small class="wms-muted" th:text="#{categories.count(${categories.size()})}">3
+                            categories</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- one row; also returned alone after activate / deactivate (variable "cat", flag "canManage") -->
+<tr th:fragment="row" th:id="|category-${cat.id()}|">
+    <td class="font-weight-bold" th:text="${cat.name()}">Fasteners</td>
+    <td th:text="${cat.description()} ?: '-'">Bolts, nuts and screws</td>
+    <td>
+        <span class="badge badge-success" th:if="${cat.active()}" th:text="#{common.active}">Active</span>
+        <span class="badge badge-danger" th:unless="${cat.active()}" th:text="#{common.inactive}">Inactive</span>
+    </td>
+    <td class="text-right text-nowrap">
+        <th:block th:if="${canManage}">
+            <a class="btn btn-sm btn-light" th:href="@{/categories/{id}/edit(id=${cat.id()})}"
+               th:title="#{common.edit}">
+                <i class="zmdi zmdi-edit"></i></a>
+            <button type="button" class="btn btn-sm btn-danger" th:if="${cat.active()}"
+                    th:hx-post="@{/categories/{id}/deactivate(id=${cat.id()})}"
+                    th:hx-confirm="#{categories.confirm.deactivate}"
+                    hx-target="closest tr" hx-swap="outerHTML" th:title="#{categories.deactivate}">
+                <i class="zmdi zmdi-block"></i></button>
+            <button type="button" class="btn btn-sm btn-success" th:unless="${cat.active()}"
+                    th:hx-post="@{/categories/{id}/activate(id=${cat.id()})}"
+                    hx-target="closest tr" hx-swap="outerHTML" th:title="#{categories.activate}">
+                <i class="zmdi zmdi-check"></i></button>
+        </th:block>
+    </td>
+</tr>
+
+</body>
+</html>
