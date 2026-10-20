@@ -14,6 +14,8 @@ spring:
     properties:
       hibernate:
         generate_statistics: true
+  thymeleaf:
+    cache: false                       # dev only
 wms:
   reporting:
     zone: Africa/Kigali        # zone for all date ranges and daily series

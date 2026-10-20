@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'warehouses')}">
+<head><title th:text="#{warehouses.list.title}">Warehouses</title></head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{warehouses.list.title}">Warehouses</div>
+                        <a class="btn btn-light px-4" th:href="@{/warehouses/new}">
+                            <i class="zmdi zmdi-plus"></i> <span th:text="#{warehouses.new}">New warehouse</span></a>
+                    </div>
+                    <hr>
+
+                    <form id="warehouse-filters" method="get" th:action="@{/warehouses}" class="mb-3"
+                          th:hx-get="@{/warehouses}" hx-target="#warehouses-results" hx-swap="outerHTML"
+                          hx-push-url="true" hx-trigger="input delay:400ms, submit">
+                        <div class="position-relative has-icon-right">
+                            <input type="search" name="q" class="form-control input-shadow" th:value="${q}"
+                                   th:placeholder="#{warehouses.search.placeholder}" autocomplete="off">
+                            <div class="form-control-position"><i class="icon-magnifier"></i></div>
+                        </div>
+                    </form>
+
+                    <div id="warehouses-results" th:fragment="results">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sorts['code'].cssClass()}"
+                                           th:href="${sorts['code'].url()}" th:hx-get="${sorts['code'].url()}"
+                                           th:text="#{warehouses.col.code}">Code</a></th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sorts['name'].cssClass()}"
+                                           th:href="${sorts['name'].url()}" th:hx-get="${sorts['name'].url()}"
+                                           th:text="#{warehouses.col.name}">Name</a></th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sorts['city'].cssClass()}"
+                                           th:href="${sorts['city'].url()}" th:hx-get="${sorts['city'].url()}"
+                                           th:text="#{warehouses.col.city}">City</a></th>
+                                    <th scope="col" th:text="#{warehouses.col.country}">Country</th>
+                                    <th scope="col" th:text="#{warehouses.col.status}">Status</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="w : ${page.content()}">
+                                    <tr th:replace="~{::row}"></tr>
+                                </th:block>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="6" class="text-center wms-muted" th:text="#{common.noResults}">No
+                                        results found
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}">Showing
+                                1-15 of 3</small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- one row; also returned alone after activate / deactivate (variable "w") -->
+<tr th:fragment="row" th:id="|warehouse-${w.id()}|">
+    <td class="font-weight-bold" th:text="${w.code()}">A-01</td>
+    <td th:text="${w.name()}">Main warehouse</td>
+    <td th:text="${w.city()} ?: '-'">Kigali</td>
+    <td th:text="${w.country()} ?: '-'">Rwanda</td>
+    <td>
+        <span class="badge badge-success" th:if="${w.active()}" th:text="#{common.active}">Active</span>
+        <span class="badge badge-danger" th:unless="${w.active()}" th:text="#{common.inactive}">Inactive</span>
+    </td>
+    <td class="text-right text-nowrap">
+        <a class="btn btn-sm btn-light" th:href="@{/warehouses/{id}/edit(id=${w.id()})}" th:title="#{common.edit}">
+            <i class="zmdi zmdi-edit"></i></a>
+        <button type="button" class="btn btn-sm btn-danger" th:if="${w.active()}"
+                th:hx-post="@{/warehouses/{id}/deactivate(id=${w.id()})}"
+                th:hx-confirm="#{warehouses.confirm.deactivate}"
+                hx-target="closest tr" hx-swap="outerHTML" th:title="#{warehouses.deactivate}">
+            <i class="zmdi zmdi-block"></i></button>
+        <button type="button" class="btn btn-sm btn-success" th:unless="${w.active()}"
+                th:hx-post="@{/warehouses/{id}/activate(id=${w.id()})}"
+                hx-target="closest tr" hx-swap="outerHTML" th:title="#{warehouses.activate}">
+            <i class="zmdi zmdi-check"></i></button>
+    </td>
+</tr>
+
+</body>
+</html>

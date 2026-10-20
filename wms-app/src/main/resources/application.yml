@@ -14,10 +14,8 @@ spring:
     multipart:
       max-file-size: 2MB
       max-request-size: 2MB
-  thymeleaf:
-    cache: false                       # dev only
   messages:
-    basename: i18n/common,i18n/users   # add one file per feature
+    basename: i18n/common,i18n/users,i18n/foundation
   web:
     resources:
       chain:

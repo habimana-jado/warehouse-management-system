@@ -19,10 +19,12 @@
             </li>
         </th:block>
 
-        <!-- each feature chat adds its entry here, for example:
-        <li th:if="${@uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.isAdmin()}" th:classappend="${active == 'items'} ? 'active'">
-            <a th:href="@{/items}"><i class="zmdi zmdi-label"></i> <span th:text="#{menu.items}">Items</span></a>
-        </li>
-        -->
+        <th:block th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}">
+            <li class="sidebar-header" th:text="#{menu.masterData}">MASTER DATA</li>
+            <li th:if="${@uiUser.isAdmin()}" th:classappend="${active == 'warehouses'} ? 'active'">
+                <a th:href="@{/warehouses}"><i class="zmdi zmdi-store"></i> <span th:text="#{menu.warehouses}">Warehouses</span></a>
+            </li>
+            <!-- locations, categories, items, suppliers, customers are added in the next steps -->
+        </th:block>
     </ul>
 </div>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'warehouses')}">
+<head><title th:text="#{warehouses.new.title}">New Warehouse</title></head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title" th:text="#{warehouses.new.title}">New Warehouse</div>
+                    <hr>
+                    <form th:action="@{/warehouses}" th:object="${form}" method="post" novalidate>
+                        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+                        </div>
+
+                        <div th:replace="~{fragments/form-fields :: input('code', 'warehouses.field.code', 'text', true, 'off')}"></div>
+                        <small class="d-block mb-3 wms-muted" th:text="#{warehouses.field.code.hint}">Letters, digits,
+                            dots and dashes</small>
+                        <div th:replace="~{fragments/form-fields :: input('name', 'warehouses.field.name', 'text', true, 'off')}"></div>
+                        <div th:replace="~{fragments/form-fields :: input('addressLine', 'warehouses.field.addressLine', 'text', false, 'off')}"></div>
+                        <div th:replace="~{fragments/form-fields :: input('city', 'warehouses.field.city', 'text', false, 'off')}"></div>
+                        <div th:replace="~{fragments/form-fields :: input('country', 'warehouses.field.country', 'text', false, 'off')}"></div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-light px-5"><i class="icon-lock"></i> <span
+                                    th:text="#{warehouses.save}">Save</span></button>
+                            <a class="btn btn-secondary px-4" th:href="@{/warehouses}"
+                               th:text="#{common.cancel}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

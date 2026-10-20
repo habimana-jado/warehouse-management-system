@@ -6,6 +6,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @Component("uiLinks")
 public class UiLinks {
 
@@ -26,6 +29,13 @@ public class UiLinks {
         return "";
     }
 
+    public Map<String, SortLink> sorts(String... fields) {
+        Map<String, SortLink> map = new LinkedHashMap<>();
+        for (String f : fields) {
+            map.put(f, new SortLink(sort(f), sortClass(f)));
+        }
+        return map;
+    }
     private UriComponentsBuilder base() { return ServletUriComponentsBuilder.fromCurrentRequest(); }
 
     private String param(String name) {
