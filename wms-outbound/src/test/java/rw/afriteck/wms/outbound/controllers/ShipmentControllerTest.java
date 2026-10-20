@@ -45,9 +45,9 @@ class ShipmentControllerTest {
         warehouseId = UUID.randomUUID();
 
         dummyResponse = new ShipmentResponse(
-                shipmentId, "DN-000001", UUID.randomUUID(), "SO-000001", UUID.randomUUID(), "Customer 1",
+                shipmentId, 1L, "DN-000001", UUID.randomUUID(), "SO-000001", UUID.randomUUID(), "Customer 1",
                 warehouseId, ShipmentStatus.DISPATCHED, Instant.now(), "Addr", "DHL", "TRACK123", 2,
-                null, null, null, null, List.of()
+                null, null, null, null, Instant.now(), List.of()
         );
     }
 

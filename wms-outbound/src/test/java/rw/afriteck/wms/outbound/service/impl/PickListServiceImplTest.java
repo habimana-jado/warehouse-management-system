@@ -27,8 +27,10 @@ import rw.afriteck.wms.foundation.service.WarehouseService;
 import rw.afriteck.wms.inventory.dtos.PostStockRequest;
 import rw.afriteck.wms.inventory.service.InventoryQueryService;
 import rw.afriteck.wms.inventory.service.InventoryService;
+import rw.afriteck.wms.operations.dtos.CreateTaskRequest;
 import rw.afriteck.wms.operations.dtos.TaskLineResponse;
 import rw.afriteck.wms.operations.dtos.TaskResponse;
+import rw.afriteck.wms.operations.enums.TaskLineStatus;
 import rw.afriteck.wms.operations.enums.TaskPriority;
 import rw.afriteck.wms.operations.enums.TaskStatus;
 import rw.afriteck.wms.operations.enums.TaskType;
@@ -107,7 +109,7 @@ class PickListServiceImplTest {
         activeCustomer = new CustomerResponse(customerId, "CUST001", "Acme", "Contact", "123", "c@t.com", "Addr", "Kigali", "Rwanda", true);
         activeWarehouse = new WarehouseResponse(warehouseId, "WH001", "Main WH", "Addr", "Kigali", "Rwanda", true);
         activeItem = new ItemResponse(itemId, "SKU001", "Item 1", "BAR001", null, "Category", "PCS", TrackingType.NONE, false, true);
-        activeLocation = new LocationResponse(locationId, warehouseId, "A-01-01", "A-01-01", LocationType.SHELF, LocationUsage.STORAGE, true, true);
+        activeLocation = new LocationResponse(locationId, warehouseId, null, "Location 1", "A-01-01", LocationType.BIN, LocationUsage.STORAGE, "BAR1", BigDecimal.valueOf(100), true);
 
         fixedInstant = Instant.parse("2026-01-01T10:00:00Z");
         lenient().when(clock.instant()).thenReturn(fixedInstant);
@@ -134,7 +136,7 @@ class PickListServiceImplTest {
         when(orders.findByIdForUpdate(salesOrderId)).thenReturn(Optional.of(so));
         when(warehouses.getById(warehouseId)).thenReturn(activeWarehouse);
         when(suggester.suggest(eq(warehouseId), anyList()))
-                .thenReturn(List.of(new PickSuggester.Suggestion(itemId, locationId, null, BigDecimal.TEN)));
+                .thenReturn(List.of(new PickSuggester.Suggestion(locationId, null)));
         when(numbers.nextPickList()).thenReturn("PCK-000001");
         when(lists.saveAndFlush(any(PickList.class))).thenAnswer(i -> {
             PickList p = i.getArgument(0);
@@ -152,16 +154,18 @@ class PickListServiceImplTest {
         when(taskService.create(any())).thenAnswer(i -> {
             CreateTaskRequest req = i.getArgument(0);
             UUID refLineId = req.lines().get(0).referenceLineId();
-            return new TaskResponse(taskId, req.type(), TaskStatus.OPEN, req.priority(), warehouseId, null, null,
-                    req.referenceType(), req.referenceId(), req.referenceNumber(), req.dueAt(), req.notes(),
-                    List.of(new TaskLineResponse(taskLineId, itemId, null, locationId, null, BigDecimal.TEN, BigDecimal.ZERO, refLineId)),
-                    fixedInstant, null, null);
+            return new TaskResponse(
+                    taskId, 1L, "TSK-000001", req.type(), TaskStatus.OPEN, req.priority(),
+                    warehouseId, null, req.referenceType(), req.referenceId(), req.referenceNumber(),
+                    null, null, null, null, null, req.dueAt(), null, req.notes(), fixedInstant,
+                    List.of(new TaskLineResponse(taskLineId, 1, itemId, "SKU001", "Item 1", null, null, locationId, "A-01-01", null, null, BigDecimal.TEN, BigDecimal.ZERO, TaskLineStatus.PENDING, refLineId, null))
+            );
         });
         when(customers.getById(customerId)).thenReturn(activeCustomer);
         when(items.findAllByIds(Set.of(itemId))).thenReturn(List.of(activeItem));
         when(locations.findAllByIds(Set.of(locationId))).thenReturn(List.of(activeLocation));
 
-        PickListResponse response = service.release(salesOrderId, new ReleaseSalesOrderRequest(TaskPriority.MEDIUM, null, "Notes"));
+        PickListResponse response = service.release(salesOrderId, new ReleaseSalesOrderRequest(TaskPriority.NORMAL, null, "Notes"));
 
         assertNotNull(response);
         assertEquals("PCK-000001", response.pickNumber());
@@ -212,8 +216,11 @@ class PickListServiceImplTest {
         when(pickLines.findSalesOrderIdById(lineId)).thenReturn(Optional.of(salesOrderId));
         when(orders.findByIdForUpdate(salesOrderId)).thenReturn(Optional.of(so));
         when(pickLines.findById(lineId)).thenReturn(Optional.of(pl));
-        when(taskService.getById(taskId)).thenReturn(new TaskResponse(taskId, TaskType.PICK, TaskStatus.ASSIGNED, TaskPriority.MEDIUM,
-                warehouseId, actorId, "Worker", "PICK_LIST", pickListId, "PCK-000001", null, null, List.of(), fixedInstant, null, null));
+        when(taskService.getById(taskId)).thenReturn(new TaskResponse(
+                taskId, 1L, "TSK-000001", TaskType.PICK, TaskStatus.ASSIGNED, TaskPriority.NORMAL,
+                warehouseId, null, "PICK_LIST", pickListId, "PCK-000001", actorId, "Worker",
+                fixedInstant, null, null, null, null, null, fixedInstant, List.of()
+        ));
         when(items.getById(itemId)).thenReturn(activeItem);
         when(locations.findAllByIds(Set.of(locationId))).thenReturn(List.of(activeLocation));
         when(lists.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
@@ -256,8 +263,11 @@ class PickListServiceImplTest {
         when(pickLines.findSalesOrderIdById(lineId)).thenReturn(Optional.of(salesOrderId));
         when(orders.findByIdForUpdate(salesOrderId)).thenReturn(Optional.of(so));
         when(pickLines.findById(lineId)).thenReturn(Optional.of(pl));
-        when(taskService.getById(taskId)).thenReturn(new TaskResponse(taskId, TaskType.PICK, TaskStatus.ASSIGNED, TaskPriority.MEDIUM,
-                warehouseId, assignedWorkerId, "Worker", "PICK_LIST", pickListId, "PCK-000001", null, null, List.of(), fixedInstant, null, null));
+        when(taskService.getById(taskId)).thenReturn(new TaskResponse(
+                taskId, 1L, "TSK-000001", TaskType.PICK, TaskStatus.ASSIGNED, TaskPriority.NORMAL,
+                warehouseId, null, "PICK_LIST", pickListId, "PCK-000001", assignedWorkerId, "Worker",
+                fixedInstant, null, null, null, null, null, fixedInstant, List.of()
+        ));
 
         ConfirmPickRequest req = new ConfirmPickRequest(List.of(), null, false);
 
@@ -292,7 +302,7 @@ class PickListServiceImplTest {
         pl.setSalesOrderLine(sol);
         list.addLine(pl);
 
-        when(lists.findById(pickListId)).thenReturn(list);
+        when(lists.findById(pickListId)).thenReturn(Optional.of(list));
         when(orders.findByIdForUpdate(salesOrderId)).thenReturn(Optional.of(so));
         when(lists.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
         when(customers.getById(customerId)).thenReturn(activeCustomer);

@@ -16,6 +16,7 @@ import rw.afriteck.wms.outbound.dtos.SupplierReturnSummaryResponse;
 import rw.afriteck.wms.outbound.enums.SupplierReturnStatus;
 import rw.afriteck.wms.outbound.service.SupplierReturnService;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -48,8 +49,8 @@ class SupplierReturnControllerTest {
         supplierId = UUID.randomUUID();
 
         dummyResponse = new SupplierReturnResponse(
-                rtvId, "RTV-000001", supplierId, "Supplier 1", warehouseId, SupplierReturnStatus.DRAFT,
-                LocalDate.now(), "Defective", null, null, List.of(), null, null
+                rtvId, 1L, "RTV-000001", supplierId, "Supplier 1", warehouseId, SupplierReturnStatus.DRAFT,
+                LocalDate.now(), "Defective", null, null, null, null, Instant.now(), List.of()
         );
     }
 

@@ -21,7 +21,6 @@ import rw.afriteck.wms.outbound.dtos.*;
 import rw.afriteck.wms.outbound.entity.SalesOrder;
 import rw.afriteck.wms.outbound.entity.SalesOrderLine;
 import rw.afriteck.wms.outbound.entity.Shipment;
-import rw.afriteck.wms.outbound.entity.ShipmentLine;
 import rw.afriteck.wms.outbound.enums.SalesOrderStatus;
 import rw.afriteck.wms.outbound.enums.ShipmentStatus;
 import rw.afriteck.wms.outbound.repository.SalesOrderRepository;
@@ -138,15 +137,19 @@ class ShipmentServiceImplTest {
     @Test
     void confirmDelivery_Success() {
         UUID shipmentId = UUID.randomUUID();
+        SalesOrder so = new SalesOrder();
+        so.setId(UUID.randomUUID());
+        so.setOrderNumber("SO-000001");
+
         Shipment s = new Shipment();
         s.setId(shipmentId);
+        s.setSalesOrder(so);
         s.setStatus(ShipmentStatus.DISPATCHED);
         s.setShippedAt(fixedInstant.minusSeconds(3600));
         s.setCustomerId(customerId);
 
         when(shipments.findById(shipmentId)).thenReturn(Optional.of(s));
         when(customers.getById(customerId)).thenReturn(activeCustomer);
-        when(items.findAllByIds(anySet())).thenReturn(List.of());
         when(shipments.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
 
         ConfirmDeliveryRequest req = new ConfirmDeliveryRequest(fixedInstant, "John Doe", "All good");
@@ -172,8 +175,13 @@ class ShipmentServiceImplTest {
 
     @Test
     void search_Success() {
+        SalesOrder so = new SalesOrder();
+        so.setId(UUID.randomUUID());
+        so.setOrderNumber("SO-000001");
+
         Shipment s = new Shipment();
         s.setId(UUID.randomUUID());
+        s.setSalesOrder(so);
         s.setWarehouseId(warehouseId);
         s.setCustomerId(customerId);
         s.setStatus(ShipmentStatus.DISPATCHED);
