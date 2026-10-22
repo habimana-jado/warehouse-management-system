@@ -2,6 +2,7 @@ package rw.afriteck.wms.foundation.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,8 @@ import rw.afriteck.wms.common.support.Codes;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -160,6 +163,22 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new BusinessException("UNKNOWN_UOM",
                         "Item " + item.getSku() + " has no unit of measure " + code))
                 .getFactorToBase().multiply(qty);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ItemResponse> searchForPicker(String q, int limit) {
+        if (Codes.blankToNull(q) == null) {
+            return List.of();
+        }
+        int size = Math.clamp(limit, 1, 50);
+        List<UUID> ids = items.findIdsByText(Codes.likePattern(q), PageRequest.of(0, size));
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, ItemResponse> byId = findAllByIds(ids).stream()
+                .collect(Collectors.toMap(ItemResponse::id, Function.identity()));
+        return ids.stream().map(byId::get).filter(Objects::nonNull).toList();        // keeps the query order
     }
 
     // ---------- helpers ----------

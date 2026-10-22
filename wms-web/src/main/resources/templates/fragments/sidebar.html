@@ -46,6 +46,33 @@
                 <a th:href="@{/customers}"><i class="zmdi zmdi-account-box"></i> <span th:text="#{menu.customers}">Customers</span></a>
             </li>
         </th:block>
+        <li class="treeview"
+            th:classappend="${#strings.contains('stock,movements,adjustments,my-adjustments', active)} ? 'active'">
+            <a href="javascript:void();" class="waves-effect">
+                <i class="zmdi zmdi-storage"></i> <span th:text="#{menu.inventory}">Inventory</span>
+                <i class="fa fa-angle-left float-right"></i>
+            </a>
+            <ul class="sidebar-submenu">
+                <li th:classappend="${active == 'stock'} ? 'active'">
+                    <a th:href="@{/stock}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.stock}">Stock on hand</span></a>
+                </li>
+                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
+                    th:classappend="${active == 'movements'} ? 'active'">
+                    <a th:href="@{/stock/movements}"><i class="zmdi zmdi-long-arrow-right"></i> <span
+                            th:text="#{menu.movements}">Stock movements</span></a>
+                </li>
+                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
+                    th:classappend="${active == 'adjustments'} ? 'active'">
+                    <a th:href="@{/adjustments}"><i class="zmdi zmdi-long-arrow-right"></i> <span
+                            th:text="#{menu.adjustments}">Adjustments</span></a>
+                </li>
+                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}"
+                    th:classappend="${active == 'my-adjustments'} ? 'active'">
+                    <a th:href="@{/adjustments/my}"><i class="zmdi zmdi-long-arrow-right"></i> <span
+                            th:text="#{menu.my-adjustments}">My adjustments</span></a>
+                </li>
+            </ul>
+        </li>
         <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}">
             <a th:href="@{/tasks}" class="waves-effect">
                 <i class="zmdi zmdi-assignment"></i> <span th:text="#{menu.tasks}">Tasks</span>
@@ -61,5 +88,6 @@
                 <i class="zmdi zmdi-chart"></i> <span th:text="#{menu.productivity}">Productivity</span>
             </a>
         </li>
+
     </ul>
 </div>

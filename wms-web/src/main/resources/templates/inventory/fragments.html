@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<span th:fragment="adjustmentStatus(status)" th:switch="${status.name()}">
+    <span th:case="'PENDING_APPROVAL'" class="badge badge-warning"
+          th:text="#{inventory.adjustment.status.PENDING_APPROVAL}">Pending</span>
+    <span th:case="'POSTED'" class="badge badge-success" th:text="#{inventory.adjustment.status.POSTED}">Posted</span>
+    <span th:case="'REJECTED'" class="badge badge-danger"
+          th:text="#{inventory.adjustment.status.REJECTED}">Rejected</span>
+    <span th:case="*" class="badge badge-dark" th:text="#{inventory.adjustment.status.CANCELLED}">Cancelled</span>
+</span>
+
+<span th:fragment="movementType(type)" class="badge"
+      th:classappend="${type.name() == 'RECEIPT' or type.name() == 'TRANSFER_IN'} ? 'badge-success'
+                      : (${type.name() == 'ISSUE' or type.name() == 'TRANSFER_OUT'} ? 'badge-warning' : 'badge-primary')"
+      th:text="#{'inventory.movement.type.' + ${type}}">Type</span>
+
+<!-- <option> list for the shared datalist: value = SKU, label = name -->
+<th:block th:fragment="itemOptions">
+    <option th:each="i : ${items}" th:value="${i.sku()}"
+            th:text="${i.name()} + (${i.active()} ? '' : ' (' + #{common.inactive} + ')')">Item name
+    </option>
+</th:block>
+</body>
+</html>

@@ -34,4 +34,6 @@ public interface ItemService {
     BarcodeResolution resolveBarcode(String barcode);             // item or UOM barcode (scanner use)
 
     BigDecimal toBaseQuantity(UUID itemId, String uom, BigDecimal qty);
+
+    List<ItemResponse> searchForPicker(String q, int limit);
 }

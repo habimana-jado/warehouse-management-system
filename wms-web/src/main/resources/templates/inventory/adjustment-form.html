@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, ${menu})}">
+<head>
+    <title th:text="#{inventory.adjustment.new}">New adjustment</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title" th:text="#{inventory.adjustment.new}">New adjustment</div>
+                    <hr>
+                    <form id="adjustment-form" method="post" th:action="@{/adjustments}" th:object="${form}">
+                        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}">Error</p>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="reasonId" th:text="#{inventory.adjustment.reason}">Reason</label>
+                                <select id="reasonId" class="form-control" th:field="*{reasonId}"
+                                        th:errorclass="is-invalid">
+                                    <option value="" th:text="#{inventory.action.select}">Select...</option>
+                                    <option th:each="r : ${reasons}" th:value="${r.id()}"
+                                            th:text="${r.code()} + ' - ' + ${r.name()}">DAMAGED - Damaged goods
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('reasonId')}"
+                                     th:errors="*{reasonId}">Error
+                                </div>
+                            </div>
+                            <div class="form-group col-md-8">
+                                <label for="notes" th:text="#{inventory.adjustment.notes}">Notes</label>
+                                <input id="notes" type="text" class="form-control" th:field="*{notes}"
+                                       th:errorclass="is-invalid" maxlength="500">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('notes')}"
+                                     th:errors="*{notes}">Error
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:replace="~{inventory/adjustment-form :: linesCard}"></div>
+
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-light px-5" th:text="#{inventory.adjustment.submit}">
+                                Submit
+                            </button>
+                            <a class="btn btn-secondary"
+                               th:href="${menu == 'my-adjustments'} ? @{/adjustments/my} : @{/adjustments}"
+                               th:text="#{inventory.action.cancel}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- The repeating lines. Swapped as a whole by the add and remove buttons (th:object makes it work on its own). -->
+<div id="adjustment-lines" th:fragment="linesCard" th:object="${form}">
+    <div class="d-flex justify-content-between align-items-center">
+        <h6 class="mb-0" th:text="#{inventory.adjustment.lines}">Lines</h6>
+        <button type="button" class="btn btn-sm btn-light"
+                th:attr="hx-post=@{/adjustments/new/lines/add}"
+                hx-target="#adjustment-lines" hx-swap="outerHTML">
+            <i class="zmdi zmdi-plus"></i> <span th:text="#{inventory.adjustment.addLine}">Add line</span>
+            <datalist id="item-options"></datalist>
+        </button>
+    </div>
+    <div class="alert alert-danger mt-2" th:if="${#fields.hasErrors('lines')}" th:errors="*{lines}">Error</div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col" th:text="#{inventory.stock.bin}">Bin</th>
+                <th scope="col" th:text="#{inventory.filter.item}">Item</th>
+                <th scope="col" th:text="#{inventory.adjustment.direction}">Direction</th>
+                <th scope="col" th:text="#{inventory.stock.quantity}">Quantity</th>
+                <th scope="col" th:text="#{inventory.stock.lot}">Lot</th>
+                <th scope="col" th:text="#{inventory.stock.expiry}">Expiry</th>
+                <th scope="col" th:text="#{inventory.stock.serial}">Serial</th>
+                <th scope="col"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="line, i : *{lines}">
+                <td>
+                    <select class="form-control" th:field="*{lines[__${i.index}__].locationId}"
+                            th:errorclass="is-invalid">
+                        <option value="" th:text="#{inventory.action.select}">Select...</option>
+                        <option th:each="b : ${bins}" th:value="${b.id()}"
+                                th:text="${b.code()} + ' (' + #{'inventory.usage.' + ${b.usage()}} + ')'">A-01
+                        </option>
+                    </select>
+                </td>
+                <td>
+                    <input type="text" class="form-control" th:field="*{lines[__${i.index}__].item}" list="item-options"
+                           th:errorclass="is-invalid" autocomplete="off"
+                           th:attr="hx-get=@{/lookup/items}" hx-trigger="input changed delay:300ms"
+                           hx-target="#item-options" hx-swap="innerHTML">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].item')}"
+                         th:errors="*{lines[__${i.index}__].item}">Error
+                    </div>
+                </td>
+                <td>
+                    <select class="form-control" th:field="*{lines[__${i.index}__].direction}"
+                            th:errorclass="is-invalid">
+                        <option value="" th:text="#{inventory.action.select}">Select...</option>
+                        <option th:each="d : ${directions}" th:value="${d}"
+                                th:text="#{'inventory.adjustment.direction.' + ${d}}">Increase
+                        </option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" step="any" min="0" class="form-control"
+                           th:field="*{lines[__${i.index}__].quantity}"
+                           th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].quantity')}"
+                         th:errors="*{lines[__${i.index}__].quantity}">Error
+                    </div>
+                </td>
+                <td><input type="text" class="form-control" th:field="*{lines[__${i.index}__].lotNumber}"
+                           autocomplete="off"></td>
+                <td><input type="date" class="form-control" th:field="*{lines[__${i.index}__].expiryDate}"></td>
+                <td><input type="text" class="form-control" th:field="*{lines[__${i.index}__].serialNumber}"
+                           autocomplete="off"></td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" th:if="${#lists.size(form.lines) > 1}"
+                            th:attr="hx-post=@{/adjustments/new/lines/remove(index=${i.index})}"
+                            hx-target="#adjustment-lines" hx-swap="outerHTML">
+                        <i class="zmdi zmdi-delete"></i>
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
