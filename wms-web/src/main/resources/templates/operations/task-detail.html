@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, ${menu})}">
+<head><title th:text="#{operations.detail.title(${view.task().taskNumber()})}">Task</title></head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div id="task-panel" th:fragment="taskPanel">
+
+                <div th:if="${notice != null}" class="alert alert-success alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <div class="alert-icon"><i class="zmdi zmdi-check"></i></div>
+                    <div class="alert-message" th:text="#{${notice}}">Saved</div>
+                </div>
+                <div th:if="${error != null}" class="alert alert-danger alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <div class="alert-icon"><i class="zmdi zmdi-alert-triangle"></i></div>
+                    <div class="alert-message" th:text="${error}">Error</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="card-title mb-0">
+                                <span th:text="${view.task().taskNumber()}">TSK-000001</span>
+                                <span th:replace="~{operations/fragments :: status(${view.task().status()})}"></span>
+                                <span th:replace="~{operations/fragments :: priority(${view.task().priority()})}"></span>
+                                <span class="badge badge-danger" th:if="${view.overdue()}"
+                                      th:text="#{operations.overdue}">Overdue</span>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-light px-4" th:if="${view.canStart()}"
+                                        th:attr="hx-post=@{/tasks/{id}/start(id=${view.task().id()})}"
+                                        hx-target="#task-panel" hx-swap="outerHTML" hx-push-url="false">
+                                    <i class="zmdi zmdi-play"></i> <span
+                                        th:text="#{operations.action.start}">Start</span>
+                                </button>
+                                <button type="button" class="btn btn-secondary" th:if="${view.canRelease()}"
+                                        th:attr="hx-post=@{/tasks/{id}/release(id=${view.task().id()}), hx-confirm=#{operations.action.release.confirm}"
+                                        hx-target="#task-panel" hx-swap="outerHTML" hx-push-url="false">
+                                    <i class="zmdi zmdi-undo"></i> <span
+                                        th:text="#{operations.action.release}">Release</span>
+                                </button>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <small class="wms-muted" th:text="#{operations.col.type}">Type</small>
+                                <div class="font-weight-bold" th:text="#{'task.type.' + ${view.task().type()}}">Pick
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <small class="wms-muted" th:text="#{operations.col.reference}">Reference</small>
+                                <div class="font-weight-bold">
+                                    <a th:if="${view.referenceUrl() != null}" th:href="@{${view.referenceUrl()}}"
+                                       th:text="${view.task().referenceNumber()}">PO-000001</a>
+                                    <span th:if="${view.referenceUrl() == null}"
+                                          th:text="${view.task().referenceNumber()}">PO-000001</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <small class="wms-muted" th:text="#{operations.col.assignee}">Assigned to</small>
+                                <div class="font-weight-bold" th:text="${view.task().assigneeName()} ?: '-'">Sara Kim
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <small class="wms-muted" th:text="#{operations.col.due}">Due</small>
+                                <div class="font-weight-bold" th:text="${@uiFormat.dateTime(view.task().dueAt())}">
+                                    date
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <small class="wms-muted" th:text="#{operations.detail.created}">Created</small>
+                                <div class="font-weight-bold" th:text="${@uiFormat.dateTime(view.task().createdAt())}">
+                                    date
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <small class="wms-muted" th:text="#{operations.detail.started}">Started</small>
+                                <div class="font-weight-bold" th:text="${@uiFormat.dateTime(view.task().startedAt())}">
+                                    date
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <small class="wms-muted" th:text="#{operations.detail.completed}">Completed</small>
+                                <div class="font-weight-bold"
+                                     th:text="${@uiFormat.dateTime(view.task().completedAt())}">date
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3" th:if="${view.task().cancelReason() != null}">
+                                <small class="wms-muted" th:text="#{operations.detail.cancelReason}">Cancel
+                                    reason</small>
+                                <div class="font-weight-bold" th:text="${view.task().cancelReason()}">reason</div>
+                            </div>
+                            <div class="col-md-12" th:if="${view.task().notes() != null}">
+                                <small class="wms-muted" th:text="#{operations.detail.notes}">Notes</small>
+                                <div th:text="${view.task().notes()}">notes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <ul class="nav nav-tabs nav-tabs-primary top-icon">
+                            <li class="nav-item">
+                                <a href="#tab-lines" data-toggle="pill" class="nav-link active">
+                                    <i class="zmdi zmdi-format-list-bulleted"></i> <span
+                                        th:text="#{operations.tab.lines}">Lines</span></a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#tab-history" data-toggle="pill" class="nav-link">
+                                    <i class="zmdi zmdi-time-restore"></i> <span th:text="#{operations.tab.history}">History</span></a>
+                            </li>
+                            <li class="nav-item"
+                                th:if="${view.canAssign() or view.canChangePriority() or view.canCancel()}">
+                                <a href="#tab-manage" data-toggle="pill" class="nav-link">
+                                    <i class="zmdi zmdi-settings"></i> <span
+                                        th:text="#{operations.tab.manage}">Manage</span></a>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content p-3">
+
+                            <div id="tab-lines" class="tab-pane active">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col">#</th>
+                                            <th scope="col" th:text="#{operations.line.item}">Item</th>
+                                            <th scope="col" th:text="#{operations.line.lot}">Lot</th>
+                                            <th scope="col" th:text="#{operations.line.serial}">Serial</th>
+                                            <th scope="col" th:text="#{operations.line.from}">From</th>
+                                            <th scope="col" th:text="#{operations.line.to}">To</th>
+                                            <th scope="col" th:text="#{operations.line.planned}">Planned</th>
+                                            <th scope="col" th:text="#{operations.line.done}">Done</th>
+                                            <th scope="col" th:text="#{operations.col.status}">Status</th>
+                                            <th scope="col" th:text="#{operations.line.shortReason}">Short reason</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="l : ${view.task().lines()}">
+                                            <td th:text="${l.lineNo()}">1</td>
+                                            <td>
+                                                <div class="font-weight-bold" th:text="${l.itemSku()}">SKU-001</div>
+                                                <small class="wms-muted" th:text="${l.itemName()}">Rice 25kg</small>
+                                            </td>
+                                            <td th:text="${l.lotNumber()} ?: '-'">-</td>
+                                            <td th:text="${l.serialNumber()} ?: '-'">-</td>
+                                            <td th:text="${l.fromLocationCode()} ?: '-'">-</td>
+                                            <td th:text="${l.toLocationCode()} ?: '-'">-</td>
+                                            <td th:text="${l.plannedQty()}">0</td>
+                                            <td th:text="${l.doneQty()}">0</td>
+                                            <td><span
+                                                    th:replace="~{operations/fragments :: lineStatus(${l.status()})}"></span>
+                                            </td>
+                                            <td th:text="${l.shortReason()} ?: '-'">-</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p class="wms-muted" th:if="${view.referenceUrl() == null}"
+                                   th:text="#{operations.line.confirmHint}">Lines are confirmed in the screen of the
+                                    module that owns this task.</p>
+                                <a class="btn btn-light px-4" th:if="${view.referenceUrl() != null}"
+                                   th:href="@{${view.referenceUrl()}}">
+                                    <i class="zmdi zmdi-open-in-new"></i> <span th:text="#{operations.line.work}">Work on this task</span></a>
+                            </div>
+
+                            <div id="tab-history" class="tab-pane">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col" th:text="#{operations.event.time}">When</th>
+                                            <th scope="col" th:text="#{operations.event.type}">Event</th>
+                                            <th scope="col" th:text="#{operations.event.change}">Status change</th>
+                                            <th scope="col" th:text="#{operations.event.actor}">By</th>
+                                            <th scope="col" th:text="#{operations.col.assignee}">Assigned to</th>
+                                            <th scope="col" th:text="#{operations.event.note}">Note</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="e : ${view.events()}">
+                                            <td th:text="${@uiFormat.dateTime(e.occurredAt())}">date</td>
+                                            <td th:text="#{'task.event.' + ${e.eventType()}}">Created</td>
+                                            <td>
+                                                <span th:if="${e.fromStatus() != null}"
+                                                      th:text="#{'task.status.' + ${e.fromStatus()}}">Open</span>
+                                                <span th:if="${e.fromStatus() != null and e.toStatus() != null}">&rarr;</span>
+                                                <span th:if="${e.toStatus() != null}"
+                                                      th:text="#{'task.status.' + ${e.toStatus()}}">Assigned</span>
+                                            </td>
+                                            <td th:text="${e.actorName()} ?: #{operations.event.system}">System</td>
+                                            <td th:text="${e.assigneeName()} ?: '-'">-</td>
+                                            <td th:text="${e.note()} ?: '-'">-</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div id="tab-manage" class="tab-pane"
+                                 th:if="${view.canAssign() or view.canChangePriority() or view.canCancel()}">
+
+                                <form th:if="${view.canAssign()}" th:object="${assignForm}" method="post"
+                                      th:action="@{/tasks/{id}/assign(id=${view.task().id()})}"
+                                      th:attr="hx-post=@{/tasks/{id}/assign(id=${view.task().id()})}"
+                                      hx-target="#task-panel" hx-swap="outerHTML" hx-push-url="false">
+                                    <div class="font-weight-bold mb-2" th:text="#{operations.manage.assign}">Assign
+                                    </div>
+                                    <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}"
+                                         th:errors="*{global}">error
+                                    </div>
+                                    <div class="form-group">
+                                        <select class="form-control" th:field="*{assigneeId}"
+                                                th:classappend="${#fields.hasErrors('assigneeId')} ? 'is-invalid'">
+                                            <option value="" th:text="#{operations.manage.assign.choose}">Choose a
+                                                worker
+                                            </option>
+                                            <option th:each="w : ${workers}" th:value="${w.id()}" th:text="${w.name()}">
+                                                Worker
+                                            </option>
+                                        </select>
+                                        <div class="invalid-feedback" th:errors="*{assigneeId}">error</div>
+                                    </div>
+                                    <button type="submit" class="btn btn-light px-5"
+                                            th:text="#{operations.manage.assign.submit}">Assign
+                                    </button>
+                                </form>
+
+                                <hr th:if="${view.canAssign()}">
+
+                                <form th:if="${view.canChangePriority()}" th:object="${priorityForm}" method="post"
+                                      th:action="@{/tasks/{id}/priority(id=${view.task().id()})}"
+                                      th:attr="hx-post=@{/tasks/{id}/priority(id=${view.task().id()})}"
+                                      hx-target="#task-panel" hx-swap="outerHTML" hx-push-url="false">
+                                    <div class="font-weight-bold mb-2" th:text="#{operations.manage.priority}">
+                                        Priority
+                                    </div>
+                                    <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}"
+                                         th:errors="*{global}">error
+                                    </div>
+                                    <div class="form-group">
+                                        <select class="form-control" th:field="*{priority}"
+                                                th:classappend="${#fields.hasErrors('priority')} ? 'is-invalid'">
+                                            <option th:each="p : ${priorities}" th:value="${p}"
+                                                    th:text="#{'task.priority.' + ${p}}">Normal
+                                            </option>
+                                        </select>
+                                        <div class="invalid-feedback" th:errors="*{priority}">error</div>
+                                    </div>
+                                    <button type="submit" class="btn btn-light px-5"
+                                            th:text="#{operations.manage.priority.submit}">Change priority
+                                    </button>
+                                </form>
+
+                                <hr th:if="${view.canChangePriority()}">
+
+                                <form th:if="${view.canCancel()}" th:object="${cancelForm}" method="post"
+                                      th:action="@{/tasks/{id}/cancel(id=${view.task().id()})}"
+                                      th:attr="hx-post=@{/tasks/{id}/cancel(id=${view.task().id()})}, hx-confirm=#{operations.manage.cancel.confirm}"
+                                      hx-target="#task-panel" hx-swap="outerHTML" hx-push-url="false">
+                                    <div class="font-weight-bold mb-2" th:text="#{operations.manage.cancel}">Cancel
+                                        task
+                                    </div>
+                                    <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}"
+                                         th:errors="*{global}">error
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="text" class="form-control" th:field="*{reason}" maxlength="255"
+                                               th:placeholder="#{operations.manage.cancel.reason}"
+                                               th:classappend="${#fields.hasErrors('reason')} ? 'is-invalid'">
+                                        <div class="invalid-feedback" th:errors="*{reason}">error</div>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger px-5"
+                                            th:text="#{operations.manage.cancel.submit}">Cancel task
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

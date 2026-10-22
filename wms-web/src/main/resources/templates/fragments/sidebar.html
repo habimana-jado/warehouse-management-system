@@ -36,12 +36,30 @@
             <li th:classappend="${active == 'items'} ? 'active'">
                 <a th:href="@{/items}"><i class="zmdi zmdi-label"></i> <span th:text="#{menu.items}">Items</span></a>
             </li>
-            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}" th:classappend="${active == 'suppliers'} ? 'active'">
-                <a th:href="@{/suppliers}"><i class="zmdi zmdi-truck"></i> <span th:text="#{menu.suppliers}">Suppliers</span></a>
+            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"
+                th:classappend="${active == 'suppliers'} ? 'active'">
+                <a th:href="@{/suppliers}"><i class="zmdi zmdi-truck"></i> <span
+                        th:text="#{menu.suppliers}">Suppliers</span></a>
             </li>
-            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}" th:classappend="${active == 'customers'} ? 'active'">
+            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"
+                th:classappend="${active == 'customers'} ? 'active'">
                 <a th:href="@{/customers}"><i class="zmdi zmdi-account-box"></i> <span th:text="#{menu.customers}">Customers</span></a>
             </li>
         </th:block>
+        <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}">
+            <a th:href="@{/tasks}" class="waves-effect">
+                <i class="zmdi zmdi-assignment"></i> <span th:text="#{menu.tasks}">Tasks</span>
+            </a>
+        </li>
+        <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}">
+            <a th:href="@{/tasks/my}" class="waves-effect">
+                <i class="zmdi zmdi-account-box"></i> <span th:text="#{menu.my-tasks}">My tasks</span>
+            </a>
+        </li>
+        <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER')}">
+            <a th:href="@{/tasks/productivity}" class="waves-effect">
+                <i class="zmdi zmdi-chart"></i> <span th:text="#{menu.productivity}">Productivity</span>
+            </a>
+        </li>
     </ul>
 </div>

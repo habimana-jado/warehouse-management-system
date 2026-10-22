@@ -8,10 +8,13 @@ import org.springframework.data.repository.query.Param;
 import rw.afriteck.wms.auth.entity.User;
 import rw.afriteck.wms.auth.enums.RoleName;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
+
+    List<User> findByActiveTrue();
 
     Optional<User> findByUsernameIgnoreCase(String username);
 

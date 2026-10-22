@@ -6,11 +6,10 @@ import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.wms.auth.entity.User;
 import rw.afriteck.wms.auth.enums.RoleName;
 import rw.afriteck.wms.auth.repository.UserRepository;
+import rw.afriteck.wms.common.dtos.WorkerOption;
 import rw.afriteck.wms.common.security.WorkerLookup;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,6 +17,9 @@ import java.util.stream.Collectors;
 public class WorkerLookupService implements WorkerLookup {
 
     private final UserRepository userRepository;
+
+    private static final Set<RoleName> WORKER_ROLES =
+            EnumSet.of(RoleName.ADMIN, RoleName.WAREHOUSE_MANAGER, RoleName.RECEIVER, RoleName.PICKER);
 
     @Override
     @Transactional(readOnly = true)
@@ -38,5 +40,17 @@ public class WorkerLookupService implements WorkerLookup {
                         User::getId,
                         u -> u.getFullName() != null && !u.getFullName().isBlank()
                                 ? u.getFullName() : u.getUsername()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<WorkerOption> findAssignableWorkers(UUID warehouseId) {
+        return userRepository.findByActiveTrue().stream()
+                .filter(u -> u.getRoles().stream().anyMatch(WORKER_ROLES::contains))
+                .filter(u -> u.getRoles().contains(RoleName.ADMIN) || u.getWarehouseIds().contains(warehouseId))
+                .map(u -> new WorkerOption(u.getId(),
+                        u.getFullName() != null && !u.getFullName().isBlank() ? u.getFullName() : u.getUsername()))
+                .sorted(Comparator.comparing(WorkerOption::name, String.CASE_INSENSITIVE_ORDER))
+                .toList();
     }
 }

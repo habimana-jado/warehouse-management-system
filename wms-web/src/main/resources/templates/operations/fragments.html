@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="status(s)">
+    <span class="badge badge-dark"    th:if="${s.name() == 'OPEN'}"        th:text="#{'task.status.' + ${s}}">Open</span>
+    <span class="badge badge-primary" th:if="${s.name() == 'ASSIGNED'}"    th:text="#{'task.status.' + ${s}}">Assigned</span>
+    <span class="badge badge-info"    th:if="${s.name() == 'IN_PROGRESS'}" th:text="#{'task.status.' + ${s}}">In progress</span>
+    <span class="badge badge-success" th:if="${s.name() == 'COMPLETED'}"   th:text="#{'task.status.' + ${s}}">Completed</span>
+    <span class="badge badge-danger"  th:if="${s.name() == 'CANCELLED'}"   th:text="#{'task.status.' + ${s}}">Cancelled</span>
+</th:block>
+
+<th:block th:fragment="priority(p)">
+    <span class="badge badge-dark"    th:if="${p.name() == 'LOW'}"    th:text="#{'task.priority.' + ${p}}">Low</span>
+    <span class="badge badge-primary" th:if="${p.name() == 'NORMAL'}" th:text="#{'task.priority.' + ${p}}">Normal</span>
+    <span class="badge badge-warning" th:if="${p.name() == 'HIGH'}"   th:text="#{'task.priority.' + ${p}}">High</span>
+    <span class="badge badge-danger"  th:if="${p.name() == 'URGENT'}" th:text="#{'task.priority.' + ${p}}">Urgent</span>
+</th:block>
+
+<th:block th:fragment="lineStatus(s)">
+    <span class="badge badge-dark"    th:if="${s.name() == 'PENDING' or s.name() == 'SKIPPED'}" th:text="#{'task.line.status.' + ${s}}">Pending</span>
+    <span class="badge badge-success" th:if="${s.name() == 'DONE'}"  th:text="#{'task.line.status.' + ${s}}">Done</span>
+    <span class="badge badge-warning" th:if="${s.name() == 'SHORT'}" th:text="#{'task.line.status.' + ${s}}">Short</span>
+</th:block>
+</body>
+</html>

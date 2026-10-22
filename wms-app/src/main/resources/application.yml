@@ -15,7 +15,7 @@ spring:
       max-file-size: 2MB
       max-request-size: 2MB
   messages:
-    basename: i18n/common,i18n/users,i18n/foundation
+    basename: i18n/common,i18n/users,i18n/foundation,i18n/operations
   web:
     resources:
       chain:

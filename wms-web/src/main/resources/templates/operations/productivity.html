@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, ${menu})}">
+<head><title th:text="#{operations.productivity.title}">Worker productivity</title></head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title" th:text="#{operations.productivity.title}">Worker productivity</div>
+                    <hr>
+                    <form id="productivity-filters" method="get" th:action="@{/tasks/productivity}" class="mb-3"
+                          th:attr="hx-get=@{/tasks/productivity}" hx-target="#productivity-results" hx-swap="outerHTML"
+                          hx-push-url="true" hx-trigger="input delay:400ms, submit">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="from" th:text="#{operations.productivity.from}">From</label>
+                                <input type="date" id="from" name="from" class="form-control" th:value="${filter.from}">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="to" th:text="#{operations.productivity.to}">To</label>
+                                <input type="date" id="to" name="to" class="form-control" th:value="${filter.to}">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="type" th:text="#{operations.col.type}">Type</label>
+                                <select id="type" name="type" class="form-control">
+                                    <option value="" th:text="#{operations.filter.type.all}">All types</option>
+                                    <option th:each="tp : ${types}" th:value="${tp}" th:selected="${filter.type == tp}"
+                                            th:text="#{'task.type.' + ${tp}}">Type</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="productivity-results" th:fragment="results">
+                        <div class="alert alert-danger" th:if="${error != null}" th:text="${error}">Error</div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col" th:text="#{operations.productivity.worker}">Worker</th>
+                                    <th scope="col" th:text="#{operations.productivity.tasks}">Tasks completed</th>
+                                    <th scope="col" th:text="#{operations.productivity.lines}">Lines completed</th>
+                                    <th scope="col" th:text="#{operations.productivity.qty}">Quantity done</th>
+                                    <th scope="col" th:text="#{operations.productivity.short}">Short lines</th>
+                                    <th scope="col" th:text="#{operations.productivity.avg}">Average time (min)</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="r : ${rows}">
+                                    <td th:text="${r.userName()} ?: '-'">Sara Kim</td>
+                                    <td th:text="${r.tasksCompleted()}">0</td>
+                                    <td th:text="${r.linesCompleted()}">0</td>
+                                    <td th:text="${r.totalQtyDone()}">0</td>
+                                    <td th:text="${r.shortLines()}">0</td>
+                                    <td th:text="${r.avgMinutes()} ?: '-'">-</td>
+                                </tr>
+                                <tr th:if="${rows.isEmpty()}">
+                                    <td colspan="6" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

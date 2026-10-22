@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, ${menu})}">
+<head><title th:text="${mine} ? #{operations.my.title} : #{operations.board.title}">Tasks</title></head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0"
+                             th:text="${mine} ? #{operations.my.title} : #{operations.board.title}">Tasks</div>
+                        <form th:if="${mine}" th:action="@{/tasks/claim-next}" method="post">
+                            <button type="submit" class="btn btn-light px-4">
+                                <i class="zmdi zmdi-flash"></i> <span th:text="#{operations.claim.button}">Claim next task</span>
+                            </button>
+                        </form>
+                    </div>
+                    <hr>
+
+                    <form id="tasks-filters" method="get" th:action="@{${basePath}}" class="mb-3"
+                          th:attr="hx-get=@{${basePath}}" hx-target="#tasks-results" hx-swap="outerHTML"
+                          hx-push-url="true" hx-trigger="input delay:400ms, submit">
+                        <div class="form-row">
+                            <div class="form-group col-md-3 position-relative has-icon-right">
+                                <input type="search" name="q" class="form-control input-shadow" th:value="${filter.q}"
+                                       th:placeholder="#{operations.filter.q}" autocomplete="off">
+                                <div class="form-control-position"><i class="icon-magnifier"></i></div>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <select name="status" class="form-control">
+                                    <option value="" th:selected="${#strings.isEmpty(filter.status)}"
+                                            th:text="#{operations.filter.status.active}">Active tasks</option>
+                                    <option value="ALL" th:selected="${filter.status == 'ALL'}"
+                                            th:text="#{operations.filter.status.all}">All statuses</option>
+                                    <option th:each="s : ${statuses}" th:value="${s}"
+                                            th:selected="${filter.status == s.name()}"
+                                            th:text="#{'task.status.' + ${s}}">Status</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <select name="type" class="form-control">
+                                    <option value="" th:text="#{operations.filter.type.all}">All types</option>
+                                    <option th:each="tp : ${types}" th:value="${tp}" th:selected="${filter.type == tp}"
+                                            th:text="#{'task.type.' + ${tp}}">Type</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <select name="priority" class="form-control">
+                                    <option value="" th:text="#{operations.filter.priority.all}">All priorities</option>
+                                    <option th:each="p : ${priorities}" th:value="${p}" th:selected="${filter.priority == p}"
+                                            th:text="#{'task.priority.' + ${p}}">Priority</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3 icheck-material-white" th:unless="${mine}">
+                                <input type="checkbox" id="unassignedOnly" name="unassignedOnly" value="true"
+                                       th:checked="${filter.unassignedOnly}">
+                                <label for="unassignedOnly" th:text="#{operations.filter.unassigned}">Unassigned only</label>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="tasks-results" th:fragment="results"
+                         hx-target="#tasks-results" hx-swap="outerHTML" hx-push-url="true">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sortClass['taskNumber']}"
+                                           th:href="${sortUrl['taskNumber']}" th:hx-get="${sortUrl['taskNumber']}"
+                                           th:text="#{operations.col.number}">Task</a></th>
+                                    <th scope="col" th:text="#{operations.col.type}">Type</th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sortClass['priorityRank']}"
+                                           th:href="${sortUrl['priorityRank']}" th:hx-get="${sortUrl['priorityRank']}"
+                                           th:text="#{operations.col.priority}">Priority</a></th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sortClass['status']}"
+                                           th:href="${sortUrl['status']}" th:hx-get="${sortUrl['status']}"
+                                           th:text="#{operations.col.status}">Status</a></th>
+                                    <th scope="col" th:text="#{operations.col.reference}">Reference</th>
+                                    <th scope="col" th:text="#{operations.col.assignee}">Assigned to</th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:classappend="${sortClass['dueAt']}"
+                                           th:href="${sortUrl['dueAt']}" th:hx-get="${sortUrl['dueAt']}"
+                                           th:text="#{operations.col.due}">Due</a></th>
+                                    <th scope="col" th:text="#{operations.col.progress}">Lines</th>
+                                    <th scope="col" th:if="${mine}"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="t : ${page.content()}">
+                                    <tr th:replace="~{::row}"></tr>
+                                </th:block>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td th:colspan="${mine} ? 9 : 8" class="text-center wms-muted"
+                                        th:text="#{common.noResults}">No tasks found</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}">Showing 1-15 of 142</small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- one row; also returned alone after "Start" (variables "t" and "mine") -->
+<table>
+    <tbody>
+    <tr th:fragment="row" th:id="|task-${t.id()}|">
+        <td><a th:href="@{/tasks/{id}(id=${t.id()})}" th:text="${t.taskNumber()}">TSK-000001</a></td>
+        <td th:text="#{'task.type.' + ${t.type()}}">Pick</td>
+        <td><span th:replace="~{operations/fragments :: priority(${t.priority()})}"></span></td>
+        <td><span th:replace="~{operations/fragments :: status(${t.status()})}"></span></td>
+        <td>
+            <a th:if="${t.referenceUrl() != null}" th:href="@{${t.referenceUrl()}}"
+               th:text="${t.referenceNumber()}">PO-000001</a>
+            <span th:if="${t.referenceUrl() == null}" th:text="${t.referenceNumber()}">PO-000001</span>
+        </td>
+        <td th:text="${t.assigneeName()} ?: '-'">Sara Kim</td>
+        <td>
+            <span th:text="${@uiFormat.dateTime(t.dueAt())}">Apr 22 · 09:42</span>
+            <span class="badge badge-danger" th:if="${t.overdue()}" th:text="#{operations.overdue}">Overdue</span>
+        </td>
+        <td th:text="${t.doneLineCount() + ' / ' + t.lineCount()}">0 / 3</td>
+        <td th:if="${mine}" class="text-right text-nowrap">
+            <button type="button" class="btn btn-sm btn-light" th:if="${t.canStart()}"
+                    th:attr="hx-post=@{/tasks/{id}/start(id=${t.id()},row=true)}"
+                    hx-target="closest tr" hx-swap="outerHTML" hx-push-url="false"
+                    th:title="#{operations.action.start}">
+                <i class="zmdi zmdi-play"></i></button>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
