@@ -22,5 +22,26 @@
             th:text="${i.name()} + (${i.active()} ? '' : ' (' + #{common.inactive} + ')')">Item name
     </option>
 </th:block>
+<span th:fragment="transferStatus(status)" th:switch="${status.name()}">
+    <span th:case="'PENDING'" class="badge badge-warning" th:text="#{inventory.transfer.status.PENDING}">Pending</span>
+    <span th:case="'IN_TRANSIT'" class="badge badge-info" th:text="#{inventory.transfer.status.IN_TRANSIT}">In transit</span>
+    <span th:case="'COMPLETED'" class="badge badge-success" th:text="#{inventory.transfer.status.COMPLETED}">Completed</span>
+    <span th:case="*" class="badge badge-dark" th:text="#{inventory.transfer.status.CANCELLED}">Cancelled</span>
+</span>
+
+<span th:fragment="transferType(type)" class="badge badge-primary"
+      th:text="#{'inventory.transfer.type.' + ${type}}">Type</span>
+
+<span th:fragment="countStatus(status)" th:switch="${status.name()}">
+    <span th:case="'DRAFT'" class="badge badge-dark" th:text="#{inventory.count.status.DRAFT}">Draft</span>
+    <span th:case="'IN_PROGRESS'" class="badge badge-info" th:text="#{inventory.count.status.IN_PROGRESS}">In progress</span>
+    <span th:case="'REVIEW'" class="badge badge-warning" th:text="#{inventory.count.status.REVIEW}">In review</span>
+    <span th:case="'COMPLETED'" class="badge badge-success" th:text="#{inventory.count.status.COMPLETED}">Completed</span>
+    <span th:case="*" class="badge badge-danger" th:text="#{inventory.count.status.CANCELLED}">Cancelled</span>
+</span>
+
+<span th:fragment="countLineStatus(status)" class="badge"
+      th:classappend="${status.name() == 'COUNTED'} ? 'badge-success' : 'badge-warning'"
+      th:text="#{'inventory.count.line.status.' + ${status}}">Pending</span>
 </body>
 </html>

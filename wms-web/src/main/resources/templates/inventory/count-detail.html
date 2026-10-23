@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'counts')}">
+<head>
+    <title th:text="#{inventory.count.detail}">Cycle count</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{inventory.count.detail}">Cycle count</div>
+                        <a class="btn btn-secondary btn-sm" th:href="@{/counts}"
+                           th:text="#{inventory.action.back}">Back</a>
+                    </div>
+                    <hr>
+                    <div th:replace="~{inventory/count-detail :: panel}"></div>
+                    <hr>
+                    <th:block th:if="${view.canAddFound()}">
+                        <div th:replace="~{inventory/count-detail :: addCard}"></div>
+                    </th:block>
+                    <div th:replace="~{inventory/count-detail :: linesCard}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- Summary, progress, tasks and the actions. Re-rendered as a whole after every action. -->
+<div id="count-panel" th:fragment="panel" th:with="c=${view.count()}">
+
+    <div class="alert alert-success alert-dismissible" th:if="${notice}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div class="alert-message" th:text="#{${notice}(${c.countNumber()})}">Done</div>
+    </div>
+    <div class="alert alert-danger alert-dismissible" th:if="${error}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div class="alert-message" th:text="${error}">Problem</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inventory.count.number}">Number</small>
+            <div><strong th:text="${c.countNumber()}">CNT-000001</strong></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inventory.count.status}">Status</small>
+            <div><span th:replace="~{inventory/fragments :: countStatus(${c.status()})}"></span></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inventory.count.warehouse}">Warehouse</small>
+            <div th:text="${view.warehouseName()}">Warehouse A</div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inventory.count.scope}">Scope</small>
+            <div th:text="${view.zoneName() != null} ? ${view.zoneName()} : #{inventory.count.wholeWarehouse}">Whole
+                warehouse
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inventory.count.created}">Created</small>
+            <div th:text="${@uiFormat.dateTime(c.createdAt())}"></div>
+        </div>
+        <div class="col-md-3 mb-3" th:if="${c.startedAt() != null}">
+            <small class="wms-muted" th:text="#{inventory.count.started}">Started</small>
+            <div th:text="${@uiFormat.dateTime(c.startedAt())}"></div>
+        </div>
+        <div class="col-md-3 mb-3" th:if="${c.completedAt() != null}">
+            <small class="wms-muted" th:text="#{inventory.count.completed}">Completed</small>
+            <div th:text="${@uiFormat.dateTime(c.completedAt())}"></div>
+        </div>
+        <div class="col-md-3 mb-3" th:if="${c.approvedByName() != null}">
+            <small class="wms-muted" th:text="#{inventory.count.approvedBy}">Approved by</small>
+            <div th:text="${c.approvedByName()}"></div>
+        </div>
+        <div class="col-md-6 mb-3" th:if="${c.notes() != null}">
+            <small class="wms-muted" th:text="#{inventory.adjustment.notes}">Notes</small>
+            <div th:text="${c.notes()}"></div>
+        </div>
+        <div class="col-md-6 mb-3" th:if="${c.cancelReason() != null}">
+            <small class="wms-muted" th:text="#{inventory.count.cancelReason}">Cancellation reason</small>
+            <div th:text="${c.cancelReason()}"></div>
+        </div>
+    </div>
+
+    <div class="row" th:if="${c.status().name() != 'DRAFT'}">
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inventory.count.progress}">Counted</small>
+            <div><strong id="count-progress" th:text="${c.countedLines()} + ' / ' + ${c.totalLines()}">0 / 0</strong>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inventory.count.differences}">Lines with a difference</small>
+            <div><strong id="count-variance" th:text="${c.varianceLines()}">0</strong></div>
+        </div>
+        <div class="col-md-6 mb-3" th:if="${!view.tasks().isEmpty()}">
+            <small class="wms-muted" th:text="#{inventory.count.tasks}">Work</small>
+            <div th:each="task : ${view.tasks()}">
+                <a th:href="@{/tasks/{id}(id=${task.id()})}" th:text="${task.taskNumber()}">TSK-000001</a>
+                <span class="badge badge-dark" th:text="${task.status()}">OPEN</span>
+                <span class="wms-muted"
+                      th:text="${task.assigneeName() != null} ? ${task.assigneeName()} : #{inventory.transfer.unassigned}">Not assigned yet</span>
+                <span class="wms-muted" th:text="'(' + ${task.doneLineCount()} + ' / ' + ${task.lineCount()} + ')'">(0 / 50)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Draft: start -->
+    <form class="mt-2" method="post" th:if="${view.canStart()}" th:object="${startForm}"
+          th:action="@{/counts/{id}/start(id=${c.id()})}"
+          th:attr="hx-post=@{/counts/{id}/start(id=${c.id()})}, hx-confirm=#{inventory.count.start.confirm}"
+          hx-target="#count-panel" hx-swap="outerHTML">
+        <div class="form-row align-items-end">
+            <div class="form-group col-md-3">
+                <label for="start-priority" th:text="#{inventory.transfer.priority}">Priority</label>
+                <select id="start-priority" class="form-control" th:field="*{priority}">
+                    <option value="" th:text="#{inventory.priority.default}">Normal</option>
+                    <option th:each="p : ${priorities}" th:value="${p}" th:text="#{'inventory.priority.' + ${p}}">High
+                    </option>
+                </select>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="start-due" th:text="#{inventory.transfer.dueDate}">Due date</label>
+                <input id="start-due" type="date" class="form-control" th:field="*{dueDate}">
+            </div>
+            <div class="form-group col-md-3">
+                <button type="submit" class="btn btn-success" th:text="#{inventory.count.start}">Start count</button>
+            </div>
+        </div>
+        <small class="wms-muted" th:text="#{inventory.count.start.hint}">Starting lists every bin with stock in the
+            scope and creates counting tasks of up to 50 lines.</small>
+    </form>
+
+    <!-- In progress / review -->
+    <div class="mt-3" th:if="${view.canSubmit() or view.canReopen() or view.canApprove()}">
+        <button type="button" class="btn btn-success" th:if="${view.canSubmit()}"
+                th:attr="hx-post=@{/counts/{id}/submit(id=${c.id()})}, hx-confirm=#{inventory.count.submit.confirm}"
+                hx-target="#count-panel" hx-swap="outerHTML">
+            <i class="zmdi zmdi-assignment-check"></i> <span
+                th:text="#{inventory.count.submit}">Submit for review</span>
+        </button>
+        <button type="button" class="btn btn-light" th:if="${view.canReopen()}"
+                th:attr="hx-post=@{/counts/{id}/reopen(id=${c.id()})}, hx-confirm=#{inventory.count.reopen.confirm}"
+                hx-target="#count-panel" hx-swap="outerHTML">
+            <i class="zmdi zmdi-replay"></i> <span th:text="#{inventory.count.reopen}">Reopen for recount</span>
+        </button>
+        <button type="button" class="btn btn-success" th:if="${view.canApprove()}"
+                th:attr="hx-post=@{/counts/{id}/approve(id=${c.id()})}, hx-confirm=#{inventory.count.approve.confirm}"
+                hx-target="#count-panel" hx-swap="outerHTML">
+            <i class="zmdi zmdi-check"></i> <span th:text="#{inventory.count.approve}">Approve and adjust stock</span>
+        </button>
+    </div>
+
+    <form class="mt-4" method="post" th:if="${view.canCancel()}" th:object="${cancelForm}"
+          th:action="@{/counts/{id}/cancel(id=${c.id()})}"
+          th:attr="hx-post=@{/counts/{id}/cancel(id=${c.id()})}, hx-confirm=#{inventory.count.cancel.confirm}"
+          hx-target="#count-panel" hx-swap="outerHTML">
+        <div class="form-group">
+            <label for="count-cancel-reason" th:text="#{inventory.count.cancelReason}">Cancellation reason</label>
+            <textarea id="count-cancel-reason" rows="2" class="form-control" th:field="*{reason}"
+                      th:errorclass="is-invalid"></textarea>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}">Error</div>
+        </div>
+        <button type="submit" class="btn btn-danger" th:text="#{inventory.count.cancel}">Cancel count</button>
+    </form>
+</div>
+
+<!-- Stock found that the snapshot did not list -->
+<div id="count-add" th:fragment="addCard" th:object="${addForm}" class="mb-3">
+    <h6 th:text="#{inventory.count.found.title}">Found stock</h6>
+    <small class="wms-muted" th:text="#{inventory.count.found.hint}">Stock that is in a bin but was not on the list. Lot
+        items need a lot that already exists.</small>
+    <div class="alert alert-success mt-2" th:if="${addNotice}" th:text="#{inventory.count.flash.lineAdded}">Added</div>
+    <div class="alert alert-danger mt-2" th:if="${#fields.hasGlobalErrors()}">
+        <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}">Error</p>
+    </div>
+    <form method="post" th:action="@{/counts/{id}/lines(id=${countId})}"
+          th:attr="hx-post=@{/counts/{id}/lines(id=${countId})}" hx-target="#count-add" hx-swap="outerHTML">
+        <datalist id="item-options"></datalist>
+        <div class="form-row mt-2">
+            <div class="form-group col-md-3">
+                <label for="found-item" th:text="#{inventory.filter.item}">Item</label>
+                <input id="found-item" type="text" class="form-control" th:field="*{item}" list="item-options"
+                       th:errorclass="is-invalid"
+                       autocomplete="off" th:placeholder="#{inventory.filter.item.hint}"
+                       th:attr="hx-get=@{/lookup/items}" hx-trigger="input changed delay:300ms"
+                       hx-target="#item-options" hx-swap="innerHTML" hx-push-url="false">
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('item')}" th:errors="*{item}">Error</div>
+            </div>
+            <div class="form-group col-md-2">
+                <label for="found-bin" th:text="#{inventory.stock.bin}">Bin</label>
+                <select id="found-bin" class="form-control" th:field="*{locationId}" th:errorclass="is-invalid">
+                    <option value="" th:text="#{inventory.action.select}">Select...</option>
+                    <option th:each="b : ${bins}" th:value="${b.id()}" th:text="${b.code()}">A-01</option>
+                </select>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('locationId')}" th:errors="*{locationId}">
+                    Error
+                </div>
+            </div>
+            <div class="form-group col-md-2">
+                <label for="found-lot" th:text="#{inventory.stock.lot}">Lot</label>
+                <input id="found-lot" type="text" class="form-control" th:field="*{lotNumber}"
+                       th:errorclass="is-invalid" autocomplete="off">
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('lotNumber')}" th:errors="*{lotNumber}">Error
+                </div>
+            </div>
+            <div class="form-group col-md-2">
+                <label for="found-serial" th:text="#{inventory.stock.serial}">Serial</label>
+                <input id="found-serial" type="text" class="form-control" th:field="*{serialNumber}" autocomplete="off">
+            </div>
+            <div class="form-group col-md-2">
+                <label for="found-qty" th:text="#{inventory.count.found.qty}">Quantity found</label>
+                <input id="found-qty" type="number" step="any" min="0" class="form-control" th:field="*{countedQty}"
+                       th:errorclass="is-invalid">
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('countedQty')}" th:errors="*{countedQty}">
+                    Error
+                </div>
+            </div>
+            <div class="form-group col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-light" th:text="#{inventory.count.found.add}">Add</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- The lines. Paged on their own; reloads whenever the panel changed (event lines-changed). -->
+<div id="count-lines" th:fragment="linesCard"
+     th:attr="hx-get=@{/counts/{id}/lines(id=${countId})}" hx-trigger="lines-changed from:body"
+     hx-include="#count-lines-filter" hx-target="#count-lines" hx-swap="outerHTML" hx-push-url="false">
+    <div class="d-flex justify-content-between align-items-center">
+        <h6 class="mb-0" th:text="#{inventory.count.lines}">Lines</h6>
+        <div class="icheck-material-white" id="count-lines-filter">
+            <input type="checkbox" id="only-variance" name="onlyVariance" value="true" th:checked="${onlyVariance}"
+                   th:attr="hx-get=@{/counts/{id}/lines(id=${countId})}" hx-trigger="change" hx-include="this"
+                   hx-target="#count-lines" hx-swap="outerHTML" hx-push-url="false">
+            <label for="only-variance" th:text="#{inventory.count.onlyVariance}">Only lines with a difference</label>
+        </div>
+    </div>
+    <div id="count-error"></div>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col" th:text="#{inventory.stock.bin}">Bin</th>
+                <th scope="col" th:text="#{inventory.stock.item}">Item</th>
+                <th scope="col" th:text="#{inventory.stock.lot}">Lot / serial</th>
+                <th scope="col" class="text-right" th:text="#{inventory.count.expected}">Expected</th>
+                <th scope="col" class="text-right" th:text="#{inventory.count.counted}">Counted</th>
+                <th scope="col" class="text-right" th:text="#{inventory.count.difference}">Difference</th>
+                <th scope="col" th:text="#{inventory.count.line.status}">Status</th>
+                <th scope="col" th:text="#{inventory.count.countedBy}">Counted by</th>
+            </tr>
+            </thead>
+            <tbody>
+            <th:block th:each="l : ${linesPage.content()}">
+                <tr th:replace="~{inventory/count-detail :: row}"></tr>
+            </th:block>
+            <tr th:if="${linesPage.content().isEmpty()}">
+                <td colspan="9" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-2">
+        <small class="wms-muted"
+               th:utext="#{common.showing(${linesPage.from()}, ${linesPage.to()}, ${linesPage.totalElements()})}">Showing</small>
+        <div th:replace="~{fragments/pagination :: pager(${linesPage})}"></div>
+    </div>
+</div>
+
+<!-- One line; also returned alone after a count was saved. -->
+<table>
+    <tbody>
+    <tr th:fragment="row">
+        <td th:text="${l.lineNo()}">1</td>
+        <td th:text="${l.locationCode()}">A-01</td>
+        <td><span th:text="${l.itemSku()}">SKU</span> <span class="wms-muted" th:text="${l.itemName()}">Name</span></td>
+        <td>
+            <span th:text="${l.lotNumber()}"></span>
+            <span class="wms-muted" th:if="${l.expiryDate() != null}"
+                  th:text="'(' + ${@invFormat.date(l.expiryDate())} + ')'"></span>
+            <span th:text="${l.serialNumber()}"></span>
+        </td>
+        <td class="text-right" th:text="${@invFormat.qty(l.expectedQty())}">0</td>
+        <td class="text-right">
+            <form th:if="${canCount}" class="form-inline justify-content-end" method="post"
+                  th:action="@{/counts/{id}/lines/{lineId}/count(id=${countId}, lineId=${l.id()})}"
+                  th:attr="hx-post=@{/counts/{id}/lines/{lineId}/count(id=${countId}, lineId=${l.id()})}"
+                  hx-target="closest tr" hx-swap="outerHTML" hx-push-url="false">
+                <input type="number" step="any" min="0" name="countedQty" required
+                       class="form-control form-control-sm mr-1"
+                       th:value="${l.countedQty() != null} ? ${@invFormat.qty(l.countedQty())} : ''">
+                <button type="submit" class="btn btn-sm btn-light"><i class="zmdi zmdi-check"></i></button>
+            </form>
+            <span th:unless="${canCount}" th:text="${l.countedQty() != null} ? ${@invFormat.qty(l.countedQty())} : '-'">-</span>
+        </td>
+        <td class="text-right"
+            th:classappend="${l.variance() == null} ? '' : (${l.variance().signum() > 0} ? 'text-success' : (${l.variance().signum() < 0} ? 'text-danger' : 'wms-muted'))"
+            th:text="${l.variance() != null} ? ${@invFormat.signedQty(l.variance())} : '-'">-
+        </td>
+        <td><span th:replace="~{inventory/fragments :: countLineStatus(${l.status()})}"></span></td>
+        <td th:text="${l.countedByName()}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- After a count was saved: the new row, and the progress numbers in the panel (out of band), and a cleared error. -->
+<th:block th:fragment="rowAndProgress">
+    <tr th:replace="~{inventory/count-detail :: row}"></tr>
+    <strong id="count-progress" hx-swap-oob="true" th:text="${count.countedLines()} + ' / ' + ${count.totalLines()}">0 /
+        0</strong>
+    <strong id="count-variance" hx-swap-oob="true" th:text="${count.varianceLines()}">0</strong>
+    <div id="count-error" hx-swap-oob="true"></div>
+</th:block>
+
+<!-- A counting error: the alert above the table changes, the row stays (the controller sends HX-Reswap: none). -->
+<div id="count-error" th:fragment="rowError" hx-swap-oob="true" class="alert alert-danger mt-2" th:text="${message}">
+    Problem
+</div>
+</body>
+</html>

@@ -46,8 +46,7 @@
                 <a th:href="@{/customers}"><i class="zmdi zmdi-account-box"></i> <span th:text="#{menu.customers}">Customers</span></a>
             </li>
         </th:block>
-        <li class="treeview"
-            th:classappend="${#strings.contains('stock,movements,adjustments,my-adjustments', active)} ? 'active'">
+        <li class="treeview" th:classappend="${#strings.contains('stock,movements,adjustments,my-adjustments,reasons,reorder,low-stock,transfers,incoming-transfers,new-transfer,counts', active)} ? 'active'">
             <a href="javascript:void();" class="waves-effect">
                 <i class="zmdi zmdi-storage"></i> <span th:text="#{menu.inventory}">Inventory</span>
                 <i class="fa fa-angle-left float-right"></i>
@@ -58,18 +57,42 @@
                 </li>
                 <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
                     th:classappend="${active == 'movements'} ? 'active'">
-                    <a th:href="@{/stock/movements}"><i class="zmdi zmdi-long-arrow-right"></i> <span
-                            th:text="#{menu.movements}">Stock movements</span></a>
+                    <a th:href="@{/stock/movements}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.movements}">Stock movements</span></a>
                 </li>
                 <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
                     th:classappend="${active == 'adjustments'} ? 'active'">
-                    <a th:href="@{/adjustments}"><i class="zmdi zmdi-long-arrow-right"></i> <span
-                            th:text="#{menu.adjustments}">Adjustments</span></a>
+                    <a th:href="@{/adjustments}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.adjustments}">Adjustments</span></a>
                 </li>
                 <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}"
                     th:classappend="${active == 'my-adjustments'} ? 'active'">
-                    <a th:href="@{/adjustments/my}"><i class="zmdi zmdi-long-arrow-right"></i> <span
-                            th:text="#{menu.my-adjustments}">My adjustments</span></a>
+                    <a th:href="@{/adjustments/my}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.my-adjustments}">My adjustments</span></a>
+                </li>
+                <li th:if="${@uiUser.isAdmin()}" th:classappend="${active == 'reasons'} ? 'active'">
+                    <a th:href="@{/adjustment-reasons}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.reasons}">Adjustment reasons</span></a>
+                </li>
+                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
+                    th:classappend="${active == 'reorder'} ? 'active'">
+                    <a th:href="@{/reorder-policies}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.reorder}">Reorder policies</span></a>
+                </li>
+                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
+                    th:classappend="${active == 'low-stock'} ? 'active'">
+                    <a th:href="@{/reorder-policies/low-stock}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.low-stock}">Low stock</span></a>
+                </li>
+                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
+                    th:classappend="${active == 'transfers'} ? 'active'">
+                    <a th:href="@{/transfers}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.transfers}">Transfers</span></a>
+                </li>
+                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}"
+                    th:classappend="${active == 'incoming-transfers'} ? 'active'">
+                    <a th:href="@{/transfers/incoming}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.incoming-transfers}">Incoming transfers</span></a>
+                </li>
+                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}"
+                    th:classappend="${active == 'new-transfer'} ? 'active'">
+                    <a th:href="@{/transfers/new}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.new-transfer}">Move stock</span></a>
+                </li>
+                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
+                    th:classappend="${active == 'counts'} ? 'active'">
+                    <a th:href="@{/counts}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.counts}">Cycle counts</span></a>
                 </li>
             </ul>
         </li>

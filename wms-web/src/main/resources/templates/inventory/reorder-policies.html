@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reorder')}">
+<head>
+    <title th:text="#{inventory.reorder.title}">Reorder policies</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{inventory.reorder.title}">Reorder policies</div>
+                        <div>
+                            <a class="btn btn-secondary btn-sm" th:href="@{/reorder-policies/low-stock}"
+                               th:text="#{inventory.lowstock.title}">Low stock</a>
+                            <a class="btn btn-light btn-sm" th:if="${canEdit}" th:href="@{/reorder-policies/new}">
+                                <i class="zmdi zmdi-plus"></i> <span
+                                    th:text="#{inventory.reorder.new}">New policy</span>
+                            </a>
+                        </div>
+                    </div>
+                    <hr>
+                    <form id="reorder-filters" method="get" th:action="@{/reorder-policies}" th:object="${filter}"
+                          th:hx-get="@{/reorder-policies}" hx-trigger="change, submit"
+                          hx-target="#reorder-results" hx-swap="outerHTML" hx-push-url="true">
+                        <div class="icheck-material-white mb-2">
+                            <input type="checkbox" th:field="*{activeOnly}">
+                            <label th:for="${#ids.prev('activeOnly')}" th:text="#{inventory.reorder.activeOnly}">Active
+                                policies only</label>
+                        </div>
+                    </form>
+
+                    <div id="reorder-results" th:fragment="results" hx-target="#reorder-results" hx-swap="outerHTML"
+                         hx-push-url="true">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col" th:text="#{inventory.reorder.item}">Item</th>
+                                    <th scope="col" class="text-right" th:text="#{inventory.reorder.min}">Reorder
+                                        point
+                                    </th>
+                                    <th scope="col" class="text-right" th:text="#{inventory.reorder.qty}">Reorder
+                                        quantity
+                                    </th>
+                                    <th scope="col" class="text-right" th:text="#{inventory.reorder.max}">Maximum</th>
+                                    <th scope="col" th:text="#{inventory.reorder.status}">Status</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="p : ${page.content()}">
+                                    <tr th:replace="~{inventory/reorder-policies :: row}"></tr>
+                                </th:block>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="6" class="text-center wms-muted" th:text="#{common.noResults}">No
+                                        results
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}">Showing</small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<table>
+    <tbody>
+    <tr th:fragment="row">
+        <td><span th:text="${p.itemSku()}">SKU</span> <span class="wms-muted" th:text="${p.itemName()}">Name</span></td>
+        <td class="text-right"><span th:text="${@invFormat.qty(p.minQty())}">0</span> <span class="wms-muted"
+                                                                                            th:text="${p.baseUom()}">pcs</span>
+        </td>
+        <td class="text-right" th:text="${@invFormat.qty(p.reorderQty())}">0</td>
+        <td class="text-right" th:text="${p.maxQty() == null} ? '-' : ${@invFormat.qty(p.maxQty())}">-</td>
+        <td>
+            <span class="badge" th:classappend="${p.active()} ? 'badge-success' : 'badge-dark'"
+                  th:text="${p.active()} ? #{common.active} : #{common.inactive}">Active</span>
+        </td>
+        <td class="text-right">
+            <th:block th:if="${canEdit}">
+                <a class="btn btn-sm btn-light" th:href="@{/reorder-policies/{id}/edit(id=${p.id()})}"
+                   th:text="#{common.edit}">Edit</a>
+                <button type="button" class="btn btn-sm" th:classappend="${p.active()} ? 'btn-danger' : 'btn-success'"
+                        th:attr="hx-post=@{/reorder-policies/{id}/status(id=${p.id()}, active=${!p.active()})},
+                                 hx-confirm=(${p.active()} ? #{inventory.reorder.deactivate.confirm} : null)"
+                        hx-target="closest tr" hx-swap="outerHTML" hx-push-url="false">
+                    <i class="zmdi" th:classappend="${p.active()} ? 'zmdi-block' : 'zmdi-check'"></i>
+                </button>
+            </th:block>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, ${menu})}">
+<head>
+    <title th:text="#{inventory.transfer.detail}">Transfer</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{inventory.transfer.detail}">Transfer</div>
+                        <a class="btn btn-secondary btn-sm"
+                           th:href="${menu == 'transfers'} ? @{/transfers} : @{/transfers/incoming}"
+                           th:text="#{inventory.action.back}">Back</a>
+                    </div>
+                    <hr>
+                    <div th:replace="~{inventory/transfer-detail :: panel}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- Re-rendered as a whole after confirm, ship, receive and cancel. -->
+<div id="transfer-panel" th:fragment="panel" th:with="t=${view.transfer()}">
+
+    <div class="alert alert-success alert-dismissible" th:if="${notice}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div class="alert-message" th:text="#{${notice}(${t.transferNumber()})}">Done</div>
+    </div>
+    <div class="alert alert-danger alert-dismissible" th:if="${error}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div class="alert-message" th:text="${error}">Problem</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inventory.transfer.number}">Number</small>
+            <div><strong th:text="${t.transferNumber()}">TRF-000001</strong></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inventory.transfer.status}">Status</small>
+            <div><span th:replace="~{inventory/fragments :: transferStatus(${t.status()})}"></span></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inventory.transfer.type}">Type</small>
+            <div><span th:replace="~{inventory/fragments :: transferType(${t.type()})}"></span></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inventory.transfer.route}">From - to</small>
+            <div>
+                <span th:text="${view.sourceName()}">A</span>
+                <span th:if="${t.type().name() == 'INTER_WAREHOUSE'}"> &rarr; <span th:text="${view.destinationName()}">B</span></span>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inventory.transfer.created}">Created</small>
+            <div th:text="${@uiFormat.dateTime(t.createdAt())}"></div>
+        </div>
+        <div class="col-md-3 mb-3" th:if="${t.shippedAt() != null}">
+            <small class="wms-muted" th:text="#{inventory.transfer.shipped}">Shipped</small>
+            <div th:text="${@uiFormat.dateTime(t.shippedAt())}"></div>
+        </div>
+        <div class="col-md-3 mb-3" th:if="${t.completedAt() != null}">
+            <small class="wms-muted" th:text="#{inventory.transfer.finished}">Finished</small>
+            <div th:text="${@uiFormat.dateTime(t.completedAt())}"></div>
+        </div>
+        <div class="col-md-6 mb-3" th:if="${t.notes() != null}">
+            <small class="wms-muted" th:text="#{inventory.adjustment.notes}">Notes</small>
+            <div th:text="${t.notes()}"></div>
+        </div>
+        <div class="col-md-6 mb-3" th:if="${t.cancelReason() != null}">
+            <small class="wms-muted" th:text="#{inventory.transfer.cancelReason}">Cancellation reason</small>
+            <div th:text="${t.cancelReason()}"></div>
+        </div>
+        <div class="col-md-12 mb-3" th:if="${!view.tasks().isEmpty()}">
+            <small class="wms-muted" th:text="#{inventory.transfer.tasks}">Work</small>
+            <div th:each="task : ${view.tasks()}">
+                <a th:href="@{/tasks/{id}(id=${task.id()})}" th:text="${task.taskNumber()}">TSK-000001</a>
+                <span class="badge badge-dark" th:text="${task.status()}">OPEN</span>
+                <span class="wms-muted" th:if="${task.assigneeName() != null}" th:text="${task.assigneeName()}">Worker</span>
+                <span class="wms-muted" th:if="${task.assigneeName() == null}" th:text="#{inventory.transfer.unassigned}">Not assigned yet</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info" th:if="${view.partiallyReceived()}" th:text="#{inventory.transfer.partial.hint}">Receive the rest or close short.</div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col" th:text="#{inventory.stock.item}">Item</th>
+                <th scope="col" th:text="#{inventory.stock.lot}">Lot / serial</th>
+                <th scope="col" th:text="#{inventory.transfer.fromBin}">From bin</th>
+                <th scope="col" th:if="${t.type().name() == 'BIN'}" th:text="#{inventory.transfer.toBin}">To bin</th>
+                <th scope="col" class="text-right" th:text="#{inventory.transfer.planned}">Planned</th>
+                <th scope="col" class="text-right" th:text="#{inventory.transfer.shipped}">Shipped</th>
+                <th scope="col" class="text-right" th:if="${t.type().name() == 'INTER_WAREHOUSE'}" th:text="#{inventory.transfer.receivedQty}">Received</th>
+                <th scope="col" th:text="#{inventory.transfer.shortReason}">Short reason</th>
+                <th scope="col" th:if="${view.canConfirm()}" th:text="#{inventory.transfer.confirm}">Confirm</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${view.lines()}" th:with="l=${row.line()}">
+                <td th:text="${l.lineNo()}">1</td>
+                <td><span th:text="${l.itemSku()}">SKU</span> <span class="wms-muted" th:text="${l.itemName()}">Name</span></td>
+                <td><span th:text="${l.lotNumber()}"></span> <span th:text="${l.serialNumber()}"></span></td>
+                <td th:text="${l.fromLocationCode()}">A-01</td>
+                <td th:if="${t.type().name() == 'BIN'}" th:text="${l.toLocationCode()}">A-02</td>
+                <td class="text-right" th:text="${@invFormat.qty(l.quantity())}">0</td>
+                <td class="text-right" th:text="${@invFormat.qty(l.shippedQty())}">0</td>
+                <td class="text-right" th:if="${t.type().name() == 'INTER_WAREHOUSE'}">
+                    <span th:text="${@invFormat.qty(l.receivedQty())}">0</span>
+                    <span class="badge badge-info" th:if="${l.inTransitQty().signum() > 0}"
+                          th:text="${@invFormat.qty(l.inTransitQty())} + ' ' + #{inventory.transfer.inTransit}">5 in transit</span>
+                </td>
+                <td th:text="${l.shortReason()}"></td>
+                <td th:if="${view.canConfirm()}">
+                    <form th:if="${row.pending()}" class="form-inline" method="post"
+                          th:action="@{/transfers/{id}/lines/{lineId}/confirm(id=${t.id()}, lineId=${l.id()})}"
+                          th:attr="hx-post=@{/transfers/{id}/lines/{lineId}/confirm(id=${t.id()}, lineId=${l.id()})}"
+                          hx-target="#transfer-panel" hx-swap="outerHTML">
+                        <input type="number" step="any" min="0" name="quantity" class="form-control form-control-sm mr-1"
+                               th:value="${@invFormat.qty(l.quantity())}" th:title="#{inventory.transfer.confirm.qty}">
+                        <input type="text" name="shortReason" maxlength="500" class="form-control form-control-sm mr-1"
+                               th:placeholder="#{inventory.transfer.shortReason.hint}">
+                        <button type="submit" class="btn btn-sm btn-success"><i class="zmdi zmdi-check"></i></button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Receive: goods still in transit to this warehouse -->
+    <div class="mt-4" th:if="${view.canReceive()}">
+        <h6 th:text="#{inventory.transfer.receive.title}">Receive goods</h6>
+        <form method="post" th:object="${receiveForm}" th:action="@{/transfers/{id}/receive(id=${t.id()})}"
+              th:attr="hx-post=@{/transfers/{id}/receive(id=${t.id()})}" hx-target="#transfer-panel" hx-swap="outerHTML">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th scope="col" th:text="#{inventory.stock.item}">Item</th>
+                        <th scope="col" class="text-right" th:text="#{inventory.transfer.inTransit}">In transit</th>
+                        <th scope="col" th:text="#{inventory.transfer.toBin}">To bin</th>
+                        <th scope="col" th:text="#{inventory.transfer.receiveNow}">Receive now</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row, i : ${view.receiveLines()}" th:with="l=${row.line()}">
+                        <td>
+                            <input type="hidden" th:field="*{lines[__${i.index}__].lineId}">
+                            <span th:text="${l.itemSku()}">SKU</span> <span class="wms-muted" th:text="${l.itemName()}">Name</span>
+                            <span class="wms-muted" th:text="${l.lotNumber()}"></span> <span class="wms-muted" th:text="${l.serialNumber()}"></span>
+                        </td>
+                        <td class="text-right" th:text="${@invFormat.qty(l.inTransitQty())}">5</td>
+                        <td>
+                            <th:block th:if="${l.toLocationCode() != null}">
+                                <span th:text="${l.toLocationCode()}">B-01</span>
+                                <input type="hidden" th:field="*{lines[__${i.index}__].toLocationId}">
+                            </th:block>
+                            <th:block th:unless="${l.toLocationCode() != null}">
+                                <select class="form-control" th:field="*{lines[__${i.index}__].toLocationId}" th:errorclass="is-invalid">
+                                    <option value="" th:text="#{inventory.action.select}">Select...</option>
+                                    <option th:each="b : ${destBins}" th:value="${b.id()}"
+                                            th:text="${b.code()} + ' (' + #{'inventory.usage.' + ${b.usage()}} + ')'">B-01</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].toLocationId')}"
+                                     th:errors="*{lines[__${i.index}__].toLocationId}">Error</div>
+                            </th:block>
+                        </td>
+                        <td>
+                            <input type="number" step="any" min="0" class="form-control" th:field="*{lines[__${i.index}__].quantity}"
+                                   th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].quantity')}"
+                                 th:errors="*{lines[__${i.index}__].quantity}">Error</div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-row align-items-center">
+                <div class="form-group col-md-4">
+                    <div class="icheck-material-white">
+                        <input type="checkbox" th:field="*{closeShort}">
+                        <label th:for="${#ids.prev('closeShort')}" th:text="#{inventory.transfer.closeShort}">Close short: the rest is lost in transit</label>
+                    </div>
+                </div>
+                <div class="form-group col-md-8">
+                    <input type="text" class="form-control" th:field="*{shortReason}" maxlength="500"
+                           th:placeholder="#{inventory.transfer.closeShort.reason}">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success" th:text="#{inventory.transfer.receive}">Receive</button>
+        </form>
+    </div>
+
+    <!-- Manager actions -->
+    <div class="mt-4" th:if="${view.canShip()}">
+        <button type="button" class="btn btn-light"
+                th:attr="hx-post=@{/transfers/{id}/ship(id=${t.id()})}, hx-confirm=#{inventory.transfer.ship.confirm}"
+                hx-target="#transfer-panel" hx-swap="outerHTML">
+            <i class="zmdi zmdi-truck"></i> <span th:text="#{inventory.transfer.ship}">Ship without picking</span>
+        </button>
+        <small class="wms-muted ml-2" th:text="#{inventory.transfer.ship.hint}">Cancels the task and sends everything not yet picked.</small>
+    </div>
+
+    <form class="mt-4" method="post" th:if="${view.canCancel()}" th:object="${cancelForm}"
+          th:action="@{/transfers/{id}/cancel(id=${t.id()})}"
+          th:attr="hx-post=@{/transfers/{id}/cancel(id=${t.id()})}, hx-confirm=#{inventory.transfer.cancel.confirm}"
+          hx-target="#transfer-panel" hx-swap="outerHTML">
+        <div class="form-group">
+            <label for="cancel-reason" th:text="#{inventory.transfer.cancelReason}">Cancellation reason</label>
+            <textarea id="cancel-reason" rows="2" class="form-control" th:field="*{reason}" th:errorclass="is-invalid"></textarea>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}">Error</div>
+        </div>
+        <button type="submit" class="btn btn-danger" th:text="#{inventory.transfer.cancel}">Cancel transfer</button>
+    </form>
+</div>
+</body>
+</html>

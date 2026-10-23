@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'counts')}">
+<head>
+    <title th:text="#{inventory.count.new}">New count</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title" th:text="#{inventory.count.new}">New count</div>
+                    <hr>
+                    <form method="post" th:action="@{/counts}" th:object="${form}">
+                        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}">Error</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="count-zone" th:text="#{inventory.count.scope}">Scope</label>
+                            <select id="count-zone" class="form-control" th:field="*{zoneLocationId}" th:errorclass="is-invalid">
+                                <option value="" th:text="#{inventory.count.wholeWarehouse}">Whole warehouse</option>
+                                <option th:each="z : ${zones}" th:value="${z.id()}" th:text="${z.code()} + ' - ' + ${z.name()}">Z1 - Zone 1</option>
+                            </select>
+                            <small class="wms-muted" th:text="#{inventory.count.scope.hint}">Only one count can be running for an area at a time.</small>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('zoneLocationId')}" th:errors="*{zoneLocationId}">Error</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="count-notes" th:text="#{inventory.adjustment.notes}">Notes</label>
+                            <input id="count-notes" type="text" class="form-control" th:field="*{notes}" th:errorclass="is-invalid" maxlength="500">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('notes')}" th:errors="*{notes}">Error</div>
+                        </div>
+                        <button type="submit" class="btn btn-light px-5" th:text="#{inventory.count.create}">Create count</button>
+                        <a class="btn btn-secondary" th:href="@{/counts}" th:text="#{inventory.action.cancel}">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

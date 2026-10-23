@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, ${menu})}">
+<head>
+    <title th:text="#{inventory.transfer.new}">New transfer</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title" th:text="#{inventory.transfer.new}">New transfer</div>
+                    <hr>
+                    <form id="transfer-form" method="post" th:action="@{/transfers}" th:object="${form}">
+                        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}">Error</p>
+                        </div>
+
+                        <div class="form-row" th:if="${#lists.size(modes) > 1}">
+                            <div class="form-group col-md-5">
+                                <label for="transfer-mode" th:text="#{inventory.transfer.mode}">Transfer type</label>
+                                <select id="transfer-mode" class="form-control" th:field="*{mode}"
+                                        th:attr="hx-post=@{/transfers/new/refresh}" hx-trigger="change"
+                                        hx-target="#transfer-fields" hx-swap="outerHTML">
+                                    <option th:each="m : ${modes}" th:value="${m}" th:text="#{'inventory.transfer.mode.' + ${m}}">Move now</option>
+                                </select>
+                            </div>
+                        </div>
+                        <input type="hidden" th:if="${#lists.size(modes) == 1}" th:field="*{mode}">
+
+                        <div th:replace="~{inventory/transfer-form :: fields}"></div>
+
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-light px-5" th:text="#{inventory.transfer.submit}">Submit</button>
+                            <a class="btn btn-secondary" th:href="@{/transfers/incoming}" th:text="#{inventory.action.cancel}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- Everything that depends on the mode. Swapped as a whole when the mode changes. -->
+<div id="transfer-fields" th:fragment="fields" th:object="${form}">
+    <p><small class="wms-muted" th:text="#{'inventory.transfer.mode.hint.' + ${form.mode}}">Hint</small></p>
+
+    <div class="form-row">
+        <div class="form-group col-md-4" th:if="${form.inter}">
+            <label for="transfer-destination" th:text="#{inventory.transfer.destination}">Destination warehouse</label>
+            <select id="transfer-destination" class="form-control" th:field="*{destinationWarehouseId}" th:errorclass="is-invalid">
+                <option value="" th:text="#{inventory.action.select}">Select...</option>
+                <option th:each="w : ${warehouses}" th:value="${w.id()}" th:text="${w.name()}">Warehouse B</option>
+            </select>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('destinationWarehouseId')}" th:errors="*{destinationWarehouseId}">Error</div>
+        </div>
+        <div class="form-group col-md-3" th:unless="${form.moveNow}">
+            <label for="transfer-priority" th:text="#{inventory.transfer.priority}">Priority</label>
+            <select id="transfer-priority" class="form-control" th:field="*{priority}">
+                <option value="" th:text="#{inventory.priority.default}">Normal</option>
+                <option th:each="p : ${priorities}" th:value="${p}" th:text="#{'inventory.priority.' + ${p}}">High</option>
+            </select>
+        </div>
+        <div class="form-group col-md-3" th:unless="${form.moveNow}">
+            <label for="transfer-due" th:text="#{inventory.transfer.dueDate}">Due date</label>
+            <input id="transfer-due" type="date" class="form-control" th:field="*{dueDate}">
+        </div>
+        <div class="form-group col-md-5">
+            <label for="transfer-notes" th:text="#{inventory.adjustment.notes}">Notes</label>
+            <input id="transfer-notes" type="text" class="form-control" th:field="*{notes}" th:errorclass="is-invalid" maxlength="500">
+        </div>
+    </div>
+
+    <div th:replace="~{inventory/transfer-form :: linesCard}"></div>
+</div>
+
+<div id="transfer-lines" th:fragment="linesCard" th:object="${form}">
+    <div class="d-flex justify-content-between align-items-center">
+        <h6 class="mb-0" th:text="#{inventory.adjustment.lines}">Lines</h6>
+        <button type="button" class="btn btn-sm btn-light"
+                th:attr="hx-post=@{/transfers/new/lines/add}"
+                hx-target="#transfer-lines" hx-swap="outerHTML">
+            <i class="zmdi zmdi-plus"></i> <span th:text="#{inventory.adjustment.addLine}">Add line</span>
+        </button>
+    </div>
+    <datalist id="item-options"></datalist>
+    <div class="alert alert-danger mt-2" th:if="${#fields.hasErrors('lines')}" th:errors="*{lines}">Error</div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col" th:text="#{inventory.filter.item}">Item</th>
+                <th scope="col" th:text="#{inventory.transfer.fromBin}">From bin</th>
+                <th scope="col" th:unless="${form.inter}" th:text="#{inventory.transfer.toBin}">To bin</th>
+                <th scope="col" th:text="#{inventory.stock.quantity}">Quantity</th>
+                <th scope="col" th:text="#{inventory.stock.lot}">Lot</th>
+                <th scope="col" th:text="#{inventory.stock.serial}">Serial</th>
+                <th scope="col"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="line, i : *{lines}">
+                <td>
+                    <input type="text" class="form-control" th:field="*{lines[__${i.index}__].item}" list="item-options"
+                           th:errorclass="is-invalid" autocomplete="off"
+                           th:attr="hx-get=@{/lookup/items}" hx-trigger="input changed delay:300ms"
+                           hx-target="#item-options" hx-swap="innerHTML" hx-push-url="false">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].item')}"
+                         th:errors="*{lines[__${i.index}__].item}">Error</div>
+                </td>
+                <td>
+                    <select class="form-control" th:field="*{lines[__${i.index}__].fromLocationId}" th:errorclass="is-invalid">
+                        <option value="" th:text="#{inventory.action.select}">Select...</option>
+                        <option th:each="b : ${bins}" th:value="${b.id()}"
+                                th:text="${b.code()} + ' (' + #{'inventory.usage.' + ${b.usage()}} + ')'">A-01</option>
+                    </select>
+                </td>
+                <td th:unless="${form.inter}">
+                    <select class="form-control" th:field="*{lines[__${i.index}__].toLocationId}" th:errorclass="is-invalid">
+                        <option value="" th:text="#{inventory.action.select}">Select...</option>
+                        <option th:each="b : ${bins}" th:value="${b.id()}"
+                                th:text="${b.code()} + ' (' + #{'inventory.usage.' + ${b.usage()}} + ')'">A-02</option>
+                    </select>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].toLocationId')}"
+                         th:errors="*{lines[__${i.index}__].toLocationId}">Error</div>
+                </td>
+                <td>
+                    <input type="number" step="any" min="0" class="form-control" th:field="*{lines[__${i.index}__].quantity}"
+                           th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].quantity')}"
+                         th:errors="*{lines[__${i.index}__].quantity}">Error</div>
+                </td>
+                <td><input type="text" class="form-control" th:field="*{lines[__${i.index}__].lotNumber}" autocomplete="off"></td>
+                <td><input type="text" class="form-control" th:field="*{lines[__${i.index}__].serialNumber}" autocomplete="off"></td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" th:if="${#lists.size(form.lines) > 1}"
+                            th:attr="hx-post=@{/transfers/new/lines/remove(index=${i.index})}"
+                            hx-target="#transfer-lines" hx-swap="outerHTML">
+                        <i class="zmdi zmdi-delete"></i>
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <small class="wms-muted" th:text="#{inventory.transfer.lines.hint}">Lot items need the lot number, serial items one line per serial.</small>
+</div>
+</body>
+</html>

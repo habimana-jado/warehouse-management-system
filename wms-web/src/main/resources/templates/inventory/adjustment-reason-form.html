@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reasons')}">
+<head>
+    <title th:text="${edit} ? #{inventory.reason.edit} : #{inventory.reason.new}">Reason</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title" th:text="${edit} ? #{inventory.reason.edit} : #{inventory.reason.new}">
+                        Reason
+                    </div>
+                    <hr>
+                    <form method="post" th:object="${form}"
+                          th:action="${edit} ? @{/adjustment-reasons/{id}/update(id=${reasonId})} : @{/adjustment-reasons}">
+                        <div class="alert alert-info" th:if="${edit}" th:text="#{inventory.reason.hint.existing}">
+                            Changes apply to new adjustments only.
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reason-code" th:text="#{inventory.reason.code}">Code</label>
+                            <input id="reason-code" type="text" class="form-control" th:field="*{code}"
+                                   th:errorclass="is-invalid"
+                                   maxlength="32" th:readonly="${edit}" autocomplete="off">
+                            <small class="wms-muted" th:if="${!edit}" th:text="#{inventory.reason.code.hint}">Cannot be
+                                changed later</small>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('code')}" th:errors="*{code}">
+                                Error
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="reason-name" th:text="#{inventory.reason.name}">Name</label>
+                            <input id="reason-name" type="text" class="form-control" th:field="*{name}"
+                                   th:errorclass="is-invalid" maxlength="120">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">
+                                Error
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="reason-direction" th:text="#{inventory.reason.direction}">Allowed
+                                direction</label>
+                            <select id="reason-direction" class="form-control" th:field="*{direction}"
+                                    th:errorclass="is-invalid">
+                                <option th:each="d : ${directions}" th:value="${d}"
+                                        th:text="#{'inventory.reason.direction.' + ${d}}">Both
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <div class="icheck-material-white">
+                                <input type="checkbox" th:field="*{requiresApproval}">
+                                <label th:for="${#ids.prev('requiresApproval')}"
+                                       th:text="#{inventory.reason.requiresApproval}">Requires manager approval</label>
+                            </div>
+                        </div>
+                        <div class="form-group" th:if="${edit}">
+                            <div class="icheck-material-white">
+                                <input type="checkbox" th:field="*{active}">
+                                <label th:for="${#ids.prev('active')}"
+                                       th:text="#{inventory.reason.activeLabel}">Active</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-light px-5" th:text="#{inventory.reason.save}">Save
+                        </button>
+                        <a class="btn btn-secondary" th:href="@{/adjustment-reasons}"
+                           th:text="#{inventory.action.cancel}">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

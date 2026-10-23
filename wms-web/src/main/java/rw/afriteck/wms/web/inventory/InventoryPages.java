@@ -2,13 +2,12 @@ package rw.afriteck.wms.web.inventory;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import rw.afriteck.wms.common.dtos.PageResponse;
 import rw.afriteck.wms.web.support.PageView;
 import rw.afriteck.wms.web.support.UiLinks;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 final class InventoryPages {
@@ -32,5 +31,22 @@ final class InventoryPages {
     static <T> PageView<T> empty(Pageable pageable) {
         PageResponse<T> none = new PageResponse<>(List.of(), pageable.getPageNumber(), pageable.getPageSize(), 0, 0);
         return PageView.of(none, Function.identity());
+    }
+    /** Typed or scanned items become item ids; an unknown or ambiguous entry is a field error on lines[i].item. */
+    static List<UUID> resolveItems(ItemResolver resolver, List<String> typed, BindingResult result) {
+        List<UUID> ids = new ArrayList<>(typed.size());
+        for (int i = 0; i < typed.size(); i++) {
+            ItemResolver.Resolution match = resolver.resolve(typed.get(i));
+            ids.add(match.found() ? match.item().id() : null);
+            String field = "lines[" + i + "].item";
+            if (!match.found() && !result.hasFieldErrors(field)) {
+                if (match.ambiguous()) {
+                    result.rejectValue(field, "inventory.item.ambiguous", new Object[]{match.candidateSkus()}, "Several items match");
+                } else {
+                    result.rejectValue(field, "inventory.item.unknown", new Object[]{typed.get(i)}, "Unknown item");
+                }
+            }
+        }
+        return ids;
     }
 }

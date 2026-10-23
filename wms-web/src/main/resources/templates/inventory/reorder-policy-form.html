@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reorder')}">
+<head>
+    <title th:text="${edit} ? #{inventory.reorder.edit} : #{inventory.reorder.new}">Reorder policy</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title" th:text="${edit} ? #{inventory.reorder.edit} : #{inventory.reorder.new}">
+                        Reorder policy
+                    </div>
+                    <hr>
+                    <form method="post" th:object="${form}"
+                          th:action="${edit} ? @{/reorder-policies/{id}/update(id=${policyId})} : @{/reorder-policies}">
+
+                        <div class="form-group" th:if="${!edit}">
+                            <label for="policy-item" th:text="#{inventory.reorder.item}">Item</label>
+                            <input id="policy-item" type="text" class="form-control" th:field="*{item}"
+                                   th:errorclass="is-invalid"
+                                   list="item-options" autocomplete="off" th:placeholder="#{inventory.filter.item.hint}"
+                                   th:attr="hx-get=@{/lookup/items}" hx-trigger="input changed delay:300ms"
+                                   hx-target="#item-options" hx-swap="innerHTML" hx-push-url="false">
+                            <datalist id="item-options"></datalist>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('item')}" th:errors="*{item}">
+                                Error
+                            </div>
+                        </div>
+                        <div class="form-group" th:if="${edit}">
+                            <label th:text="#{inventory.reorder.item}">Item</label>
+                            <input type="text" class="form-control"
+                                   th:value="${policy.itemSku()} + ' - ' + ${policy.itemName()}" disabled>
+                            <small class="wms-muted" th:text="#{inventory.reorder.item.locked}">The item cannot be
+                                changed.</small>
+                            <input type="hidden" th:field="*{item}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="policy-min" th:text="#{inventory.reorder.min}">Reorder point</label>
+                            <input id="policy-min" type="number" step="any" min="0" class="form-control"
+                                   th:field="*{minQty}" th:errorclass="is-invalid">
+                            <small class="wms-muted" th:text="#{inventory.reorder.min.hint}">Reorder at or below this
+                                quantity</small>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('minQty')}" th:errors="*{minQty}">
+                                Error
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="policy-qty" th:text="#{inventory.reorder.qty}">Reorder quantity</label>
+                            <input id="policy-qty" type="number" step="any" min="0" class="form-control"
+                                   th:field="*{reorderQty}" th:errorclass="is-invalid">
+                            <small class="wms-muted" th:text="#{inventory.reorder.qty.hint}">Suggested order
+                                size</small>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('reorderQty')}"
+                                 th:errors="*{reorderQty}">Error
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="policy-max" th:text="#{inventory.reorder.max}">Maximum</label>
+                            <input id="policy-max" type="number" step="any" min="0" class="form-control"
+                                   th:field="*{maxQty}" th:errorclass="is-invalid">
+                            <small class="wms-muted" th:text="#{inventory.reorder.max.hint}">Optional ceiling</small>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('maxQty')}" th:errors="*{maxQty}">
+                                Error
+                            </div>
+                        </div>
+                        <div class="form-group" th:if="${edit}">
+                            <div class="icheck-material-white">
+                                <input type="checkbox" th:field="*{active}">
+                                <label th:for="${#ids.prev('active')}"
+                                       th:text="#{inventory.reason.activeLabel}">Active</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-light px-5" th:text="#{inventory.reorder.save}">Save
+                        </button>
+                        <a class="btn btn-secondary" th:href="@{/reorder-policies}"
+                           th:text="#{inventory.action.cancel}">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

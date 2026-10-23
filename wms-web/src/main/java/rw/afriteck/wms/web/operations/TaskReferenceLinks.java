@@ -17,6 +17,8 @@ public class TaskReferenceLinks {
      *   "STOCK_COUNT",    "/counts/{id}"           (inventory)
      */
     private static final Map<String, String> ROUTES = Map.of(
+            "STOCK_TRANSFER", "/transfers/{id}",
+            "STOCK_COUNT", "/counts/{id}"
     );
 
     /** UI path of the document behind a task, or null when that module has no screen yet. */

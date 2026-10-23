@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reasons')}">
+<head>
+    <title th:text="#{inventory.reasons.title}">Adjustment reasons</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{inventory.reasons.title}">Adjustment reasons</div>
+                        <a class="btn btn-light btn-sm" th:href="@{/adjustment-reasons/new}">
+                            <i class="zmdi zmdi-plus"></i> <span th:text="#{inventory.reason.new}">New reason</span>
+                        </a>
+                    </div>
+                    <hr>
+                    <form id="reasons-filters" method="get" th:action="@{/adjustment-reasons}" th:object="${filter}"
+                          th:hx-get="@{/adjustment-reasons}" hx-trigger="input delay:400ms, change, submit"
+                          hx-target="#reasons-results" hx-swap="outerHTML" hx-push-url="true">
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <div class="position-relative has-icon-right">
+                                    <input type="text" class="form-control input-shadow" th:field="*{q}"
+                                           autocomplete="off"
+                                           th:placeholder="#{inventory.reasons.search}">
+                                    <div class="form-control-position"><i class="icon-magnifier"></i></div>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-4 d-flex align-items-center">
+                                <div class="icheck-material-white">
+                                    <input type="checkbox" th:field="*{includeInactive}">
+                                    <label th:for="${#ids.prev('includeInactive')}"
+                                           th:text="#{inventory.reasons.includeInactive}">Include inactive</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="reasons-results" th:fragment="results" hx-target="#reasons-results" hx-swap="outerHTML"
+                         hx-push-url="true">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['code']}" th:hx-get="${sortUrl['code']}"
+                                           th:classappend="${sortClass['code']}"
+                                           th:text="#{inventory.reason.code}">Code</a>
+                                    </th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['name']}" th:hx-get="${sortUrl['name']}"
+                                           th:classappend="${sortClass['name']}"
+                                           th:text="#{inventory.reason.name}">Name</a>
+                                    </th>
+                                    <th scope="col" th:text="#{inventory.reason.direction}">Direction</th>
+                                    <th scope="col" th:text="#{inventory.reason.approval}">Approval</th>
+                                    <th scope="col" th:text="#{inventory.reason.status}">Status</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="r : ${page.content()}">
+                                    <tr th:replace="~{inventory/adjustment-reasons :: row}"></tr>
+                                </th:block>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="6" class="text-center wms-muted" th:text="#{common.noResults}">No
+                                        results
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}">Showing</small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- One row; also returned alone by the activate / deactivate action. -->
+<table>
+    <tbody>
+    <tr th:fragment="row">
+        <td><strong th:text="${r.code()}">DAMAGED</strong></td>
+        <td th:text="${r.name()}">Damaged goods</td>
+        <td th:text="#{'inventory.reason.direction.' + ${r.direction()}}">Decrease only</td>
+        <td>
+            <span class="badge" th:classappend="${r.requiresApproval()} ? 'badge-warning' : 'badge-success'"
+                  th:text="${r.requiresApproval()} ? #{inventory.reason.approval.yes} : #{inventory.reason.approval.no}">Required</span>
+        </td>
+        <td>
+            <span class="badge" th:classappend="${r.active()} ? 'badge-success' : 'badge-dark'"
+                  th:text="${r.active()} ? #{common.active} : #{common.inactive}">Active</span>
+        </td>
+        <td class="text-right">
+            <a class="btn btn-sm btn-light" th:href="@{/adjustment-reasons/{id}/edit(id=${r.id()})}"
+               th:text="#{common.edit}">Edit</a>
+            <button type="button" class="btn btn-sm" th:classappend="${r.active()} ? 'btn-danger' : 'btn-success'"
+                    th:attr="hx-post=@{/adjustment-reasons/{id}/status(id=${r.id()}, active=${!r.active()})},
+                             hx-confirm=(${r.active()} ? #{inventory.reason.deactivate.confirm} : null)"
+                    hx-target="closest tr" hx-swap="outerHTML" hx-push-url="false">
+                <i class="zmdi" th:classappend="${r.active()} ? 'zmdi-block' : 'zmdi-check'"></i>
+            </button>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
