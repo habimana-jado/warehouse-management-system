@@ -38,7 +38,13 @@
                         <i class="zmdi zmdi-assignment"></i> <span th:text="#{pick.task.open}">Task</span>
                     </a>
                     <a class="btn btn-secondary"
-                       th:href="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')} ? @{/pick-lists} : @{/tasks/my}">
+                       th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"
+                       th:href="@{/pick-lists}">
+                        <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{outbound.action.back}">Back</span>
+                    </a>
+                    <a class="btn btn-secondary"
+                       th:unless="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"
+                       th:href="@{/tasks/my}">
                         <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{outbound.action.back}">Back</span>
                     </a>
                 </div>
