@@ -47,9 +47,13 @@ public class TaskServiceImpl implements TaskService {
     private static final int MAX_PAGE_SIZE = 100;
     private static final Set<TaskStatus> ASSIGNABLE = EnumSet.of(TaskStatus.OPEN, TaskStatus.ASSIGNED);
     private static final Set<TaskStatus> HELD = EnumSet.of(TaskStatus.ASSIGNED, TaskStatus.IN_PROGRESS);
-    /** Task types whose lines may leave the lot open for a LOT-tracked item: the worker chooses the lot on the floor. */
+    /**
+     * Task types whose lines may leave the lot open for a LOT-tracked item: the worker chooses the lot on the floor.
+     */
     private static final Set<TaskType> LOT_OPTIONAL_TYPES = EnumSet.of(TaskType.PICK);
-    /** Task types whose lines may leave the serial open for a SERIAL-tracked item (the worker scans the units). */
+    /**
+     * Task types whose lines may leave the serial open for a SERIAL-tracked item (the worker scans the units).
+     */
     private static final Set<TaskType> SERIAL_OPTIONAL_TYPES = EnumSet.of(TaskType.PICK);
 
     private final TaskRepository taskRepository;
@@ -256,12 +260,14 @@ public class TaskServiceImpl implements TaskService {
         List<String> typeNames = wanted.stream().map(Enum::name).toList();
 
         // FOR UPDATE SKIP LOCKED: concurrent pickers get different tasks, never the same one
-        return taskRepository.lockNextOpen(warehouseId, typeNames).map(t -> {
-            applyAssignment(t, userId);
-            save(t);
-            record(t, TaskEventType.ASSIGNED, TaskStatus.OPEN, TaskStatus.ASSIGNED, userId, "claimed");
-            return toResponse(t);
-        });
+        return taskRepository.lockNextOpenId(warehouseId, typeNames)
+                .flatMap(taskRepository::findById)
+                .map(t -> {
+                    applyAssignment(t, userId);
+                    save(t);
+                    record(t, TaskEventType.ASSIGNED, TaskStatus.OPEN, TaskStatus.ASSIGNED, userId, "claimed");
+                    return toResponse(t);
+                });
     }
 
     @Override
@@ -386,7 +392,9 @@ public class TaskServiceImpl implements TaskService {
                 .orElseThrow(() -> new NotFoundException("Task", id));
     }
 
-    /** Flush so the @Version bump is visible in the response we are about to build. */
+    /**
+     * Flush so the @Version bump is visible in the response we are about to build.
+     */
     private Task save(Task t) {
         return taskRepository.saveAndFlush(t);
     }
@@ -492,7 +500,9 @@ public class TaskServiceImpl implements TaskService {
                 .collect(Collectors.toMap(ItemResponse::id, Function.identity()));
     }
 
-    /** One batch call for every location the request mentions (lines and zone). */
+    /**
+     * One batch call for every location the request mentions (lines and zone).
+     */
     private Map<UUID, LocationResponse> indexLocations(CreateTaskRequest r) {
         Set<UUID> ids = new HashSet<>();
         if (r.zoneLocationId() != null) ids.add(r.zoneLocationId());

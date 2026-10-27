@@ -69,12 +69,12 @@
                                            th:classappend="${sortClass['createdAt']}"
                                            th:text="#{inventory.transfer.created}">Created</a>
                                     </th>
+                                    <th scope="col"></th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 <tr th:each="r : ${page.content()}" th:with="t=${r.transfer()}">
-                                    <td><a th:href="@{/transfers/{id}(id=${t.id()})}" th:text="${t.transferNumber()}">TRF-000001</a>
-                                    </td>
+                                    <td th:text="${t.transferNumber()}">TRF-000001</td>
                                     <td><span th:replace="~{inventory/fragments :: transferType(${t.type()})}"></span>
                                     </td>
                                     <td>
@@ -87,9 +87,15 @@
                                     </td>
                                     <td class="text-right" th:text="${t.lineCount()}">1</td>
                                     <td th:text="${@uiFormat.dateTime(t.createdAt())}"></td>
+                                    <td class="text-right">
+                                        <a class="btn btn-sm btn-light" th:href="@{/transfers/{id}(id=${t.id()})}">
+                                            <i class="zmdi zmdi-eye"></i> <span
+                                                th:text="#{inventory.action.view}">View</span>
+                                        </a>
+                                    </td>
                                 </tr>
                                 <tr th:if="${page.content().isEmpty()}">
-                                    <td colspan="6" class="text-center wms-muted" th:text="#{common.noResults}">No
+                                    <td colspan="7" class="text-center wms-muted" th:text="#{common.noResults}">No
                                         results
                                     </td>
                                 </tr>

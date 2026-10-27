@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="soStatus(s)" th:switch="${s.name()}">
+    <span th:case="'DRAFT'" class="badge badge-dark" th:text="#{so.status.DRAFT}">Draft</span>
+    <span th:case="'CONFIRMED'" class="badge badge-info" th:text="#{so.status.CONFIRMED}">Confirmed</span>
+    <span th:case="'PARTIALLY_SHIPPED'" class="badge badge-warning" th:text="#{so.status.PARTIALLY_SHIPPED}">Partially shipped</span>
+    <span th:case="'SHIPPED'" class="badge badge-success" th:text="#{so.status.SHIPPED}">Shipped</span>
+    <span th:case="'CLOSED'" class="badge badge-dark" th:text="#{so.status.CLOSED}">Closed</span>
+    <span th:case="'CANCELLED'" class="badge badge-danger" th:text="#{so.status.CANCELLED}">Cancelled</span>
+</th:block>
+
+<th:block th:fragment="pickStatus(s)" th:switch="${s.name()}">
+    <span th:case="'RELEASED'" class="badge badge-info" th:text="#{pick.status.RELEASED}">Released</span>
+    <span th:case="'PICKING'" class="badge badge-warning" th:text="#{pick.status.PICKING}">Picking</span>
+    <span th:case="'PICKED'" class="badge badge-success" th:text="#{pick.status.PICKED}">Picked</span>
+    <span th:case="'CANCELLED'" class="badge badge-danger" th:text="#{pick.status.CANCELLED}">Cancelled</span>
+</th:block>
+
+<th:block th:fragment="shipmentStatus(s)" th:switch="${s.name()}">
+    <span th:case="'DISPATCHED'" class="badge badge-info" th:text="#{shipment.status.DISPATCHED}">Dispatched</span>
+    <span th:case="'DELIVERED'" class="badge badge-success" th:text="#{shipment.status.DELIVERED}">Delivered</span>
+</th:block>
+
+<th:block th:fragment="pickLineStatus(s)" th:switch="${s.name()}">
+    <span th:case="'PENDING'" class="badge badge-warning" th:text="#{pickline.status.PENDING}">To pick</span>
+    <span th:case="'PICKED'" class="badge badge-success" th:text="#{pickline.status.PICKED}">Picked</span>
+    <span th:case="'SHORT'" class="badge badge-danger" th:text="#{pickline.status.SHORT}">Short</span>
+</th:block>
+</body>
+</html>

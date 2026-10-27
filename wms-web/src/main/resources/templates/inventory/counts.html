@@ -68,12 +68,12 @@
                                            th:text="#{inventory.count.created}">Created</a>
                                     </th>
                                     <th scope="col" th:text="#{inventory.count.completed}">Completed</th>
+                                    <th scope="col"></th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 <tr th:each="r : ${page.content()}" th:with="c=${r.count()}">
-                                    <td><a th:href="@{/counts/{id}(id=${c.id()})}" th:text="${c.countNumber()}">CNT-000001</a>
-                                    </td>
+                                    <td th:text="${c.countNumber()}">CNT-000001</td>
                                     <td th:text="${r.zoneName() != null} ? ${r.zoneName()} : #{inventory.count.wholeWarehouse}">
                                         Whole warehouse
                                     </td>
@@ -84,9 +84,14 @@
                                     </td>
                                     <td th:text="${@uiFormat.dateTime(c.createdAt())}"></td>
                                     <td th:text="${@uiFormat.dateTime(c.completedAt())}"></td>
+                                    <td class="text-right">
+                                        <a class="btn btn-sm btn-light" th:href="@{/counts/{id}(id=${c.id()})}">
+                                            <i class="zmdi zmdi-eye"></i> <span th:text="#{inventory.action.view}">View</span>
+                                        </a>
+                                    </td>
                                 </tr>
                                 <tr th:if="${page.content().isEmpty()}">
-                                    <td colspan="6" class="text-center wms-muted" th:text="#{common.noResults}">No
+                                    <td colspan="7" class="text-center wms-muted" th:text="#{common.noResults}">No
                                         results
                                     </td>
                                 </tr>

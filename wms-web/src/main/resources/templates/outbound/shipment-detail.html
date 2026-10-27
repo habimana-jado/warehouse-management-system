@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'shipments')}">
+<head>
+    <title th:text="#{shipment.detail.title(${view.shipment().shipmentNumber()})}">Shipment</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div th:replace="~{outbound/shipment-detail :: panel}"></div>
+        </div>
+    </div>
+</th:block>
+
+<!-- Re-rendered as a whole after the delivery is confirmed. -->
+<div id="shipment-panel" th:fragment="panel" th:with="s=${view.shipment()}">
+    <div class="card">
+        <div class="card-body">
+
+            <div class="alert alert-success alert-dismissible" th:if="${notice}">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <div class="alert-message" th:text="#{${notice}(${s.shipmentNumber()})}">Done</div>
+            </div>
+            <div class="alert alert-danger alert-dismissible" th:if="${error}">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <div class="alert-message" th:text="${error}">Problem</div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="card-title mb-1" th:text="${s.shipmentNumber()}">DN-000001</div>
+                    <th:block th:replace="~{outbound/fragments :: shipmentStatus(${s.status()})}"></th:block>
+                </div>
+                <div>
+                    <a class="btn btn-light" th:href="@{/sales-orders/{id}(id=${s.salesOrderId()})}">
+                        <i class="zmdi zmdi-assignment"></i> <span th:text="#{shipment.order.open}">Sales order</span>
+                    </a>
+                    <a class="btn btn-secondary" th:href="@{/shipments}">
+                        <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{outbound.action.back}">Back</span>
+                    </a>
+                </div>
+            </div>
+            <hr>
+
+            <dl class="row">
+                <dt class="col-sm-3" th:text="#{shipment.field.order}">Sales order</dt>
+                <dd class="col-sm-9" th:text="${s.orderNumber()}">SO-000001</dd>
+                <dt class="col-sm-3" th:text="#{shipment.field.customer}">Customer</dt>
+                <dd class="col-sm-9" th:text="${s.customerName()}">Customer</dd>
+                <dt class="col-sm-3" th:text="#{shipment.field.shipped}">Shipped</dt>
+                <dd class="col-sm-9" th:text="${@uiFormat.dateTime(s.shippedAt())}">date</dd>
+                <dt class="col-sm-3" th:text="#{shipment.field.address}">Ship-to address</dt>
+                <dd class="col-sm-9" th:text="${s.shipToAddress()} ?: '&mdash;'">Address</dd>
+                <dt class="col-sm-3" th:text="#{shipment.field.carrier}">Carrier</dt>
+                <dd class="col-sm-9" th:text="${s.carrier()} ?: '&mdash;'">Carrier</dd>
+                <dt class="col-sm-3" th:text="#{shipment.field.tracking}">Tracking reference</dt>
+                <dd class="col-sm-9" th:text="${s.trackingReference()} ?: '&mdash;'">TRK-1</dd>
+                <dt class="col-sm-3" th:text="#{shipment.field.packages}">Packages</dt>
+                <dd class="col-sm-9" th:text="${s.packageCount()} ?: '&mdash;'">2</dd>
+                <th:block th:if="${s.notes() != null}">
+                    <dt class="col-sm-3" th:text="#{shipment.field.notes}">Notes</dt>
+                    <dd class="col-sm-9" th:text="${s.notes()}">Notes</dd>
+                </th:block>
+                <th:block th:if="${s.deliveredAt() != null}">
+                    <dt class="col-sm-3" th:text="#{shipment.field.delivered}">Delivered</dt>
+                    <dd class="col-sm-9" th:text="${@uiFormat.dateTime(s.deliveredAt())}">date</dd>
+                    <dt class="col-sm-3" th:text="#{shipment.field.receivedBy}">Received by</dt>
+                    <dd class="col-sm-9" th:text="${s.receivedByName()} ?: '&mdash;'">Name</dd>
+                    <th:block th:if="${s.podNotes() != null}">
+                        <dt class="col-sm-3" th:text="#{shipment.field.podNotes}">Delivery notes</dt>
+                        <dd class="col-sm-9" th:text="${s.podNotes()}">Notes</dd>
+                    </th:block>
+                </th:block>
+            </dl>
+
+            <h6 th:text="#{shipment.lines.title}">Goods on this delivery note</h6>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th scope="col" th:text="#{shipment.line.col.no}">#</th>
+                        <th scope="col" th:text="#{shipment.line.col.item}">Item</th>
+                        <th scope="col" class="text-right" th:text="#{shipment.line.col.qty}">Quantity</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="l : ${s.lines()}">
+                        <td th:text="${l.lineNo()}">1</td>
+                        <td>
+                            <span th:text="${l.itemSku()}">SKU-1</span>
+                            <span class="wms-muted" th:text="${l.itemName()}">Item name</span>
+                        </td>
+                        <td class="text-right" th:text="${@outboundFormat.qty(l.quantity())} + ' ' + ${l.baseUom()}">10 pcs</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- proof of delivery (optional) -->
+            <div class="mt-4" th:if="${view.canConfirmDelivery()}">
+                <hr>
+                <h6 th:text="#{shipment.delivery.title}">Confirm delivery</h6>
+                <small class="wms-muted" th:text="#{shipment.delivery.help}">Optional proof of delivery. It does not change the order status.</small>
+                <form class="mt-2" method="post" th:object="${deliveryForm}"
+                      th:action="@{/shipments/{id}/delivery(id=${s.id()})}"
+                      th:hx-post="@{/shipments/{id}/delivery(id=${s.id()})}"
+                      hx-target="#shipment-panel" hx-swap="outerHTML">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="deliveredAt" th:text="#{shipment.delivery.at}">Delivered at (empty = now)</label>
+                            <input id="deliveredAt" type="datetime-local" class="form-control" th:field="*{deliveredAt}"
+                                   th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('deliveredAt')}"
+                                 th:errors="*{deliveredAt}">Error</div>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="receivedByName" th:text="#{shipment.delivery.receivedBy}">Received by</label>
+                            <input id="receivedByName" type="text" maxlength="120" class="form-control"
+                                   th:field="*{receivedByName}" th:errorclass="is-invalid">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="podNotes" th:text="#{shipment.delivery.notes}">Notes</label>
+                            <input id="podNotes" type="text" maxlength="500" class="form-control" th:field="*{podNotes}"
+                                   th:errorclass="is-invalid">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="zmdi zmdi-check"></i> <span th:text="#{shipment.delivery.submit}">Confirm delivery</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'sales-orders')}">
+<head>
+    <title th:text="#{so.detail.title(${view.order().orderNumber()})}">Sales order</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div th:replace="~{outbound/sales-order-detail :: panel}"></div>
+        </div>
+    </div>
+</th:block>
+
+<!-- Re-rendered as a whole after every action (slice 2). -->
+<div id="so-panel" th:fragment="panel" th:with="o=${view.order()}">
+    <div class="card">
+        <div class="card-body">
+
+            <div class="alert alert-success alert-dismissible" th:if="${notice}">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <div class="alert-message" th:text="#{${notice}(${o.orderNumber()})}">Done</div>
+            </div>
+            <div class="alert alert-danger alert-dismissible" th:if="${error}">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <div class="alert-message" th:text="${error}">Problem</div>
+            </div>
+            <div class="alert alert-warning alert-dismissible" th:if="${warnings != null and !warnings.isEmpty()}">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <div class="alert-message">
+                    <strong th:text="#{so.confirm.warnings.title}">Stock may not cover this order</strong>
+                    <ul class="mb-0">
+                        <li th:each="w : ${warnings}"
+                            th:text="#{so.confirm.warnings.line(${w.itemSku()}, ${w.itemName()}, ${@outboundFormat.qty(w.requiredQty())}, ${@outboundFormat.qty(w.availableQty())})}">
+                            SKU-1 Item: ordered 10, available in storage 4</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="card-title mb-1" th:text="${o.orderNumber()}">SO-000001</div>
+                    <th:block th:replace="~{outbound/fragments :: soStatus(${o.status()})}"></th:block>
+                    <span class="badge badge-danger ml-1" th:if="${view.overdue()}" th:text="#{so.overdue}">Overdue</span>
+                </div>
+                <div>
+                    <div>
+                        <a class="btn btn-light" th:if="${view.canEdit()}"
+                           th:href="@{/sales-orders/{id}/edit(id=${o.id()})}">
+                            <i class="zmdi zmdi-edit"></i> <span th:text="#{outbound.action.edit}">Edit</span>
+                        </a>
+                        <button type="button" class="btn btn-success" th:if="${view.canConfirm()}"
+                                th:hx-post="@{/sales-orders/{id}/confirm(id=${o.id()})}"
+                                th:hx-confirm="#{so.confirm.confirm}"
+                                hx-target="#so-panel" hx-swap="outerHTML">
+                            <i class="zmdi zmdi-check"></i> <span th:text="#{so.confirm}">Confirm order</span>
+                        </button>
+                        <a class="btn btn-primary" th:if="${view.canRelease()}" href="#release-card">
+                            <i class="zmdi zmdi-shopping-basket"></i> <span th:text="#{so.release.button}">Release for picking</span>
+                        </a>
+                        <a class="btn btn-primary" th:if="${view.canShip()}" th:href="@{/sales-orders/{id}/ship(id=${o.id()})}">
+                            <i class="zmdi zmdi-truck"></i> <span th:text="#{shipment.ship.button}">Ship</span>
+                        </a>
+                        <button type="button" class="btn btn-warning" th:if="${view.canClose()}"
+                                th:hx-post="@{/sales-orders/{id}/close(id=${o.id()})}"
+                                th:hx-confirm="#{so.close.confirm}"
+                                hx-target="#so-panel" hx-swap="outerHTML">
+                            <i class="zmdi zmdi-block"></i> <span th:text="#{so.close}">Close short</span>
+                        </button>
+                        <a class="btn btn-secondary" th:href="@{/sales-orders}">
+                            <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{outbound.action.back}">Back</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <hr>
+
+            <dl class="row">
+                <dt class="col-sm-3" th:text="#{so.field.customer}">Customer</dt>
+                <dd class="col-sm-9" th:text="${o.customerName()}">Customer</dd>
+
+                <dt class="col-sm-3" th:text="#{so.field.orderDate}">Order date</dt>
+                <dd class="col-sm-9" th:text="${o.orderDate()}">2026-10-01</dd>
+
+                <dt class="col-sm-3" th:text="#{so.field.required}">Required date</dt>
+                <dd class="col-sm-9" th:text="${o.requiredDate()} ?: '&mdash;'">2026-10-15</dd>
+
+                <dt class="col-sm-3" th:text="#{so.field.customerRef}">Customer reference</dt>
+                <dd class="col-sm-9" th:text="${o.customerReference()} ?: '&mdash;'">PO-77</dd>
+
+                <dt class="col-sm-3" th:text="#{so.field.currency}">Currency</dt>
+                <dd class="col-sm-9" th:text="${o.currency()}">RWF</dd>
+
+                <dt class="col-sm-3" th:text="#{so.field.total}">Ordered total</dt>
+                <dd class="col-sm-9" th:text="${@outboundFormat.money(o.orderedTotal(), o.currency())}">350,000 RWF</dd>
+
+                <th:block th:if="${o.notes() != null}">
+                    <dt class="col-sm-3" th:text="#{so.field.notes}">Notes</dt>
+                    <dd class="col-sm-9" th:text="${o.notes()}">Notes</dd>
+                </th:block>
+                <th:block th:if="${o.confirmedAt() != null}">
+                    <dt class="col-sm-3" th:text="#{so.field.confirmed}">Confirmed</dt>
+                    <dd class="col-sm-9" th:text="${@uiFormat.dateTime(o.confirmedAt())}">date</dd>
+                </th:block>
+                <th:block th:if="${o.closedAt() != null}">
+                    <dt class="col-sm-3" th:text="#{so.field.completed}">Completed</dt>
+                    <dd class="col-sm-9" th:text="${@uiFormat.dateTime(o.closedAt())}">date</dd>
+                </th:block>
+                <th:block th:if="${o.cancelReason() != null}">
+                    <dt class="col-sm-3" th:text="#{so.field.cancelReason}">Cancel reason</dt>
+                    <dd class="col-sm-9" th:text="${o.cancelReason()}">Reason</dd>
+                </th:block>
+            </dl>
+
+            <ul class="nav nav-tabs nav-tabs-primary top-icon">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="pill" href="#tab-so-lines">
+                        <i class="zmdi zmdi-format-list-bulleted"></i> <span th:text="#{so.tab.lines}">Lines</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="pill" href="#tab-so-picks">
+                        <i class="zmdi zmdi-shopping-basket"></i> <span th:text="#{so.tab.picks}">Pick lists</span>
+                        <span class="badge badge-light ml-1" th:text="${view.pickLists().size()}">0</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="pill" href="#tab-so-shipments">
+                        <i class="zmdi zmdi-truck"></i> <span th:text="#{so.tab.shipments}">Shipments</span>
+                        <span class="badge badge-light ml-1" th:text="${view.shipments().size()}">0</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content p-3">
+                <!-- lines -->
+                <div id="tab-so-lines" class="tab-pane active">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th scope="col" th:text="#{so.line.col.no}">#</th>
+                                <th scope="col" th:text="#{so.line.col.item}">Item</th>
+                                <th scope="col" class="text-right" th:text="#{so.line.col.ordered}">Ordered</th>
+                                <th scope="col" class="text-right" th:text="#{so.line.col.released}">On pick lists</th>
+                                <th scope="col" class="text-right" th:text="#{so.line.col.picked}">Picked</th>
+                                <th scope="col" class="text-right" th:text="#{so.line.col.shipped}">Shipped</th>
+                                <th scope="col" class="text-right" th:text="#{so.line.col.price}">Unit price</th>
+                                <th scope="col" class="text-right" th:text="#{so.line.col.total}">Line total</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="l : ${o.lines()}">
+                                <td th:text="${l.lineNo()}">1</td>
+                                <td>
+                                    <span th:text="${l.itemSku()}">SKU-1</span>
+                                    <span class="wms-muted" th:text="${l.itemName()}">Item name</span>
+                                </td>
+                                <td class="text-right" th:text="${@outboundFormat.qty(l.orderedQty())} + ' ' + ${l.baseUom()}">100 pcs</td>
+                                <td class="text-right">
+                                    <span th:text="${@outboundFormat.qty(l.releasedQty())}">100</span>
+                                    <span class="badge badge-warning ml-1"
+                                          th:if="${l.unreleasedQty().signum() > 0 and l.releasedQty().signum() > 0}"
+                                          th:title="#{so.line.backorder.help}"
+                                          th:text="'+' + ${@outboundFormat.qty(l.unreleasedQty())}">+20</span>
+                                </td>
+                                <td class="text-right" th:text="${@outboundFormat.qty(l.pickedQty())}">80</td>
+                                <td class="text-right" th:text="${@outboundFormat.qty(l.shippedQty())}">60</td>
+                                <td class="text-right" th:text="${@outboundFormat.money(l.unitPrice(), o.currency())}">500 RWF</td>
+                                <td class="text-right" th:text="${@outboundFormat.money(l.lineTotal(), o.currency())}">50,000 RWF</td>
+                            </tr>
+                            <tr th:if="${o.lines().isEmpty()}">
+                                <td colspan="8" class="text-center wms-muted" th:text="#{so.line.empty}">No lines</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- pick lists -->
+                <div id="tab-so-picks" class="tab-pane">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th scope="col" th:text="#{so.pick.col.number}">Pick list</th>
+                                <th scope="col" th:text="#{so.pick.col.status}">Status</th>
+                                <th scope="col" th:text="#{so.pick.col.released}">Released</th>
+                                <th scope="col" class="text-right" th:text="#{so.pick.col.done}">Lines done / total</th>
+                                <th scope="col"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="p : ${view.pickLists()}">
+                                <td th:text="${p.pickNumber()}">PCK-000001</td>
+                                <td><th:block th:replace="~{outbound/fragments :: pickStatus(${p.status()})}"></th:block></td>
+                                <td th:text="${@uiFormat.dateTime(p.releasedAt())}">date</td>
+                                <td class="text-right" th:text="${p.doneCount()} + ' / ' + ${p.lineCount()}">1 / 3</td>
+                                <td class="text-right">
+                                    <a class="btn btn-sm btn-light" th:href="@{/pick-lists/{id}(id=${p.id()})}">
+                                        <i class="zmdi zmdi-eye"></i> <span th:text="#{outbound.action.view}">View</span>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${view.pickLists().isEmpty()}">
+                                <td colspan="5" class="text-center wms-muted" th:text="#{so.pick.empty}">Nothing released for picking yet</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+                <!-- shipments -->
+                <div id="tab-so-shipments" class="tab-pane">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th scope="col" th:text="#{so.shipment.col.number}">Delivery note</th>
+                                <th scope="col" th:text="#{so.shipment.col.status}">Status</th>
+                                <th scope="col" th:text="#{so.shipment.col.shipped}">Shipped</th>
+                                <th scope="col" class="text-right" th:text="#{so.shipment.col.packages}">Packages</th>
+                                <th scope="col" class="text-right" th:text="#{so.shipment.col.lines}">Lines</th>
+                                <th scope="col"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="s : ${view.shipments()}">
+                                <td th:text="${s.shipmentNumber()}">DN-000001</td>
+                                <td><th:block th:replace="~{outbound/fragments :: shipmentStatus(${s.status()})}"></th:block></td>
+                                <td th:text="${@uiFormat.dateTime(s.shippedAt())}">date</td>
+                                <td class="text-right" th:text="${s.packageCount()} ?: '&mdash;'">2</td>
+                                <td class="text-right" th:text="${s.lineCount()}">3</td>
+                                <td class="text-right">
+                                    <a class="btn btn-sm btn-light" th:href="@{/shipments/{id}(id=${s.id()})}">
+                                        <i class="zmdi zmdi-eye"></i> <span th:text="#{outbound.action.view}">View</span>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${view.shipments().isEmpty()}">
+                                <td colspan="6" class="text-center wms-muted" th:text="#{so.shipment.empty}">Nothing shipped yet</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- release for picking -->
+            <div id="release-card" class="mt-4" th:if="${view.canRelease()}">
+                <hr>
+                <h6 th:text="#{so.release.title}">Release for picking</h6>
+                <small class="wms-muted" th:text="#{so.release.help}">
+                    Puts everything not yet on a pick list on a new pick list and creates the picking task.</small>
+                <form class="mt-2" method="post" th:object="${releaseForm}"
+                      th:action="@{/sales-orders/{id}/release(id=${o.id()})}"
+                      th:hx-post="@{/sales-orders/{id}/release(id=${o.id()})}"
+                      hx-target="#so-panel" hx-swap="outerHTML">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="release-priority" th:text="#{so.release.priority}">Priority</label>
+                            <select id="release-priority" class="form-control" th:field="*{priority}">
+                                <option th:each="p : ${priorities}" th:value="${p}" th:text="#{'outbound.priority.' + ${p}}">Normal</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="release-due" th:text="#{so.release.due}">Due date</label>
+                            <input id="release-due" type="date" class="form-control" th:field="*{dueDate}" th:errorclass="is-invalid">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="release-notes" th:text="#{so.release.notes}">Notes for the pickers</label>
+                            <input id="release-notes" type="text" maxlength="1000" class="form-control" th:field="*{notes}"
+                                   th:errorclass="is-invalid">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="zmdi zmdi-shopping-basket"></i> <span th:text="#{so.release.button}">Release for picking</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- cancel with a reason (draft or confirmed orders, only while nothing is picked) -->
+            <div class="mt-4" th:if="${view.canCancel()}">
+                <hr>
+                <h6 th:text="#{so.cancel.title}">Cancel this sales order</h6>
+                <small class="wms-muted" th:text="#{so.cancel.help}">Possible only while nothing is picked. Open pick lists are cancelled with it.</small>
+                <form class="mt-2" method="post" th:object="${cancelForm}"
+                      th:action="@{/sales-orders/{id}/cancel(id=${o.id()})}"
+                      th:hx-post="@{/sales-orders/{id}/cancel(id=${o.id()})}"
+                      hx-target="#so-panel" hx-swap="outerHTML">
+                    <div class="form-group">
+                        <label for="cancel-reason" th:text="#{so.cancel.reason}">Reason for cancelling</label>
+                        <textarea id="cancel-reason" rows="2" class="form-control" th:field="*{reason}"
+                                  th:errorclass="is-invalid"></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}">Error</div>
+                    </div>
+                    <button type="submit" class="btn btn-danger" th:text="#{so.cancel}">Cancel order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

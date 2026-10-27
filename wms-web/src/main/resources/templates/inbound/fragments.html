@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="poStatus(s)" th:switch="${s.name()}">
+    <span th:case="'DRAFT'" class="badge badge-dark" th:text="#{'po.status.' + ${s}}">Draft</span>
+    <span th:case="'CONFIRMED'" class="badge badge-primary" th:text="#{'po.status.' + ${s}}">Confirmed</span>
+    <span th:case="'PARTIALLY_RECEIVED'" class="badge badge-warning" th:text="#{'po.status.' + ${s}}">Partially received</span>
+    <span th:case="'RECEIVED'" class="badge badge-success" th:text="#{'po.status.' + ${s}}">Received</span>
+    <span th:case="'CLOSED'" class="badge badge-info" th:text="#{'po.status.' + ${s}}">Closed</span>
+    <span th:case="'CANCELLED'" class="badge badge-danger" th:text="#{'po.status.' + ${s}}">Cancelled</span>
+</th:block>
+<th:block th:fragment="putawayStatus(s)" th:switch="${s.name()}">
+    <span th:case="'NOT_REQUIRED'" class="badge badge-dark" th:text="#{'putaway.status.' + ${s}}">Not required</span>
+    <span th:case="'PENDING'" class="badge badge-warning" th:text="#{'putaway.status.' + ${s}}">Waiting</span>
+    <span th:case="'DONE'" class="badge badge-success" th:text="#{'putaway.status.' + ${s}}">Done</span>
+    <span th:case="'SHORT'" class="badge badge-danger" th:text="#{'putaway.status.' + ${s}}">Short</span>
+</th:block>
+<th:block th:fragment="returnStatus(s)" th:switch="${s.name()}">
+    <span th:case="'EXPECTED'" class="badge badge-primary" th:text="#{'return.status.' + ${s}}">Expected</span>
+    <span th:case="'RECEIVED'" class="badge badge-success" th:text="#{'return.status.' + ${s}}">Received</span>
+    <span th:case="'CANCELLED'" class="badge badge-danger" th:text="#{'return.status.' + ${s}}">Cancelled</span>
+</th:block>
+
+</body>
+</html>

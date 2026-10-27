@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'pick-lists')}">
+<head>
+    <title th:text="#{pick.title}">Pick lists</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title mb-0" th:text="#{pick.title}">Pick lists</div>
+                    <hr>
+
+                    <form id="pick-filters" method="get" th:object="${filter}"
+                          th:action="@{/pick-lists}" th:hx-get="@{/pick-lists}"
+                          hx-trigger="input delay:400ms, submit"
+                          hx-target="#pick-results" hx-swap="outerHTML" hx-push-url="true">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <select class="form-control" th:field="*{status}">
+                                    <option value="" th:text="#{pick.filter.open}">Open lists</option>
+                                    <option value="ALL" th:text="#{pick.filter.all}">All statuses</option>
+                                    <option th:each="s : ${statuses}" th:value="${s}" th:text="#{'pick.status.' + ${s}}">Status</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="pick-results" th:fragment="results"
+                         hx-target="#pick-results" hx-swap="outerHTML" hx-push-url="true">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['pickNumber']}" th:hx-get="${sortUrl['pickNumber']}"
+                                           th:classappend="${sortClass['pickNumber']}" th:text="#{pick.col.number}">Pick list</a>
+                                    </th>
+                                    <th scope="col" th:text="#{pick.col.order}">Sales order</th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['status']}" th:hx-get="${sortUrl['status']}"
+                                           th:classappend="${sortClass['status']}" th:text="#{pick.col.status}">Status</a>
+                                    </th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['releasedAt']}" th:hx-get="${sortUrl['releasedAt']}"
+                                           th:classappend="${sortClass['releasedAt']}" th:text="#{pick.col.released}">Released</a>
+                                    </th>
+                                    <th scope="col" class="text-right" th:text="#{pick.col.done}">Lines done / total</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="p : ${page.content()}">
+                                    <tr th:replace="~{outbound/pick-lists :: row}"></tr>
+                                </th:block>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="6" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}"></small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- row fragment: also returnable alone; uses the loop variable p of its caller -->
+<table>
+    <tbody>
+    <tr th:fragment="row">
+        <td th:text="${p.pickNumber()}">PCK-000001</td>
+        <td th:text="${p.orderNumber()}">SO-000001</td>
+        <td><th:block th:replace="~{outbound/fragments :: pickStatus(${p.status()})}"></th:block></td>
+        <td th:text="${@uiFormat.dateTime(p.releasedAt())}">date</td>
+        <td class="text-right" th:text="${p.doneLineCount()} + ' / ' + ${p.lineCount()}">1 / 3</td>
+        <td class="text-right">
+            <a class="btn btn-sm btn-light" th:href="@{/pick-lists/{id}(id=${p.id()})}">
+                <i class="zmdi zmdi-eye"></i> <span th:text="#{outbound.action.view}">View</span>
+            </a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

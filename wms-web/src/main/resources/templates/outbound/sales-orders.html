@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'sales-orders')}">
+<head>
+    <title th:text="#{so.title}">Sales orders</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{so.title}">Sales orders</div>
+                        <a class="btn btn-light" th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER')}" th:href="@{/sales-orders/new}">
+                            <i class="zmdi zmdi-plus"></i> <span th:text="#{so.new}">New sales order</span>
+                        </a>
+                    </div>
+                    <hr>
+
+                    <form id="so-filters" method="get" th:object="${filter}"
+                          th:action="@{/sales-orders}" th:hx-get="@{/sales-orders}"
+                          hx-trigger="input delay:400ms, submit"
+                          hx-target="#so-results" hx-swap="outerHTML" hx-push-url="true">
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <div class="position-relative has-icon-right">
+                                    <input type="text" class="form-control input-shadow" th:field="*{q}"
+                                           th:placeholder="#{so.search}">
+                                    <div class="form-control-position"><i class="icon-magnifier"></i></div>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <select class="form-control" th:field="*{status}">
+                                    <option value="" th:text="#{so.filter.open}">Open orders</option>
+                                    <option value="ALL" th:text="#{so.filter.all}">All statuses</option>
+                                    <option th:each="s : ${statuses}" th:value="${s}" th:text="#{'so.status.' + ${s}}">Status</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <input type="date" class="form-control" th:field="*{orderDateFrom}"
+                                       th:title="#{so.filter.from}">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <input type="date" class="form-control" th:field="*{orderDateTo}"
+                                       th:title="#{so.filter.to}">
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="so-results" th:fragment="results"
+                         hx-target="#so-results" hx-swap="outerHTML" hx-push-url="true">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['orderNumber']}" th:hx-get="${sortUrl['orderNumber']}"
+                                           th:classappend="${sortClass['orderNumber']}" th:text="#{so.col.number}">Order number</a>
+                                    </th>
+                                    <th scope="col" th:text="#{so.col.customer}">Customer</th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['status']}" th:hx-get="${sortUrl['status']}"
+                                           th:classappend="${sortClass['status']}" th:text="#{so.col.status}">Status</a>
+                                    </th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['orderDate']}" th:hx-get="${sortUrl['orderDate']}"
+                                           th:classappend="${sortClass['orderDate']}" th:text="#{so.col.orderDate}">Order date</a>
+                                    </th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['requiredDate']}" th:hx-get="${sortUrl['requiredDate']}"
+                                           th:classappend="${sortClass['requiredDate']}" th:text="#{so.col.required}">Required</a>
+                                    </th>
+                                    <th scope="col" th:text="#{so.col.lines}">Lines</th>
+                                    <th scope="col" th:text="#{so.col.picked}">Picked / ordered</th>
+                                    <th scope="col" th:text="#{so.col.shipped}">Shipped / ordered</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="o : ${page.content()}">
+                                    <tr th:replace="~{outbound/sales-orders :: row}"></tr>
+                                </th:block>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="9" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}"></small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- row fragment: also returnable alone; uses the loop variable o of its caller -->
+<table>
+    <tbody>
+    <tr th:fragment="row">
+        <td th:text="${o.orderNumber()}">SO-000001</td>
+        <td th:text="${o.customerName()}">Customer</td>
+        <td><th:block th:replace="~{outbound/fragments :: soStatus(${o.status()})}"></th:block></td>
+        <td th:text="${o.orderDate()}">2026-10-01</td>
+        <td>
+            <span th:text="${o.requiredDate()} ?: '&mdash;'">2026-10-15</span>
+            <span class="badge badge-danger ml-1" th:if="${o.overdue()}" th:text="#{so.overdue}">Overdue</span>
+        </td>
+        <td th:text="${o.lineCount()}">3</td>
+        <td th:text="${@outboundFormat.qty(o.pickedQty())} + ' / ' + ${@outboundFormat.qty(o.orderedQty())}">0 / 100</td>
+        <td th:text="${@outboundFormat.qty(o.shippedQty())} + ' / ' + ${@outboundFormat.qty(o.orderedQty())}">0 / 100</td>
+        <td class="text-right">
+            <a class="btn btn-sm btn-light" th:href="@{/sales-orders/{id}(id=${o.id()})}">
+                <i class="zmdi zmdi-eye"></i> <span th:text="#{outbound.action.view}">View</span>
+            </a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

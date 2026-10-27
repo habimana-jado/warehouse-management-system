@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'pick-lists')}">
+<head>
+    <title th:text="#{pick.detail.title(${view.list().pickNumber()})}">Pick list</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div th:replace="~{outbound/pick-list-detail :: panel}"></div>
+        </div>
+    </div>
+</th:block>
+
+<!-- Re-rendered as a whole after a confirm or a cancel. -->
+<div id="pick-panel" th:fragment="panel" th:with="p=${view.list()}">
+    <div class="card">
+        <div class="card-body">
+
+            <div class="alert alert-success alert-dismissible" th:if="${notice}">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <div class="alert-message" th:text="#{${notice}(${p.pickNumber()})}">Done</div>
+            </div>
+            <div class="alert alert-danger alert-dismissible" th:if="${error}">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <div class="alert-message" th:text="${error}">Problem</div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="card-title mb-1" th:text="${p.pickNumber()}">PCK-000001</div>
+                    <th:block th:replace="~{outbound/fragments :: pickStatus(${p.status()})}"></th:block>
+                </div>
+                <div>
+                    <a class="btn btn-light" th:if="${view.taskId() != null}" th:href="@{/tasks/{id}(id=${view.taskId()})}">
+                        <i class="zmdi zmdi-assignment"></i> <span th:text="#{pick.task.open}">Task</span>
+                    </a>
+                    <a class="btn btn-secondary"
+                       th:href="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')} ? @{/pick-lists} : @{/tasks/my}">
+                        <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{outbound.action.back}">Back</span>
+                    </a>
+                </div>
+            </div>
+            <hr>
+
+            <dl class="row">
+                <dt class="col-sm-3" th:text="#{pick.field.order}">Sales order</dt>
+                <dd class="col-sm-9">
+                    <a th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"
+                       th:href="@{/sales-orders/{id}(id=${p.salesOrderId()})}" th:text="${p.orderNumber()}">SO-000001</a>
+                    <span th:unless="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}" th:text="${p.orderNumber()}">SO-000001</span>
+                    <span class="wms-muted" th:text="'- ' + ${p.customerName()}">- Customer</span>
+                </dd>
+                <dt class="col-sm-3" th:text="#{pick.field.task}">Task</dt>
+                <dd class="col-sm-9" th:text="${view.taskNumber()} ?: '&mdash;'">TSK-000001</dd>
+                <dt class="col-sm-3" th:text="#{pick.field.released}">Released</dt>
+                <dd class="col-sm-9" th:text="${@uiFormat.dateTime(p.releasedAt())}">date</dd>
+                <th:block th:if="${p.completedAt() != null}">
+                    <dt class="col-sm-3" th:text="#{pick.field.completed}">Completed</dt>
+                    <dd class="col-sm-9" th:text="${@uiFormat.dateTime(p.completedAt())}">date</dd>
+                </th:block>
+                <th:block th:if="${p.cancelReason() != null}">
+                    <dt class="col-sm-3" th:text="#{pick.field.cancelReason}">Cancel reason</dt>
+                    <dd class="col-sm-9" th:text="${p.cancelReason()}">Reason</dd>
+                </th:block>
+            </dl>
+
+            <div class="alert alert-info" th:if="${view.taskNotStarted()}">
+                <span th:text="#{pick.task.notStarted}">Claim or start the picking task before confirming lines.</span>
+                <a th:if="${view.taskId() != null}" th:href="@{/tasks/{id}(id=${view.taskId()})}" th:text="#{pick.task.open}">Task</a>
+            </div>
+
+            <th:block th:each="lv : ${view.lines()}">
+                <div th:replace="~{outbound/pick-list-detail :: pickLine}"></div>
+            </th:block>
+
+            <!-- manager: cancel the open list (lines already picked stay issued and shippable) -->
+            <div class="mt-4" th:if="${view.canCancel()}">
+                <hr>
+                <h6 th:text="#{pick.cancel.title}">Cancel this pick list</h6>
+                <small class="wms-muted" th:text="#{pick.cancel.help}">Lines already picked stay picked and can still be shipped. The rest goes back to the order as unreleased quantity.</small>
+                <form class="mt-2" method="post" th:object="${cancelForm}"
+                      th:action="@{/pick-lists/{id}/cancel(id=${p.id()})}"
+                      th:hx-post="@{/pick-lists/{id}/cancel(id=${p.id()})}"
+                      hx-target="#pick-panel" hx-swap="outerHTML">
+                    <div class="form-group">
+                        <label for="cancel-reason" th:text="#{pick.cancel.reason}">Reason for cancelling</label>
+                        <textarea id="cancel-reason" rows="2" class="form-control" th:field="*{reason}"
+                                  th:errorclass="is-invalid"></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}">Error</div>
+                    </div>
+                    <button type="submit" class="btn btn-danger" th:text="#{pick.cancel}">Cancel pick list</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- One pick line. Uses lv and view of the caller; swapped alone by the add and remove row buttons. -->
+<div th:fragment="pickLine" th:id="'pick-line-' + ${lv.line().id()}" class="card mt-3"
+     th:with="l=${lv.line()}, base='/pick-lists/' + ${view.list().id()} + '/lines/' + ${l.id()}">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <strong th:text="${l.itemSku()}">SKU-1</strong>
+                <span class="wms-muted" th:text="${l.itemName()}">Item name</span>
+                <span class="badge badge-info ml-1" th:if="${lv.tracking() != 'NONE'}"
+                      th:text="#{'pick.tracking.' + ${lv.tracking()}}">Lot tracked</span>
+            </div>
+            <div class="text-right">
+                <th:block th:replace="~{outbound/fragments :: pickLineStatus(${l.status()})}"></th:block>
+                <div>
+                    <span th:text="${@outboundFormat.qty(l.pickedQty())} + ' / ' + ${@outboundFormat.qty(l.plannedQty())} + ' ' + ${l.baseUom()}">0 / 10 pcs</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- what to pick -->
+        <div class="mt-2" th:if="${l.status().name() == 'PENDING'}">
+            <small class="wms-muted" th:if="${l.suggestedLocationCode() != null}"
+                   th:text="#{pick.suggested(${l.suggestedLocationCode()}, ${l.suggestedLotNumber()} ?: '-')}">Suggested bin</small>
+            <small class="wms-muted" th:if="${l.suggestedLocationCode() == null}" th:text="#{pick.noSuggestion}">No stock found</small>
+        </div>
+
+        <!-- stock to choose from -->
+        <div class="mt-2" th:if="${lv.canWork() and !lv.stock().isEmpty()}">
+            <small class="wms-muted" th:text="#{pick.stock.title}">In stock (STORAGE bins):</small>
+            <ul class="list-unstyled mb-0">
+                <li th:each="s : ${lv.stock()}">
+                    <small>
+                        <span th:text="${s.locationCode()}">A-01</span>
+                        <span th:if="${s.lotNumber() != null}" th:text="'&middot; ' + ${s.lotNumber()}">lot</span>
+                        <span th:if="${s.serialNumber() != null}" th:text="'&middot; ' + ${s.serialNumber()}">serial</span>
+                        <span th:if="${s.expiryDate() != null}" th:text="'&middot; ' + #{pick.stock.expiry(${s.expiryDate()})}">exp</span>
+                        <span th:text="'&middot; ' + ${@outboundFormat.qty(s.quantity())}">40</span>
+                    </small>
+                </li>
+            </ul>
+            <small class="wms-muted" th:if="${lv.stockMore() > 0}" th:text="#{pick.stock.more(${lv.stockMore()})}">+3 more</small>
+        </div>
+
+        <!-- closed line: what was taken -->
+        <div class="table-responsive mt-3" th:if="${!l.allocations().isEmpty()}">
+            <table class="table table-sm">
+                <thead>
+                <tr>
+                    <th scope="col" th:text="#{pick.alloc.bin}">Bin</th>
+                    <th scope="col" th:text="#{pick.alloc.lot}">Lot</th>
+                    <th scope="col" th:text="#{pick.alloc.serial}">Serial</th>
+                    <th scope="col" class="text-right" th:text="#{pick.alloc.qty}">Quantity</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${l.allocations()}">
+                    <td th:text="${a.locationCode()}">A-01</td>
+                    <td>
+                        <span th:text="${a.lotNumber()} ?: '&mdash;'">LOT-1</span>
+                        <span class="badge badge-warning ml-1" th:if="${a.expiryOverride()}" th:text="#{pick.alloc.override}">Expired, allowed</span>
+                    </td>
+                    <td th:text="${a.serialNumber()} ?: '&mdash;'">SN-1</td>
+                    <td class="text-right" th:text="${@outboundFormat.qty(a.quantity())}">10</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-2" th:if="${l.shortReason() != null}">
+            <small class="wms-muted" th:text="#{pick.shortReason(${l.shortReason()})}">Short: reason</small>
+        </div>
+
+        <!-- confirm -->
+        <div class="mt-3" th:if="${lv.canWork()}">
+            <div class="alert alert-danger" th:if="${lv.error() != null}" th:text="${lv.error()}">Problem</div>
+
+            <form class="d-inline" method="post" th:if="${lv.quickPick()}"
+                  th:action="@{${base} + '/confirm'}" th:hx-post="@{${base} + '/confirm'}"
+                  hx-target="#pick-panel" hx-swap="outerHTML">
+                <input type="hidden" name="allocations[0].locationId" th:value="${l.suggestedLocationId()}">
+                <input type="hidden" name="allocations[0].lotNumber" th:value="${l.suggestedLotNumber()}">
+                <input type="hidden" name="allocations[0].quantity" th:value="${l.plannedQty()}">
+                <button type="submit" class="btn btn-success">
+                    <i class="zmdi zmdi-check"></i> <span th:text="#{pick.asSuggested}">Pick as suggested</span>
+                </button>
+            </form>
+
+            <form method="post" class="mt-3"
+                  th:action="@{${base} + '/confirm'}" th:hx-post="@{${base} + '/confirm'}"
+                  hx-target="#pick-panel" hx-swap="outerHTML">
+                <small class="wms-muted" th:text="#{pick.form.help}">Pick differently: choose the bin and lot you took from.</small>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                        <tr>
+                            <th scope="col" th:text="#{pick.alloc.bin}">Bin</th>
+                            <th scope="col" th:if="${lv.tracking() == 'LOT'}" th:text="#{pick.alloc.lot}">Lot</th>
+                            <th scope="col" th:if="${lv.tracking() == 'SERIAL'}" th:text="#{pick.alloc.serials}">Serials (one per line)</th>
+                            <th scope="col" th:unless="${lv.tracking() == 'SERIAL'}" th:text="#{pick.alloc.qty}">Quantity</th>
+                            <th scope="col"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="a, i : ${lv.form().allocations}">
+                            <td>
+                                <select class="form-control form-control-sm" th:name="|allocations[${i.index}].locationId|">
+                                    <option value="" th:text="#{outbound.action.select}">Select...</option>
+                                    <option th:each="b : ${view.storageBins()}" th:value="${b.id()}" th:text="${b.code()}"
+                                            th:selected="${a.locationId != null and b.id() == a.locationId}">A-01</option>
+                                </select>
+                            </td>
+                            <td th:if="${lv.tracking() == 'LOT'}">
+                                <input type="text" maxlength="100" class="form-control form-control-sm" autocomplete="off"
+                                       th:name="|allocations[${i.index}].lotNumber|" th:value="${a.lotNumber}">
+                            </td>
+                            <td th:if="${lv.tracking() == 'SERIAL'}">
+                                <textarea rows="2" class="form-control form-control-sm" autocomplete="off"
+                                          th:name="|allocations[${i.index}].serials|" th:text="${a.serials}"></textarea>
+                            </td>
+                            <td th:unless="${lv.tracking() == 'SERIAL'}">
+                                <input type="number" step="any" min="0" class="form-control form-control-sm"
+                                       th:name="|allocations[${i.index}].quantity|"
+                                       th:value="${a.quantity != null} ? ${@outboundFormat.qty(a.quantity)} : ''">
+                            </td>
+                            <td class="text-nowrap">
+                                <button type="button" class="btn btn-sm btn-light" th:title="#{pick.addRow}"
+                                        th:hx-post="@{${base} + '/rows/add'}"
+                                        th:hx-target="'#pick-line-' + ${l.id()}" hx-swap="outerHTML">
+                                    <i class="zmdi zmdi-plus"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger"
+                                        th:if="${#lists.size(lv.form().allocations) > 1}"
+                                        th:hx-post="@{${base} + '/rows/remove'(index=${i.index})}"
+                                        th:hx-target="'#pick-line-' + ${l.id()}" hx-swap="outerHTML">
+                                    <i class="zmdi zmdi-delete"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-8">
+                        <label th:text="#{pick.form.shortReason}">Reason when less than planned</label>
+                        <input type="text" maxlength="500" class="form-control form-control-sm" name="shortReason"
+                               th:value="${lv.form().shortReason}">
+                    </div>
+                    <div class="form-group col-md-4 d-flex align-items-end" th:if="${view.canOverrideExpiry()}">
+                        <div class="icheck-material-white">
+                            <input type="checkbox" th:id="'override-' + ${l.id()}" name="expiryOverride" value="true"
+                                   th:checked="${lv.form().expiryOverride}">
+                            <label th:for="'override-' + ${l.id()}" th:text="#{pick.form.override}">Allow an expired lot</label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-light px-5" th:text="#{pick.form.confirm}">Confirm pick</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

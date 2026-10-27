@@ -37,7 +37,7 @@
                                         th:text="#{operations.action.start}">Start</span>
                                 </button>
                                 <button type="button" class="btn btn-secondary" th:if="${view.canRelease()}"
-                                        th:attr="hx-post=@{/tasks/{id}/release(id=${view.task().id()}), hx-confirm=#{operations.action.release.confirm}"
+                                        th:attr="hx-post=@{/tasks/{id}/release(id=${view.task().id()})}, hx-confirm=#{operations.action.release.confirm}"
                                         hx-target="#task-panel" hx-swap="outerHTML" hx-push-url="false">
                                     <i class="zmdi zmdi-undo"></i> <span
                                         th:text="#{operations.action.release}">Release</span>

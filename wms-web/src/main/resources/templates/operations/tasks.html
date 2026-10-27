@@ -10,7 +10,8 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="card-title mb-0"
-                             th:text="${mine} ? #{operations.my.title} : #{operations.board.title}">Tasks</div>
+                             th:text="${mine} ? #{operations.my.title} : #{operations.board.title}">Tasks
+                        </div>
                         <form th:if="${mine}" th:action="@{/tasks/claim-next}" method="post">
                             <button type="submit" class="btn btn-light px-4">
                                 <i class="zmdi zmdi-flash"></i> <span th:text="#{operations.claim.button}">Claim next task</span>
@@ -31,32 +32,39 @@
                             <div class="form-group col-md-2">
                                 <select name="status" class="form-control">
                                     <option value="" th:selected="${#strings.isEmpty(filter.status)}"
-                                            th:text="#{operations.filter.status.active}">Active tasks</option>
+                                            th:text="#{operations.filter.status.active}">Active tasks
+                                    </option>
                                     <option value="ALL" th:selected="${filter.status == 'ALL'}"
-                                            th:text="#{operations.filter.status.all}">All statuses</option>
+                                            th:text="#{operations.filter.status.all}">All statuses
+                                    </option>
                                     <option th:each="s : ${statuses}" th:value="${s}"
                                             th:selected="${filter.status == s.name()}"
-                                            th:text="#{'task.status.' + ${s}}">Status</option>
+                                            th:text="#{'task.status.' + ${s}}">Status
+                                    </option>
                                 </select>
                             </div>
                             <div class="form-group col-md-2">
                                 <select name="type" class="form-control">
                                     <option value="" th:text="#{operations.filter.type.all}">All types</option>
                                     <option th:each="tp : ${types}" th:value="${tp}" th:selected="${filter.type == tp}"
-                                            th:text="#{'task.type.' + ${tp}}">Type</option>
+                                            th:text="#{'task.type.' + ${tp}}">Type
+                                    </option>
                                 </select>
                             </div>
                             <div class="form-group col-md-2">
                                 <select name="priority" class="form-control">
                                     <option value="" th:text="#{operations.filter.priority.all}">All priorities</option>
-                                    <option th:each="p : ${priorities}" th:value="${p}" th:selected="${filter.priority == p}"
-                                            th:text="#{'task.priority.' + ${p}}">Priority</option>
+                                    <option th:each="p : ${priorities}" th:value="${p}"
+                                            th:selected="${filter.priority == p}"
+                                            th:text="#{'task.priority.' + ${p}}">Priority
+                                    </option>
                                 </select>
                             </div>
                             <div class="form-group col-md-3 icheck-material-white" th:unless="${mine}">
                                 <input type="checkbox" id="unassignedOnly" name="unassignedOnly" value="true"
                                        th:checked="${filter.unassignedOnly}">
-                                <label for="unassignedOnly" th:text="#{operations.filter.unassigned}">Unassigned only</label>
+                                <label for="unassignedOnly" th:text="#{operations.filter.unassigned}">Unassigned
+                                    only</label>
                             </div>
                         </div>
                     </form>
@@ -87,7 +95,7 @@
                                            th:href="${sortUrl['dueAt']}" th:hx-get="${sortUrl['dueAt']}"
                                            th:text="#{operations.col.due}">Due</a></th>
                                     <th scope="col" th:text="#{operations.col.progress}">Lines</th>
-                                    <th scope="col" th:if="${mine}"></th>
+                                    <th scope="col"></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -95,15 +103,17 @@
                                     <tr th:replace="~{::row}"></tr>
                                 </th:block>
                                 <tr th:if="${page.content().isEmpty()}">
-                                    <td th:colspan="${mine} ? 9 : 8" class="text-center wms-muted"
-                                        th:text="#{common.noResults}">No tasks found</td>
+                                    <td colspan="9" class="text-center wms-muted" th:text="#{common.noResults}">
+                                        No tasks found
+                                    </td>
                                 </tr>
                                 </tbody>
                             </table>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-2">
                             <small class="wms-muted"
-                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}">Showing 1-15 of 142</small>
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}">Showing
+                                1-15 of 142</small>
                             <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
                         </div>
                     </div>
@@ -117,7 +127,7 @@
 <table>
     <tbody>
     <tr th:fragment="row" th:id="|task-${t.id()}|">
-        <td><a th:href="@{/tasks/{id}(id=${t.id()})}" th:text="${t.taskNumber()}">TSK-000001</a></td>
+        <td class="font-weight-bold" th:text="${t.taskNumber()}">TSK-000001</td>
         <td th:text="#{'task.type.' + ${t.type()}}">Pick</td>
         <td><span th:replace="~{operations/fragments :: priority(${t.priority()})}"></span></td>
         <td><span th:replace="~{operations/fragments :: status(${t.status()})}"></span></td>
@@ -132,12 +142,13 @@
             <span class="badge badge-danger" th:if="${t.overdue()}" th:text="#{operations.overdue}">Overdue</span>
         </td>
         <td th:text="${t.doneLineCount() + ' / ' + t.lineCount()}">0 / 3</td>
-        <td th:if="${mine}" class="text-right text-nowrap">
+        <td class="text-right text-nowrap">
             <button type="button" class="btn btn-sm btn-light" th:if="${t.canStart()}"
                     th:attr="hx-post=@{/tasks/{id}/start(id=${t.id()},row=true)}"
-                    hx-target="closest tr" hx-swap="outerHTML" hx-push-url="false"
-                    th:title="#{operations.action.start}">
-                <i class="zmdi zmdi-play"></i></button>
+                    hx-target="closest tr" hx-swap="outerHTML" hx-push-url="false">
+                <i class="zmdi zmdi-play"></i> <span th:text="#{operations.action.start}">Start</span></button>
+            <a class="btn btn-sm btn-light" th:href="@{/tasks/{id}(id=${t.id()})}">
+                <i class="zmdi zmdi-eye"></i> <span th:text="#{operations.action.view}">View</span></a>
         </td>
     </tr>
     </tbody>

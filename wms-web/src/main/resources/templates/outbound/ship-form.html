@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'sales-orders')}">
+<head>
+    <title th:text="#{shipment.ship.title}">Ship order</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title mb-1" th:text="#{shipment.ship.title}">Ship order</div>
+                    <div class="wms-muted" th:text="#{shipment.ship.for(${orderNumber}, ${customerName})}">SO-000001 - Customer</div>
+                    <hr>
+                    <form id="ship-form" method="post" th:object="${form}"
+                          th:action="@{/sales-orders/{id}/ship(id=${orderId})}">
+
+                        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}">Error</p>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="shipToAddress" th:text="#{shipment.field.address}">Ship-to address</label>
+                                <input id="shipToAddress" type="text" maxlength="500" class="form-control"
+                                       th:field="*{shipToAddress}" th:errorclass="is-invalid">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="carrier" th:text="#{shipment.field.carrier}">Carrier</label>
+                                <input id="carrier" type="text" maxlength="100" class="form-control" th:field="*{carrier}"
+                                       th:errorclass="is-invalid">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="trackingReference" th:text="#{shipment.field.tracking}">Tracking reference</label>
+                                <input id="trackingReference" type="text" maxlength="100" class="form-control"
+                                       th:field="*{trackingReference}" th:errorclass="is-invalid">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="packageCount" th:text="#{shipment.field.packages}">Packages</label>
+                                <input id="packageCount" type="number" min="1" class="form-control" th:field="*{packageCount}"
+                                       th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('packageCount')}"
+                                     th:errors="*{packageCount}">Error</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="notes" th:text="#{shipment.field.notes}">Notes</label>
+                            <input id="notes" type="text" maxlength="1000" class="form-control" th:field="*{notes}">
+                        </div>
+
+                        <small class="wms-muted" th:text="#{shipment.ship.help}">Ship what is picked and waiting. Lower a quantity, or set it to 0, to keep goods for a later shipment.</small>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th scope="col" th:text="#{shipment.ship.col.item}">Item</th>
+                                    <th scope="col" class="text-right" th:text="#{shipment.ship.col.ordered}">Ordered</th>
+                                    <th scope="col" class="text-right" th:text="#{shipment.ship.col.shipped}">Already shipped</th>
+                                    <th scope="col" class="text-right" th:text="#{shipment.ship.col.ready}">Picked, waiting</th>
+                                    <th scope="col" th:text="#{shipment.ship.col.qty}">Ship now</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="line, i : *{lines}" th:with="info=${lineInfo.get(line.salesOrderLineId)}">
+                                    <td>
+                                        <input type="hidden" th:field="*{lines[__${i.index}__].salesOrderLineId}">
+                                        <strong th:text="${info.itemSku()}">SKU</strong>
+                                        <span class="wms-muted" th:text="${info.itemName()}">Item name</span>
+                                    </td>
+                                    <td class="text-right" th:text="${@outboundFormat.qty(info.orderedQty())} + ' ' + ${info.baseUom()}">100 pcs</td>
+                                    <td class="text-right" th:text="${@outboundFormat.qty(info.shippedQty())}">40</td>
+                                    <td class="text-right" th:text="${@outboundFormat.qty(info.readyQty())}">60</td>
+                                    <td>
+                                        <input type="number" step="any" min="0" class="form-control"
+                                               th:field="*{lines[__${i.index}__].quantity}" th:errorclass="is-invalid">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-light px-5" th:text="#{shipment.ship.submit}">Dispatch shipment</button>
+                            <a class="btn btn-secondary" th:href="@{/sales-orders/{id}(id=${orderId})}"
+                               th:text="#{outbound.action.cancel}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+</body>
+</html>

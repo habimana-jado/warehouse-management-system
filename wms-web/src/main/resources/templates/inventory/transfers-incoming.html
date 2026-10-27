@@ -12,30 +12,53 @@
                 <div class="card-body">
                     <div class="card-title" th:text="#{inventory.incoming.title}">Incoming transfers</div>
                     <hr>
-                    <small class="wms-muted" th:text="#{inventory.incoming.hint}">Goods on their way to this warehouse</small>
+                    <small class="wms-muted" th:text="#{inventory.incoming.hint}">Transfers on their way to this
+                        warehouse</small>
                     <div class="table-responsive mt-2">
                         <table class="table table-hover">
                             <thead>
                             <tr>
                                 <th scope="col" th:text="#{inventory.transfer.number}">Number</th>
                                 <th scope="col" th:text="#{inventory.incoming.from}">From</th>
+                                <th scope="col" th:text="#{inventory.incoming.stage}">Where it is</th>
                                 <th scope="col" class="text-right" th:text="#{inventory.transfer.lineCount}">Lines</th>
+                                <th scope="col" th:text="#{inventory.transfer.created}">Created</th>
                                 <th scope="col" th:text="#{inventory.transfer.shipped}">Shipped</th>
                                 <th scope="col"></th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr th:each="r : ${rows}" th:with="t=${r.transfer()}">
-                                <td><a th:href="@{/transfers/{id}(id=${t.id()})}" th:text="${t.transferNumber()}">TRF-000001</a></td>
-                                <td th:text="${r.sourceName()}">A</td>
+                                <td th:text="${t.transferNumber()}">TRF-000001</td>
+                                <td th:text="${r.sourceName()}">Warehouse A</td>
+                                <td th:switch="${r.stage()}">
+                                    <span th:case="'IN_TRANSIT'" class="badge badge-info"
+                                          th:text="#{inventory.incoming.stage.IN_TRANSIT}">In transit</span>
+                                    <span th:case="'PICKING'" class="badge badge-warning"
+                                          th:text="#{inventory.incoming.stage.PICKING}">Being picked</span>
+                                    <span th:case="*" class="badge badge-dark"
+                                          th:text="#{inventory.incoming.stage.WAITING}">Waiting to be picked</span>
+                                </td>
                                 <td class="text-right" th:text="${t.lineCount()}">1</td>
+                                <td th:text="${@uiFormat.dateTime(t.createdAt())}"></td>
                                 <td th:text="${@uiFormat.dateTime(t.shippedAt())}"></td>
                                 <td class="text-right">
-                                    <a class="btn btn-sm btn-light" th:href="@{/transfers/{id}(id=${t.id()})}" th:text="#{inventory.incoming.receive}">Receive</a>
+                                    <a class="btn btn-sm btn-success" th:if="${r.stage() == 'IN_TRANSIT'}"
+                                       th:href="@{/transfers/{id}(id=${t.id()})}">
+                                        <i class="zmdi zmdi-assignment-check"></i> <span
+                                            th:text="#{inventory.incoming.receive}">Receive</span>
+                                    </a>
+                                    <a class="btn btn-sm btn-light" th:unless="${r.stage() == 'IN_TRANSIT'}"
+                                       th:href="@{/transfers/{id}(id=${t.id()})}">
+                                        <i class="zmdi zmdi-eye"></i> <span
+                                            th:text="#{inventory.action.view}">View</span>
+                                    </a>
                                 </td>
                             </tr>
                             <tr th:if="${rows.isEmpty()}">
-                                <td colspan="5" class="text-center wms-muted" th:text="#{inventory.incoming.empty}">Nothing is on its way.</td>
+                                <td colspan="7" class="text-center wms-muted" th:text="#{inventory.incoming.empty}">
+                                    Nothing is on its way.
+                                </td>
                             </tr>
                             </tbody>
                         </table>

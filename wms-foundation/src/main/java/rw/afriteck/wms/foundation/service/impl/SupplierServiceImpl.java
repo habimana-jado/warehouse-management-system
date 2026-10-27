@@ -18,6 +18,7 @@ import rw.afriteck.wms.foundation.repository.SupplierRepository;
 import rw.afriteck.wms.foundation.service.SupplierService;
 import rw.afriteck.wms.common.support.Codes;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -73,6 +74,14 @@ public class SupplierServiceImpl implements SupplierService {
     @Override @Transactional(readOnly = true)
     public SupplierResponse getById(UUID id) {
         return PartnerMapper.toSupplier(find(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SupplierResponse> findAllActive() {
+        return suppliers.findAllActiveOrdered().stream()
+                .map(PartnerMapper::toSupplier)
+                .toList();
     }
 
     private Supplier find(UUID id) {

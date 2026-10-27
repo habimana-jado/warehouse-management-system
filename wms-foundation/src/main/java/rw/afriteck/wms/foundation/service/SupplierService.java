@@ -7,6 +7,7 @@ import rw.afriteck.wms.foundation.dtos.CreateSupplierRequest;
 import rw.afriteck.wms.foundation.dtos.SupplierResponse;
 import rw.afriteck.wms.foundation.dtos.UpdateSupplierRequest;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface SupplierService {
@@ -22,4 +23,7 @@ public interface SupplierService {
     Page<SupplierResponse> search(String q, Pageable pageable);
 
     SupplierResponse getById(UUID id);            // lookup for inbound
+
+    /** Active suppliers sorted by name (pickers in the UI). */
+    List<SupplierResponse> findAllActive();
 }

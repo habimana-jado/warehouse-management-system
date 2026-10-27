@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'goods-receipts')}">
+<head>
+    <title th:text="#{inbound.receipt.detail.title(${view.receipt().receiptNumber()})}">Goods receipt</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{inbound.receipt.detail.title(${view.receipt().receiptNumber()})}">Goods receipt</div>
+                        <div>
+                            <a class="btn btn-light btn-sm" th:href="@{/purchase-orders/{id}(id=${view.receipt().purchaseOrderId()})}"
+                               th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','RECEIVER')}">
+                                <i class="zmdi zmdi-assignment"></i> <span th:text="#{inbound.receipt.openPo}">Open purchase order</span>
+                            </a>
+                            <a class="btn btn-secondary btn-sm" th:href="@{/goods-receipts}"
+                               th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','RECEIVER')}"
+                               th:text="#{inbound.action.back}">Back</a>
+                            <a class="btn btn-secondary btn-sm" th:href="@{/tasks/my}"
+                               th:unless="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','RECEIVER')}"
+                               th:text="#{inbound.action.back}">Back</a>
+                        </div>
+                    </div>
+                    <hr>
+                    <div th:replace="~{inbound/goods-receipt-detail :: panel}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- Re-rendered as a whole after a put-away confirmation. -->
+<div id="receipt-panel" th:fragment="panel" th:with="r=${view.receipt()}">
+
+    <div class="alert alert-success alert-dismissible" th:if="${notice}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div class="alert-message" th:text="#{${notice}(${r.receiptNumber()})}">Done</div>
+    </div>
+    <div class="alert alert-danger alert-dismissible" th:if="${error}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div class="alert-message" th:text="${error}">Problem</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inbound.receipt.field.number}">Receipt</small>
+            <div><strong th:text="${r.receiptNumber()}">GRN-000001</strong></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inbound.receipt.field.po}">Purchase order</small>
+            <div th:text="${r.poNumber()}">PO-000001</div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inbound.receipt.field.mode}">Mode</small>
+            <div><span class="badge badge-dark" th:text="#{'receipt.mode.' + ${r.mode()}}">Put-away</span></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inbound.receipt.field.received}">Received</small>
+            <div><span th:text="${@uiFormat.dateTime(r.receivedAt())}">date</span>
+                <span class="wms-muted" th:text="${r.receivedByName()}">User</span></div>
+        </div>
+        <div class="col-md-3 mb-3" th:if="${r.deliveryNoteNumber() != null}">
+            <small class="wms-muted" th:text="#{inbound.receipt.field.note}">Delivery note</small>
+            <div th:text="${r.deliveryNoteNumber()}">DN-1</div>
+        </div>
+        <div class="col-md-6 mb-3" th:if="${r.notes() != null}">
+            <small class="wms-muted" th:text="#{inbound.receipt.field.notes}">Notes</small>
+            <div th:text="${r.notes()}">Notes</div>
+        </div>
+        <div class="col-md-6 mb-3" th:if="${view.task() != null}">
+            <small class="wms-muted" th:text="#{inbound.receipt.field.task}">Put-away task</small>
+            <div>
+                <a th:href="@{/tasks/{id}(id=${view.task().id()})}" th:text="${view.task().taskNumber()}">TSK-000001</a>
+                <span class="badge badge-dark" th:text="${view.task().status()}">OPEN</span>
+                <span class="wms-muted" th:if="${view.task().assigneeName() != null}" th:text="${view.task().assigneeName()}">Worker</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info" th:if="${view.taskNotStarted()}" th:text="#{inbound.receipt.task.unassigned}">Not assigned yet</div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th scope="col" th:text="#{inbound.line.col.no}">#</th>
+                <th scope="col" th:text="#{inbound.line.col.item}">Item</th>
+                <th scope="col" th:text="#{inbound.receive.col.lot}">Lot / serial</th>
+                <th scope="col" th:text="#{inbound.receive.col.expiry}">Expiry</th>
+                <th scope="col" class="text-right" th:text="#{inbound.line.col.accepted}">Accepted</th>
+                <th scope="col" class="text-right" th:text="#{inbound.line.col.rejected}">Rejected</th>
+                <th scope="col" th:text="#{inbound.receipt.line.receivedIn}">Received into</th>
+                <th scope="col" th:text="#{inbound.receipt.line.rejectedTo}">Rejected to</th>
+                <th scope="col" th:text="#{inbound.receipt.line.suggested}">Suggested bin</th>
+                <th scope="col" th:text="#{inbound.receipt.line.putaway}">Put-away</th>
+                <th scope="col" th:if="${view.canWork()}" th:text="#{inbound.receipt.putaway.col}">Confirm put-away</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="l : ${r.lines()}">
+                <td th:text="${l.lineNo()}">1</td>
+                <td><span th:text="${l.itemSku()}">SKU</span> <span class="wms-muted" th:text="${l.itemName()}">Name</span></td>
+                <td><span th:text="${l.lotNumber()}"></span> <span th:text="${l.serialNumber()}"></span></td>
+                <td th:text="${l.expiryDate()}"></td>
+                <td class="text-right" th:text="${@inboundFormat.qty(l.acceptedQty())}">0</td>
+                <td class="text-right">
+                    <span th:text="${@inboundFormat.qty(l.rejectedQty())}">0</span>
+                    <div class="wms-muted" th:if="${l.rejectReason() != null}" th:text="${l.rejectReason()}">Damaged</div>
+                </td>
+                <td th:text="${l.receivingLocationCode()}">REC-01</td>
+                <td th:text="${l.rejectLocationCode()}">DMG-01</td>
+                <td th:text="${l.suggestedLocationCode()}">A-01</td>
+                <td>
+                    <th:block th:replace="~{inbound/fragments :: putawayStatus(${l.putawayStatus()})}"></th:block>
+                    <div class="wms-muted" th:if="${l.putawayDoneQty() != null}"
+                         th:text="${@inboundFormat.qty(l.putawayDoneQty())} + ' &rarr; ' + ${l.putawayLocationCode()}">40 -> A-01</div>
+                </td>
+                <td th:if="${view.canWork()}">
+                    <form th:if="${l.putawayStatus().name() == 'PENDING'}" class="form-inline" method="post"
+                          th:action="@{/goods-receipts/{id}/lines/{lineId}/putaway(id=${r.id()}, lineId=${l.id()})}"
+                          th:hx-post="@{/goods-receipts/{id}/lines/{lineId}/putaway(id=${r.id()}, lineId=${l.id()})}"
+                          hx-target="#receipt-panel" hx-swap="outerHTML">
+                        <select name="locationId" class="form-control form-control-sm mr-1" th:title="#{inbound.receipt.putaway.bin}">
+                            <option value="" th:text="#{inbound.receipt.putaway.suggested}">Suggested bin</option>
+                            <option th:each="b : ${view.storageBins()}" th:value="${b.id()}" th:text="${b.code()}"
+                                    th:selected="${b.id() == l.suggestedLocationId()}">A-01</option>
+                        </select>
+                        <input type="number" step="any" min="0" name="doneQty" class="form-control form-control-sm mr-1"
+                               th:value="${@inboundFormat.qty(l.acceptedQty())}" th:title="#{inbound.receipt.putaway.qty}">
+                        <input type="text" name="shortReason" maxlength="500" class="form-control form-control-sm mr-1"
+                               th:placeholder="#{inbound.receipt.putaway.reason}">
+                        <button type="submit" class="btn btn-sm btn-success"><i class="zmdi zmdi-check"></i></button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

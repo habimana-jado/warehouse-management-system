@@ -8,4 +8,8 @@ public final class WebAccess {
     public static final String BOARD    = "hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')";
     public static final String WORKER   = "hasAnyRole('ADMIN','WAREHOUSE_MANAGER','RECEIVER','PICKER')";
     public static final String ANY_USER = "isAuthenticated()";
+    public static final String INBOUND_READ = "hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','RECEIVER')";
+    public static final String INBOUND_RECEIVE = "hasAnyRole('ADMIN','WAREHOUSE_MANAGER','RECEIVER')";
+    public static final String OUTBOUND_PICK      = "hasAnyRole('ADMIN','WAREHOUSE_MANAGER','PICKER')";
+    public static final String OUTBOUND_PICK_READ = "hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','PICKER')";
 }

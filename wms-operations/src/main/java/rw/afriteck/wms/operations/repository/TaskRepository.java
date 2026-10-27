@@ -40,18 +40,18 @@ public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificat
 
     // ---- claim next (scanner flow) ----
     @Query(value = """
-        SELECT * FROM tasks
-        WHERE warehouse_id = :warehouseId
-          AND status = 'OPEN'
-          AND type IN (:types)
-        ORDER BY CASE priority WHEN 'URGENT' THEN 4 WHEN 'HIGH' THEN 3 WHEN 'NORMAL' THEN 2 ELSE 1 END DESC,
-                 due_at ASC NULLS LAST,
-                 created_at ASC
-        LIMIT 1
-        FOR UPDATE SKIP LOCKED
-        """, nativeQuery = true)
-    Optional<Task> lockNextOpen(@Param("warehouseId") UUID warehouseId,
-                                @Param("types") Collection<String> types);
+    SELECT id FROM tasks
+    WHERE warehouse_id = :warehouseId
+      AND status = 'OPEN'
+      AND type IN (:types)
+    ORDER BY CASE priority WHEN 'URGENT' THEN 4 WHEN 'HIGH' THEN 3 WHEN 'NORMAL' THEN 2 ELSE 1 END DESC,
+             due_at ASC NULLS LAST,
+             created_at ASC
+    LIMIT 1
+    FOR UPDATE SKIP LOCKED
+    """, nativeQuery = true)
+    Optional<UUID> lockNextOpenId(@Param("warehouseId") UUID warehouseId,
+                                  @Param("types") Collection<String> types);
 
     // ---- board line counts: one grouped query for the whole page ----
     @Query(value = """

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'purchase-orders')}">
+<head>
+    <title th:text="#{inbound.receive.title}">Receive goods</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title mb-1" th:text="#{inbound.receive.title}">Receive goods</div>
+                    <div class="wms-muted" th:text="#{inbound.receive.for(${po.poNumber()}, ${po.supplierName()})}">PO-000001 - Supplier</div>
+                    <hr>
+                    <form id="receive-form" method="post" th:object="${form}"
+                          th:action="@{/purchase-orders/{id}/receive(id=${poId})}">
+
+                        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}">Error</p>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="mode" th:text="#{inbound.receive.mode}">Mode</label>
+                                <select id="mode" class="form-control" th:field="*{mode}">
+                                    <option th:each="m : ${modes}" th:value="${m}" th:text="#{'receipt.mode.' + ${m}}">Put-away</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="receivingLocationId" th:text="#{inbound.receive.receivingBin}">Receiving bin</label>
+                                <select id="receivingLocationId" class="form-control" th:field="*{receivingLocationId}"
+                                        th:errorclass="is-invalid">
+                                    <option value="" th:text="#{inbound.receive.receivingBin.default}">Default</option>
+                                    <option th:each="b : ${receivingBins}" th:value="${b.id()}" th:text="${b.code()}">REC-01</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('receivingLocationId')}"
+                                     th:errors="*{receivingLocationId}">Error</div>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="damagedLocationId" th:text="#{inbound.receive.damagedBin}">Bin for rejected goods</label>
+                                <select id="damagedLocationId" class="form-control" th:field="*{damagedLocationId}"
+                                        th:errorclass="is-invalid">
+                                    <option value="" th:text="#{inbound.receive.damagedBin.default}">Default</option>
+                                    <option th:each="b : ${damagedBins}" th:value="${b.id()}" th:text="${b.code()}">DMG-01</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('damagedLocationId')}"
+                                     th:errors="*{damagedLocationId}">Error</div>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="deliveryNoteNumber" th:text="#{inbound.receive.deliveryNote}">Delivery note number</label>
+                                <input id="deliveryNoteNumber" type="text" maxlength="100" class="form-control"
+                                       th:field="*{deliveryNoteNumber}" th:errorclass="is-invalid">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="notes" th:text="#{inbound.receive.notes}">Notes</label>
+                            <input id="notes" type="text" maxlength="1000" class="form-control" th:field="*{notes}">
+                        </div>
+
+                        <div th:replace="~{inbound/receive-form :: linesCard}"></div>
+
+                        <div class="mt-3" th:unless="${form.lines.isEmpty()}">
+                            <button type="submit" class="btn btn-light px-5" th:text="#{inbound.receive.submit}">Post receipt</button>
+                            <a class="btn btn-secondary" th:href="@{/purchase-orders/{id}(id=${poId})}"
+                               th:text="#{inbound.action.cancel}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- The receiving rows. Swapped as a whole by the plus and remove buttons (th:object makes it work on its own). -->
+<div id="receive-lines" th:fragment="linesCard" th:object="${form}">
+    <small class="wms-muted" th:text="#{inbound.receive.help}">Enter only what arrived.</small>
+    <div class="alert alert-info mt-2" th:if="${form.lines.isEmpty()}" th:text="#{inbound.receive.noRows}">Nothing is left</div>
+    <div class="table-responsive">
+        <table class="table" th:unless="${form.lines.isEmpty()}">
+            <thead>
+            <tr>
+                <th scope="col" th:text="#{inbound.receive.col.item}">Item</th>
+                <th scope="col" th:text="#{inbound.receive.col.accepted}">Accepted</th>
+                <th scope="col" th:text="#{inbound.receive.col.unit}">Unit</th>
+                <th scope="col" th:text="#{inbound.receive.col.rejected}">Rejected</th>
+                <th scope="col" th:text="#{inbound.receive.col.reason}">Reject reason</th>
+                <th scope="col" th:text="#{inbound.receive.col.lot}">Lot</th>
+                <th scope="col" th:text="#{inbound.receive.col.expiry}">Expiry</th>
+                <th scope="col" th:text="#{inbound.receive.col.serial}">Serial</th>
+                <th scope="col" th:text="#{inbound.receive.col.bin}">Storage bin</th>
+                <th scope="col"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="line, i : *{lines}" th:with="info=${lineInfo.get(line.purchaseOrderLineId)}">
+                <td>
+                    <input type="hidden" th:field="*{lines[__${i.index}__].purchaseOrderLineId}">
+                    <div>
+                        <strong th:text="${info.itemSku()}">SKU</strong>
+                        <span class="wms-muted" th:text="${info.itemName()}">Item name</span>
+                    </div>
+                    <small class="wms-muted"
+                           th:text="#{inbound.receive.remaining(${@inboundFormat.qty(info.remainingQty())}, ${@inboundFormat.qty(info.acceptableLeft())})} + ' ' + ${info.baseUom()}">Remaining 60</small>
+                    <span class="badge badge-info ml-1" th:if="${info.tracking() != 'NONE'}"
+                          th:text="#{'inbound.receive.tracking.' + ${info.tracking()}}">Lot tracked</span>
+                </td>
+                <td>
+                    <input type="number" step="any" min="0" class="form-control"
+                           th:field="*{lines[__${i.index}__].acceptedQty}" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].acceptedQty')}"
+                         th:errors="*{lines[__${i.index}__].acceptedQty}">Error</div>
+                </td>
+                <td><input type="text" maxlength="30" class="form-control" th:field="*{lines[__${i.index}__].uom}"
+                           th:placeholder="${info.baseUom()}" autocomplete="off"></td>
+                <td>
+                    <input type="number" step="any" min="0" class="form-control"
+                           th:field="*{lines[__${i.index}__].rejectedQty}" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].rejectedQty')}"
+                         th:errors="*{lines[__${i.index}__].rejectedQty}">Error</div>
+                </td>
+                <td><input type="text" maxlength="500" class="form-control" th:field="*{lines[__${i.index}__].rejectReason}"
+                           autocomplete="off"></td>
+                <td>
+                    <input type="text" maxlength="100" class="form-control" th:if="${info.tracking() == 'LOT'}"
+                           th:field="*{lines[__${i.index}__].lotNumber}" autocomplete="off">
+                </td>
+                <td>
+                    <input type="date" class="form-control" th:if="${info.tracking() == 'LOT' and info.expiryTracked()}"
+                           th:field="*{lines[__${i.index}__].expiryDate}">
+                </td>
+                <td>
+                    <input type="text" maxlength="100" class="form-control" th:if="${info.tracking() == 'SERIAL'}"
+                           th:field="*{lines[__${i.index}__].serialNumber}" autocomplete="off">
+                </td>
+                <td>
+                    <select class="form-control" th:field="*{lines[__${i.index}__].locationId}">
+                        <option value="" th:text="#{inbound.receive.bin.suggested}">Suggested bin</option>
+                        <option th:each="b : ${storageBins}" th:value="${b.id()}" th:text="${b.code()}">A-01</option>
+                    </select>
+                </td>
+                <td class="text-nowrap">
+                    <button type="button" class="btn btn-sm btn-light" th:title="#{inbound.receive.addRow}"
+                            th:hx-post="@{/purchase-orders/{id}/receive/lines/add(id=${poId}, poLineId=${line.purchaseOrderLineId})}"
+                            hx-target="#receive-lines" hx-swap="outerHTML">
+                        <i class="zmdi zmdi-plus"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger"
+                            th:if="${rowCounts.get(line.purchaseOrderLineId) != null and rowCounts.get(line.purchaseOrderLineId) > 1}"
+                            th:hx-post="@{/purchase-orders/{id}/receive/lines/remove(id=${poId}, index=${i.index})}"
+                            hx-target="#receive-lines" hx-swap="outerHTML">
+                        <i class="zmdi zmdi-delete"></i>
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

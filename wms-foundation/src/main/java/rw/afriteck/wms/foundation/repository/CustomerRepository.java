@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import rw.afriteck.wms.foundation.entity.Customer;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface CustomerRepository extends JpaRepository<Customer, UUID>, JpaSpecificationExecutor<Customer> {
@@ -20,4 +21,7 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID>, JpaSp
               or lower(s.phone) like :pattern
            """)
     Page<Customer> search(@Param("pattern") String pattern, Pageable pageable);
+
+    @Query("select c from Customer c where c.active = true order by lower(c.name), c.code")
+    List<Customer> findAllActiveOrdered();
 }

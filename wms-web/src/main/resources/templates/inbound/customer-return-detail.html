@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'customer-returns')}">
+<head>
+    <title th:text="#{inbound.return.detail.title(${view.ret().returnNumber()})}">Customer return</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0"
+                             th:text="#{inbound.return.detail.title(${view.ret().returnNumber()})}">Customer return</div>
+                        <a class="btn btn-secondary btn-sm" th:href="@{/customer-returns}" th:text="#{inbound.action.back}">Back</a>
+                    </div>
+                    <hr>
+                    <div th:replace="~{inbound/customer-return-detail :: panel}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- Re-rendered as a whole after receive and cancel. -->
+<div id="return-panel" th:fragment="panel" th:with="r=${view.ret()}">
+
+    <div class="alert alert-success alert-dismissible" th:if="${notice}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div class="alert-message" th:text="#{${notice}(${r.returnNumber()})}">Done</div>
+    </div>
+    <div class="alert alert-danger alert-dismissible" th:if="${error}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div class="alert-message" th:text="${error}">Problem</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inbound.return.col.number}">Return</small>
+            <div><strong th:text="${r.returnNumber()}">RMA-000001</strong></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inbound.return.col.status}">Status</small>
+            <div><th:block th:replace="~{inbound/fragments :: returnStatus(${r.status()})}"></th:block></div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inbound.return.field.customer}">Customer</small>
+            <div th:text="${r.customerName()} ?: #{inbound.return.walkin}">Customer</div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inbound.return.field.salesOrder}">Sales order</small>
+            <div th:text="${r.salesOrderNumber()} ?: '&mdash;'">SO-000001</div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <small class="wms-muted" th:text="#{inbound.return.field.created}">Created</small>
+            <div th:text="${@uiFormat.dateTime(r.createdAt())}">date</div>
+        </div>
+        <div class="col-md-3 mb-3" th:if="${r.receivedAt() != null}">
+            <small class="wms-muted" th:text="#{inbound.return.field.received}">Received</small>
+            <div><span th:text="${@uiFormat.dateTime(r.receivedAt())}">date</span>
+                <span class="wms-muted" th:text="${r.receivedByName()}">User</span></div>
+        </div>
+        <div class="col-md-6 mb-3" th:if="${r.cancelledAt() != null}">
+            <small class="wms-muted" th:text="#{inbound.return.field.cancelled}">Cancelled</small>
+            <div><span th:text="${@uiFormat.dateTime(r.cancelledAt())}">date</span>
+                <span class="wms-muted" th:text="${r.cancelReason()}">Reason</span></div>
+        </div>
+        <div class="col-md-12 mb-3" th:if="${r.notes() != null}">
+            <small class="wms-muted" th:text="#{inbound.return.field.notes}">Notes</small>
+            <div th:text="${r.notes()}">Notes</div>
+        </div>
+    </div>
+
+    <!-- what was expected and, once received, what happened to it -->
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th scope="col" th:text="#{inbound.line.col.no}">#</th>
+                <th scope="col" th:text="#{inbound.line.col.item}">Item</th>
+                <th scope="col" th:text="#{inbound.receive.col.lot}">Lot / serial</th>
+                <th scope="col" th:text="#{inbound.receive.col.expiry}">Expiry</th>
+                <th scope="col" class="text-right" th:text="#{inbound.return.line.col.expected}">Expected</th>
+                <th scope="col" class="text-right" th:text="#{inbound.return.line.col.received}">Received</th>
+                <th scope="col" th:text="#{inbound.return.line.col.disposition}">Disposition</th>
+                <th scope="col" th:text="#{inbound.return.line.col.bin}">Bin</th>
+                <th scope="col" th:text="#{inbound.return.line.col.reason}">Return reason</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="l : ${r.lines()}">
+                <td th:text="${l.lineNo()}">1</td>
+                <td><span th:text="${l.itemSku()}">SKU</span> <span class="wms-muted" th:text="${l.itemName()}">Name</span></td>
+                <td><span th:text="${l.lotNumber()}"></span> <span th:text="${l.serialNumber()}"></span></td>
+                <td th:text="${l.expiryDate()}"></td>
+                <td class="text-right" th:text="${@inboundFormat.qty(l.expectedQty())} + ' ' + ${l.baseUom()}">5 pcs</td>
+                <td class="text-right" th:text="${l.receivedQty() != null} ? ${@inboundFormat.qty(l.receivedQty())} : '&mdash;'">5</td>
+                <td>
+                    <span class="badge badge-dark" th:if="${l.disposition() != null}"
+                          th:text="#{'return.disposition.' + ${l.disposition()}}">Restock</span>
+                </td>
+                <td th:text="${l.locationCode()}">A-01</td>
+                <td th:text="${l.returnReason()}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- receive: only while the return is expected -->
+    <div class="mt-4" th:if="${view.canReceiveGoods()}">
+        <h6 th:text="#{inbound.return.receive.title}">Receive this return</h6>
+        <small class="wms-muted" th:text="#{inbound.return.receive.help}">Enter what actually came back.</small>
+        <form class="mt-2" method="post" th:object="${receiveForm}"
+              th:action="@{/customer-returns/{id}/receive(id=${r.id()})}"
+              th:hx-post="@{/customer-returns/{id}/receive(id=${r.id()})}"
+              hx-target="#return-panel" hx-swap="outerHTML">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th scope="col" th:text="#{inbound.line.col.item}">Item</th>
+                        <th scope="col" th:text="#{inbound.return.line.col.expected}">Expected</th>
+                        <th scope="col" th:text="#{inbound.return.line.col.received}">Received</th>
+                        <th scope="col" th:text="#{inbound.return.line.col.disposition}">Disposition</th>
+                        <th scope="col" th:text="#{inbound.return.line.col.bin}">Bin</th>
+                        <th scope="col" th:text="#{inbound.receive.col.lot}">Lot</th>
+                        <th scope="col" th:text="#{inbound.receive.col.expiry}">Expiry</th>
+                        <th scope="col" th:text="#{inbound.receive.col.serial}">Serial</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="l, i : ${r.lines()}" th:with="info=${view.lineInfo().get(l.id())}">
+                        <td>
+                            <input type="hidden" th:field="*{lines[__${i.index}__].lineId}">
+                            <span th:text="${l.itemSku()}">SKU</span> <span class="wms-muted" th:text="${l.itemName()}">Name</span>
+                        </td>
+                        <td th:text="${@inboundFormat.qty(l.expectedQty())} + ' ' + ${l.baseUom()}">5 pcs</td>
+                        <td>
+                            <input type="number" step="any" min="0" class="form-control"
+                                   th:field="*{lines[__${i.index}__].receivedQty}" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].receivedQty')}"
+                                 th:errors="*{lines[__${i.index}__].receivedQty}">Error</div>
+                        </td>
+                        <td>
+                            <select class="form-control" th:field="*{lines[__${i.index}__].disposition}">
+                                <option value="" th:text="#{inbound.return.receive.choose}">Choose...</option>
+                                <option value="RESTOCK" th:text="#{return.disposition.RESTOCK}">Restock</option>
+                                <option value="DAMAGED" th:text="#{return.disposition.DAMAGED}">Damaged</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="form-control" th:field="*{lines[__${i.index}__].locationId}">
+                                <option value="" th:text="#{inbound.return.receive.bin.auto}">Automatic</option>
+                                <optgroup th:label="#{inbound.return.receive.bin.storage}">
+                                    <option th:each="b : ${view.storageBins()}" th:value="${b.id()}" th:text="${b.code()}">A-01</option>
+                                </optgroup>
+                                <optgroup th:label="#{inbound.return.receive.bin.damaged}">
+                                    <option th:each="b : ${view.damagedBins()}" th:value="${b.id()}" th:text="${b.code()}">DMG-01</option>
+                                </optgroup>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" maxlength="100" class="form-control" th:if="${info.tracking() == 'LOT'}"
+                                   th:field="*{lines[__${i.index}__].lotNumber}" autocomplete="off">
+                        </td>
+                        <td>
+                            <input type="date" class="form-control" th:if="${info.tracking() == 'LOT' and info.expiryTracked()}"
+                                   th:field="*{lines[__${i.index}__].expiryDate}">
+                        </td>
+                        <td>
+                            <input type="text" maxlength="100" class="form-control" th:if="${info.tracking() == 'SERIAL'}"
+                                   th:field="*{lines[__${i.index}__].serialNumber}" autocomplete="off">
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-group">
+                <label for="receive-notes" th:text="#{inbound.return.receive.notes}">Inspection notes</label>
+                <input id="receive-notes" type="text" maxlength="1000" class="form-control" th:field="*{notes}">
+            </div>
+            <button type="submit" class="btn btn-success" th:text="#{inbound.return.receive.submit}">Post return</button>
+        </form>
+    </div>
+
+    <!-- cancel: managers, while the return is expected -->
+    <form class="mt-4" method="post" th:if="${view.canCancel()}" th:object="${cancelForm}"
+          th:action="@{/customer-returns/{id}/cancel(id=${r.id()})}"
+          th:hx-post="@{/customer-returns/{id}/cancel(id=${r.id()})}"
+          hx-target="#return-panel" hx-swap="outerHTML">
+        <h6 th:text="#{inbound.return.cancel.title}">Cancel this return</h6>
+        <div class="form-group">
+            <label for="cancel-reason" th:text="#{inbound.return.cancel.reason}">Reason for cancelling</label>
+            <textarea id="cancel-reason" rows="2" class="form-control" th:field="*{reason}"
+                      th:errorclass="is-invalid"></textarea>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}">Error</div>
+        </div>
+        <button type="submit" class="btn btn-danger" th:text="#{inbound.return.cancel}">Cancel return</button>
+    </form>
+</div>
+
+</body>
+</html>

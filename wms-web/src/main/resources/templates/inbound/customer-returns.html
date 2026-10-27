@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'customer-returns')}">
+<head>
+    <title th:text="#{inbound.return.title}">Customer returns</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{inbound.return.title}">Customer returns</div>
+                        <a class="btn btn-light" th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER')}"
+                           th:href="@{/customer-returns/new}">
+                            <i class="zmdi zmdi-plus"></i> <span th:text="#{inbound.return.new}">New customer return</span>
+                        </a>
+                    </div>
+                    <hr>
+
+                    <form id="returns-filters" method="get" th:object="${filter}"
+                          th:action="@{/customer-returns}" th:hx-get="@{/customer-returns}"
+                          hx-trigger="input delay:400ms, submit"
+                          hx-target="#returns-results" hx-swap="outerHTML" hx-push-url="true">
+                        <div class="form-row">
+                            <div class="form-group col-md-5">
+                                <div class="position-relative has-icon-right">
+                                    <input type="text" class="form-control input-shadow" th:field="*{q}"
+                                           th:placeholder="#{inbound.return.search}">
+                                    <div class="form-control-position"><i class="icon-magnifier"></i></div>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <select class="form-control" th:field="*{status}">
+                                    <option value="" th:text="#{inbound.return.filter.expected}">Expected returns</option>
+                                    <option value="ALL" th:text="#{inbound.return.filter.all}">All statuses</option>
+                                    <option th:each="s : ${statuses}" th:value="${s}" th:text="#{'return.status.' + ${s}}">Status</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="returns-results" th:fragment="results"
+                         hx-target="#returns-results" hx-swap="outerHTML" hx-push-url="true">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['returnNumber']}" th:hx-get="${sortUrl['returnNumber']}"
+                                           th:classappend="${sortClass['returnNumber']}" th:text="#{inbound.return.col.number}">Return</a>
+                                    </th>
+                                    <th scope="col" th:text="#{inbound.return.col.customer}">Customer</th>
+                                    <th scope="col" th:text="#{inbound.return.col.salesOrder}">Sales order</th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['status']}" th:hx-get="${sortUrl['status']}"
+                                           th:classappend="${sortClass['status']}" th:text="#{inbound.return.col.status}">Status</a>
+                                    </th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['createdAt']}" th:hx-get="${sortUrl['createdAt']}"
+                                           th:classappend="${sortClass['createdAt']}" th:text="#{inbound.return.col.created}">Created</a>
+                                    </th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['receivedAt']}" th:hx-get="${sortUrl['receivedAt']}"
+                                           th:classappend="${sortClass['receivedAt']}" th:text="#{inbound.return.col.received}">Received</a>
+                                    </th>
+                                    <th scope="col" class="text-right" th:text="#{inbound.return.col.lines}">Lines</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="r : ${page.content()}">
+                                    <tr th:replace="~{inbound/customer-returns :: row}"></tr>
+                                </th:block>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="8" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}"></small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<table>
+    <tbody>
+    <tr th:fragment="row">
+        <td th:text="${r.returnNumber()}">RMA-000001</td>
+        <td th:text="${r.customerName()} ?: #{inbound.return.walkin}">Customer</td>
+        <td th:text="${r.salesOrderNumber()} ?: '&mdash;'">SO-000001</td>
+        <td><th:block th:replace="~{inbound/fragments :: returnStatus(${r.status()})}"></th:block></td>
+        <td th:text="${@uiFormat.dateTime(r.createdAt())}">date</td>
+        <td th:text="${@uiFormat.dateTime(r.receivedAt())}">date</td>
+        <td class="text-right" th:text="${r.lineCount()}">2</td>
+        <td class="text-right">
+            <a class="btn btn-sm btn-light" th:href="@{/customer-returns/{id}(id=${r.id()})}">
+                <i class="zmdi zmdi-eye"></i> <span th:text="#{inbound.action.view}">View</span>
+            </a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

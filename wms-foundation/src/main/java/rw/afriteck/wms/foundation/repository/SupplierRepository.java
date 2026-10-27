@@ -8,9 +8,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import rw.afriteck.wms.foundation.entity.Supplier;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface SupplierRepository extends JpaRepository<Supplier, UUID>, JpaSpecificationExecutor<Supplier> {
+
     boolean existsByCodeIgnoreCase(String code);
 
     @Query("""
@@ -20,4 +22,12 @@ public interface SupplierRepository extends JpaRepository<Supplier, UUID>, JpaSp
               or lower(s.phone) like :pattern
            """)
     Page<Supplier> search(@Param("pattern") String pattern, Pageable pageable);
+
+    @Query("""
+           select s from Supplier s
+           where s.active = true
+           order by lower(s.name), s.code
+           """)
+    List<Supplier> findAllActiveOrdered();
+
 }

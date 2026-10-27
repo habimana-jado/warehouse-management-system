@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, ${menu})}">
+<head>
+    <title th:text="${editing} ? #{inbound.po.edit.title(${poNumber})} : #{inbound.po.new}">New purchase order</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title"
+                         th:text="${editing} ? #{inbound.po.edit.title(${poNumber})} : #{inbound.po.new}">New purchase order</div>
+                    <hr>
+                    <form id="po-form" method="post" th:object="${form}"
+                          th:action="${editing} ? @{/purchase-orders/{id}/update(id=${poId})} : @{/purchase-orders}">
+
+                        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}">Error</p>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4" th:unless="${editing}">
+                                <label for="supplierId" th:text="#{inbound.po.form.supplier}">Supplier</label>
+                                <select id="supplierId" class="form-control" th:field="*{supplierId}" th:errorclass="is-invalid">
+                                    <option value="" th:text="#{inbound.action.select}">Select...</option>
+                                    <option th:each="s : ${suppliers}" th:value="${s.id()}"
+                                            th:text="${s.code()} + ' - ' + ${s.name()}">SUP-1 - Supplier</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('supplierId')}"
+                                     th:errors="*{supplierId}">Error</div>
+                            </div>
+                            <div class="form-group col-md-4" th:if="${editing}">
+                                <label th:text="#{inbound.po.form.supplier}">Supplier</label>
+                                <input type="text" class="form-control" readonly th:value="${supplierName}">
+                            </div>
+                            <div class="form-group col-md-2" th:unless="${editing}">
+                                <label for="orderDate" th:text="#{inbound.po.form.orderDate}">Order date</label>
+                                <input id="orderDate" type="date" class="form-control" th:field="*{orderDate}"
+                                       th:errorclass="is-invalid">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="expectedDate" th:text="#{inbound.po.form.expectedDate}">Expected date</label>
+                                <input id="expectedDate" type="date" class="form-control" th:field="*{expectedDate}"
+                                       th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('expectedDate')}"
+                                     th:errors="*{expectedDate}">Error</div>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="currency" th:text="#{inbound.po.form.currency}">Currency</label>
+                                <input id="currency" type="text" maxlength="3" class="form-control" th:field="*{currency}"
+                                       th:errorclass="is-invalid" autocomplete="off">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('currency')}"
+                                     th:errors="*{currency}">Error</div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="supplierReference" th:text="#{inbound.po.form.supplierRef}">Supplier reference</label>
+                                <input id="supplierReference" type="text" maxlength="100" class="form-control"
+                                       th:field="*{supplierReference}" th:errorclass="is-invalid">
+                            </div>
+                            <div class="form-group col-md-8">
+                                <label for="notes" th:text="#{inbound.po.form.notes}">Notes</label>
+                                <input id="notes" type="text" maxlength="1000" class="form-control" th:field="*{notes}"
+                                       th:errorclass="is-invalid">
+                            </div>
+                        </div>
+
+                        <div th:replace="~{inbound/purchase-order-form :: linesCard}"></div>
+
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-light px-5" th:text="#{inbound.po.save}">Save draft</button>
+                            <a class="btn btn-secondary"
+                               th:href="${editing} ? @{/purchase-orders/{id}(id=${poId})} : @{/purchase-orders}"
+                               th:text="#{inbound.action.cancel}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- The repeating lines. Swapped as a whole by the add and remove buttons (th:object makes it work on its own). -->
+<div id="po-lines" th:fragment="linesCard" th:object="${form}">
+    <div class="d-flex justify-content-between align-items-center">
+        <h6 class="mb-0" th:text="#{inbound.po.form.lines}">Lines</h6>
+        <button type="button" class="btn btn-sm btn-light"
+                th:hx-post="@{/purchase-orders/lines/add}"
+                hx-target="#po-lines" hx-swap="outerHTML">
+            <i class="zmdi zmdi-plus"></i> <span th:text="#{inbound.po.form.addLine}">Add line</span>
+        </button>
+    </div>
+    <small class="wms-muted" th:text="#{inbound.po.form.help}">Leave Unit empty to use the base unit.</small>
+    <datalist id="item-options"></datalist>
+    <div class="alert alert-danger mt-2" th:if="${#fields.hasErrors('lines')}" th:errors="*{lines}">Error</div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col" th:text="#{inbound.line.col.itemInput}">Item</th>
+                <th scope="col" th:text="#{inbound.line.col.qty}">Quantity</th>
+                <th scope="col" th:text="#{inbound.line.col.unit}">Unit</th>
+                <th scope="col" th:text="#{inbound.line.col.price}">Unit price</th>
+                <th scope="col" th:text="#{inbound.line.col.tolerance}">Tolerance %</th>
+                <th scope="col" th:text="#{inbound.line.col.notes}">Notes</th>
+                <th scope="col"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="line, i : *{lines}">
+                <td>
+                    <input type="hidden" th:field="*{lines[__${i.index}__].lineId}">
+                    <input type="text" class="form-control" th:field="*{lines[__${i.index}__].item}" list="item-options"
+                           th:errorclass="is-invalid" autocomplete="off"
+                           th:attr="hx-get=@{/lookup/items}" hx-trigger="input changed delay:300ms"
+                           hx-target="#item-options" hx-swap="innerHTML">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].item')}"
+                         th:errors="*{lines[__${i.index}__].item}">Error</div>
+                </td>
+                <td>
+                    <input type="number" step="any" min="0" class="form-control"
+                           th:field="*{lines[__${i.index}__].quantity}" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].quantity')}"
+                         th:errors="*{lines[__${i.index}__].quantity}">Error</div>
+                </td>
+                <td><input type="text" maxlength="30" class="form-control" th:field="*{lines[__${i.index}__].uom}"
+                           autocomplete="off"></td>
+                <td>
+                    <input type="number" step="any" min="0" class="form-control"
+                           th:field="*{lines[__${i.index}__].unitPrice}" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].unitPrice')}"
+                         th:errors="*{lines[__${i.index}__].unitPrice}">Error</div>
+                </td>
+                <td>
+                    <input type="number" step="any" min="0" max="100" class="form-control"
+                           th:field="*{lines[__${i.index}__].tolerancePercent}" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('lines[__${i.index}__].tolerancePercent')}"
+                         th:errors="*{lines[__${i.index}__].tolerancePercent}">Error</div>
+                </td>
+                <td><input type="text" maxlength="500" class="form-control" th:field="*{lines[__${i.index}__].notes}"
+                           autocomplete="off"></td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" th:if="${#lists.size(form.lines) > 1}"
+                            th:hx-post="@{/purchase-orders/lines/remove(index=${i.index})}"
+                            hx-target="#po-lines" hx-swap="outerHTML">
+                        <i class="zmdi zmdi-delete"></i>
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

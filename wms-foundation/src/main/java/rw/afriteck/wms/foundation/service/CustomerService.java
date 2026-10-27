@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.wms.foundation.dtos.*;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface CustomerService {
@@ -19,5 +20,8 @@ public interface CustomerService {
 
     Page<CustomerResponse> search(String q, Pageable pageable);
 
-    CustomerResponse getById(UUID id);            // lookup for outbound
+    CustomerResponse getById(UUID id);
+
+    List<CustomerResponse> findAllActive();
+
 }

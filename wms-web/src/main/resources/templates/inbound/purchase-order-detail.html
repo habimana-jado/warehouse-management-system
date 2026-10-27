@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'purchase-orders')}">
+<head>
+    <title th:text="#{inbound.po.detail.title(${view.po().poNumber()})}">Purchase order</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div th:replace="~{inbound/purchase-order-detail :: panel}"></div>
+        </div>
+    </div>
+</th:block>
+
+<!-- Re-rendered as a whole after confirm, close, cancel and tolerance changes. -->
+<div id="po-panel" th:fragment="panel" th:with="po=${view.po()}">
+    <div class="card">
+        <div class="card-body">
+
+            <div class="alert alert-success alert-dismissible" th:if="${notice}">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <div class="alert-message" th:text="#{${notice}(${po.poNumber()})}">Done</div>
+            </div>
+            <div class="alert alert-danger alert-dismissible" th:if="${error}">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <div class="alert-message" th:text="${error}">Problem</div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="card-title mb-1" th:text="${po.poNumber()}">PO-000001</div>
+                    <th:block th:replace="~{inbound/fragments :: poStatus(${po.status()})}"></th:block>
+                    <span class="badge badge-danger ml-1" th:if="${view.overdue()}" th:text="#{inbound.po.overdue}">Overdue</span>
+                </div>
+                <div>
+                    <a class="btn btn-light" th:if="${view.canEdit()}"
+                       th:href="@{/purchase-orders/{id}/edit(id=${po.id()})}">
+                        <i class="zmdi zmdi-edit"></i> <span th:text="#{inbound.action.edit}">Edit</span>
+                    </a>
+                    <button type="button" class="btn btn-success" th:if="${view.canConfirm()}"
+                            th:hx-post="@{/purchase-orders/{id}/confirm(id=${po.id()})}"
+                            th:hx-confirm="#{inbound.po.confirm.confirm}"
+                            hx-target="#po-panel" hx-swap="outerHTML">
+                        <i class="zmdi zmdi-check"></i> <span th:text="#{inbound.po.confirm}">Confirm order</span>
+                    </button>
+                    <a class="btn btn-primary" th:if="${view.canStartReceiving()}"
+                       th:href="@{/purchase-orders/{id}/receive(id=${po.id()})}">
+                        <i class="zmdi zmdi-download"></i> <span th:text="#{inbound.po.receive}">Receive goods</span>
+                    </a>
+                    <button type="button" class="btn btn-warning" th:if="${view.canClose()}"
+                            th:hx-post="@{/purchase-orders/{id}/close(id=${po.id()})}"
+                            th:hx-confirm="#{inbound.po.close.confirm}"
+                            hx-target="#po-panel" hx-swap="outerHTML">
+                        <i class="zmdi zmdi-block"></i> <span th:text="#{inbound.po.close}">Close short</span>
+                    </button>
+                    <a class="btn btn-secondary" th:href="@{/purchase-orders}">
+                        <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{inbound.action.back}">Back</span>
+                    </a>
+                </div>
+            </div>
+            <hr>
+
+            <dl class="row">
+                <dt class="col-sm-3" th:text="#{inbound.po.field.supplier}">Supplier</dt>
+                <dd class="col-sm-9" th:text="${po.supplierName()}">Supplier</dd>
+
+                <dt class="col-sm-3" th:text="#{inbound.po.field.orderDate}">Order date</dt>
+                <dd class="col-sm-9" th:text="${po.orderDate()}">2026-10-01</dd>
+
+                <dt class="col-sm-3" th:text="#{inbound.po.field.expected}">Expected date</dt>
+                <dd class="col-sm-9" th:text="${po.expectedDate()} ?: '&mdash;'">2026-10-15</dd>
+
+                <dt class="col-sm-3" th:text="#{inbound.po.field.supplierRef}">Supplier reference</dt>
+                <dd class="col-sm-9" th:text="${po.supplierReference()} ?: '&mdash;'">QUOTE-1</dd>
+
+                <dt class="col-sm-3" th:text="#{inbound.po.field.currency}">Currency</dt>
+                <dd class="col-sm-9" th:text="${po.currency()}">RWF</dd>
+
+                <dt class="col-sm-3" th:text="#{inbound.po.field.total}">Ordered total</dt>
+                <dd class="col-sm-9" th:text="${@inboundFormat.money(po.orderedTotal(), po.currency())}">350,000 RWF</dd>
+
+                <th:block th:if="${po.notes() != null}">
+                    <dt class="col-sm-3" th:text="#{inbound.po.field.notes}">Notes</dt>
+                    <dd class="col-sm-9" th:text="${po.notes()}">Notes</dd>
+                </th:block>
+                <th:block th:if="${po.confirmedAt() != null}">
+                    <dt class="col-sm-3" th:text="#{inbound.po.field.confirmed}">Confirmed</dt>
+                    <dd class="col-sm-9"
+                        th:text="${@uiFormat.dateTime(po.confirmedAt())} + ' &middot; ' + (${po.confirmedByName()} ?: '&mdash;')">date</dd>
+                </th:block>
+                <th:block th:if="${po.closedAt() != null}">
+                    <dt class="col-sm-3" th:text="#{inbound.po.field.closed}">Closed short</dt>
+                    <dd class="col-sm-9"
+                        th:text="${@uiFormat.dateTime(po.closedAt())} + ' &middot; ' + (${po.closedByName()} ?: '&mdash;')">date</dd>
+                </th:block>
+                <th:block th:if="${po.cancelledAt() != null}">
+                    <dt class="col-sm-3" th:text="#{inbound.po.field.cancelled}">Cancelled</dt>
+                    <dd class="col-sm-9"
+                        th:text="${@uiFormat.dateTime(po.cancelledAt())} + ' &middot; ' + ${po.cancelReason()}">date</dd>
+                </th:block>
+            </dl>
+
+            <ul class="nav nav-tabs nav-tabs-primary top-icon">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="pill" href="#tab-po-lines">
+                        <i class="zmdi zmdi-format-list-bulleted"></i> <span th:text="#{inbound.po.tab.lines}">Lines</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="pill" href="#tab-po-receipts">
+                        <i class="zmdi zmdi-truck"></i> <span th:text="#{inbound.po.tab.receipts}">Receipts</span>
+                        <span class="badge badge-light ml-1" th:text="${view.receipts().size()}">0</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content p-3">
+                <!-- lines -->
+                <div id="tab-po-lines" class="tab-pane active">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th scope="col" th:text="#{inbound.line.col.no}">#</th>
+                                <th scope="col" th:text="#{inbound.line.col.item}">Item</th>
+                                <th scope="col" class="text-right" th:text="#{inbound.line.col.ordered}">Ordered</th>
+                                <th scope="col" class="text-right" th:text="#{inbound.line.col.accepted}">Accepted</th>
+                                <th scope="col" class="text-right" th:text="#{inbound.line.col.rejected}">Rejected</th>
+                                <th scope="col" class="text-right" th:text="#{inbound.line.col.remaining}">Remaining</th>
+                                <th scope="col" class="text-right" th:text="#{inbound.line.col.tolerance}">Tolerance</th>
+                                <th scope="col" class="text-right" th:text="#{inbound.line.col.price}">Unit price</th>
+                                <th scope="col" class="text-right" th:text="#{inbound.line.col.total}">Line total</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="l : ${po.lines()}">
+                                <td th:text="${l.lineNo()}">1</td>
+                                <td>
+                                    <span th:text="${l.itemSku()}">SKU-1</span>
+                                    <span class="wms-muted" th:text="${l.itemName()}">Item name</span>
+                                </td>
+                                <td class="text-right" th:text="${@inboundFormat.qty(l.orderedQty())} + ' ' + ${l.baseUom()}">100 pcs</td>
+                                <td class="text-right" th:text="${@inboundFormat.qty(l.acceptedQty())}">40</td>
+                                <td class="text-right" th:text="${@inboundFormat.qty(l.rejectedQty())}">0</td>
+                                <td class="text-right" th:text="${@inboundFormat.qty(l.remainingQty())}">60</td>
+                                <td class="text-right">
+                                    <form method="post" class="form-inline justify-content-end"
+                                          th:if="${view.canAdjustTolerance()}"
+                                          th:action="@{/purchase-orders/{id}/lines/{lineId}/tolerance(id=${po.id()}, lineId=${l.id()})}"
+                                          th:hx-post="@{/purchase-orders/{id}/lines/{lineId}/tolerance(id=${po.id()}, lineId=${l.id()})}"
+                                          hx-target="#po-panel" hx-swap="outerHTML">
+                                        <input type="number" step="any" min="0" max="100" name="tolerancePercent"
+                                               class="form-control form-control-sm" th:value="${l.tolerancePercent()}">
+                                        <button type="submit" class="btn btn-sm btn-light ml-1"
+                                                th:title="#{inbound.po.tolerance.save}">
+                                            <i class="zmdi zmdi-check"></i>
+                                        </button>
+                                    </form>
+                                    <span th:unless="${view.canAdjustTolerance()}"
+                                          th:text="${@inboundFormat.qty(l.tolerancePercent())} + ' %'">5 %</span>
+                                </td>
+                                <td class="text-right" th:text="${@inboundFormat.money(l.unitPrice(), po.currency())}">500 RWF</td>
+                                <td class="text-right" th:text="${@inboundFormat.money(l.lineTotal(), po.currency())}">50,000 RWF</td>
+                            </tr>
+                            <tr th:if="${po.lines().isEmpty()}">
+                                <td colspan="9" class="text-center wms-muted" th:text="#{inbound.line.empty}">No lines</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- receipts -->
+                <div id="tab-po-receipts" class="tab-pane">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th scope="col" th:text="#{inbound.receipt.col.number}">Receipt</th>
+                                <th scope="col" th:text="#{inbound.receipt.col.date}">Received</th>
+                                <th scope="col" th:text="#{inbound.receipt.col.mode}">Mode</th>
+                                <th scope="col" th:text="#{inbound.receipt.col.by}">Received by</th>
+                                <th scope="col" th:text="#{inbound.receipt.col.note}">Delivery note</th>
+                                <th scope="col" class="text-right" th:text="#{inbound.receipt.col.lines}">Lines</th>
+                                <th scope="col" class="text-right" th:text="#{inbound.receipt.col.pending}">Waiting for put-away</th>
+                                <th scope="col"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="r : ${view.receipts()}">
+                                <td th:text="${r.receiptNumber()}">GRN-000001</td>
+                                <td th:text="${@uiFormat.dateTime(r.receivedAt())}">date</td>
+                                <td><span class="badge badge-dark" th:text="#{'receipt.mode.' + ${r.mode()}}">Put-away</span></td>
+                                <td th:text="${r.receivedByName()} ?: '&mdash;'">User</td>
+                                <td th:text="${r.deliveryNoteNumber()} ?: '&mdash;'">DN-1</td>
+                                <td class="text-right" th:text="${r.lineCount()}">3</td>
+                                <td class="text-right" th:text="${r.pendingPutawayCount()}">1</td>
+                                <td class="text-right">
+                                    <a class="btn btn-sm btn-light" th:href="@{/goods-receipts/{id}(id=${r.id()})}">
+                                        <i class="zmdi zmdi-eye"></i> <span th:text="#{inbound.action.view}">View</span>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${view.receipts().isEmpty()}">
+                                <td colspan="8" class="text-center wms-muted" th:text="#{inbound.receipt.empty}">No receipts</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- cancel with a reason (draft or confirmed orders only) -->
+            <div class="mt-4" th:if="${view.canCancel()}">
+                <hr>
+                <h6 th:text="#{inbound.po.cancel.title}">Cancel this purchase order</h6>
+                <small class="wms-muted" th:text="#{inbound.po.cancel.help}">Only draft or confirmed orders can be cancelled.</small>
+                <form class="mt-2" method="post" th:object="${cancelForm}"
+                      th:action="@{/purchase-orders/{id}/cancel(id=${po.id()})}"
+                      th:hx-post="@{/purchase-orders/{id}/cancel(id=${po.id()})}"
+                      hx-target="#po-panel" hx-swap="outerHTML">
+                    <div class="form-group">
+                        <label for="cancel-reason" th:text="#{inbound.po.cancel.reason}">Reason for cancelling</label>
+                        <textarea id="cancel-reason" rows="2" class="form-control" th:field="*{reason}"
+                                  th:errorclass="is-invalid"></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}">Error</div>
+                    </div>
+                    <button type="submit" class="btn btn-danger" th:text="#{inbound.po.cancel}">Cancel order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

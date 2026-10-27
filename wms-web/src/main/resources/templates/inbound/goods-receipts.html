@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, ${menu})}">
+<head>
+    <title th:text="${awaiting} ? #{inbound.receipt.board.title} : #{inbound.receipt.list.title}">Goods receipts</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title mb-0"
+                         th:text="${awaiting} ? #{inbound.receipt.board.title} : #{inbound.receipt.list.title}">Goods receipts</div>
+                    <hr>
+
+                    <form id="receipts-filters" method="get" th:object="${filter}" th:unless="${awaiting}"
+                          th:action="@{/goods-receipts}" th:hx-get="@{/goods-receipts}"
+                          hx-trigger="input delay:400ms, submit"
+                          hx-target="#receipts-results" hx-swap="outerHTML" hx-push-url="true">
+                        <div class="form-row">
+                            <div class="form-group col-md-5">
+                                <div class="position-relative has-icon-right">
+                                    <input type="text" class="form-control input-shadow" th:field="*{q}"
+                                           th:placeholder="#{inbound.receipt.search}">
+                                    <div class="form-control-position"><i class="icon-magnifier"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="receipts-results" th:fragment="results"
+                         hx-target="#receipts-results" hx-swap="outerHTML" hx-push-url="true">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['receiptNumber']}" th:hx-get="${sortUrl['receiptNumber']}"
+                                           th:classappend="${sortClass['receiptNumber']}" th:text="#{inbound.receipt.col.number}">Receipt</a>
+                                    </th>
+                                    <th scope="col" th:text="#{inbound.receipt.col.po}">Purchase order</th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['receivedAt']}" th:hx-get="${sortUrl['receivedAt']}"
+                                           th:classappend="${sortClass['receivedAt']}" th:text="#{inbound.receipt.col.date}">Received</a>
+                                    </th>
+                                    <th scope="col">
+                                        <a class="wms-sort" th:href="${sortUrl['mode']}" th:hx-get="${sortUrl['mode']}"
+                                           th:classappend="${sortClass['mode']}" th:text="#{inbound.receipt.col.mode}">Mode</a>
+                                    </th>
+                                    <th scope="col" th:text="#{inbound.receipt.col.by}">Received by</th>
+                                    <th scope="col" th:text="#{inbound.receipt.col.note}">Delivery note</th>
+                                    <th scope="col" class="text-right" th:text="#{inbound.receipt.col.lines}">Lines</th>
+                                    <th scope="col" class="text-right" th:text="#{inbound.receipt.col.pending}">Waiting for put-away</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <th:block th:each="r : ${page.content()}">
+                                    <tr th:replace="~{inbound/goods-receipts :: row}"></tr>
+                                </th:block>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="9" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}"></small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<table>
+    <tbody>
+    <tr th:fragment="row">
+        <td th:text="${r.receiptNumber()}">GRN-000001</td>
+        <td th:text="${r.poNumber()}">PO-000001</td>
+        <td th:text="${@uiFormat.dateTime(r.receivedAt())}">date</td>
+        <td><span class="badge badge-dark" th:text="#{'receipt.mode.' + ${r.mode()}}">Put-away</span></td>
+        <td th:text="${r.receivedByName()} ?: '&mdash;'">User</td>
+        <td th:text="${r.deliveryNote()} ?: '&mdash;'">DN-1</td>
+        <td class="text-right" th:text="${r.lineCount()}">3</td>
+        <td class="text-right">
+            <span class="badge badge-warning" th:if="${r.pendingPutawayCount() > 0}" th:text="${r.pendingPutawayCount()}">1</span>
+            <span th:unless="${r.pendingPutawayCount() > 0}">0</span>
+        </td>
+        <td class="text-right">
+            <a class="btn btn-sm btn-light" th:href="@{/goods-receipts/{id}(id=${r.id()})}">
+                <i class="zmdi zmdi-eye"></i> <span th:text="#{inbound.action.view}">View</span>
+            </a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

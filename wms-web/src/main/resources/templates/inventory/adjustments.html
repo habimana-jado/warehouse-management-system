@@ -74,12 +74,12 @@
                                            th:classappend="${sortClass['createdAt']}"
                                            th:text="#{inventory.adjustment.created}">Created</a>
                                     </th>
+                                    <th scope="col"></th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 <tr th:each="a : ${page.content()}">
-                                    <td><a th:href="@{/adjustments/{id}(id=${a.id()})}"
-                                           th:text="${a.adjustmentNumber()}">ADJ-000001</a></td>
+                                    <td th:text="${a.adjustmentNumber()}">ADJ-000001</td>
                                     <td><span th:text="${a.reasonName()}">Reason</span> <span class="wms-muted"
                                                                                               th:text="${a.reasonCode()}">CODE</span>
                                     </td>
@@ -89,9 +89,14 @@
                                     <td th:text="${a.requestedByName()}"></td>
                                     <td class="text-right" th:text="${a.lineCount()}">1</td>
                                     <td th:text="${@uiFormat.dateTime(a.createdAt())}"></td>
+                                    <td class="text-right">
+                                        <a class="btn btn-sm btn-light" th:href="@{/adjustments/{id}(id=${a.id()})}">
+                                            <i class="zmdi zmdi-eye"></i> <span th:text="#{inventory.action.view}">View</span>
+                                        </a>
+                                    </td>
                                 </tr>
                                 <tr th:if="${page.content().isEmpty()}">
-                                    <td colspan="6" class="text-center wms-muted" th:text="#{common.noResults}">No
+                                    <td colspan="7" class="text-center wms-muted" th:text="#{common.noResults}">No
                                         results
                                     </td>
                                 </tr>

@@ -26,6 +26,7 @@ import rw.afriteck.wms.inventory.enums.TransferType;
 import rw.afriteck.wms.inventory.service.TransferService;
 import rw.afriteck.wms.inventory.support.InventoryReferences;
 import rw.afriteck.wms.operations.enums.TaskPriority;
+import rw.afriteck.wms.operations.enums.TaskStatus;
 import rw.afriteck.wms.operations.service.TaskService;
 import rw.afriteck.wms.web.config.WebAccess;
 import rw.afriteck.wms.web.support.*;
@@ -94,19 +95,31 @@ class TransferPageController {
         return Htmx.isFragmentRequest(request) ? "inventory/transfers :: results" : "inventory/transfers";
     }
 
-    /** Goods on their way to the selected warehouse (a UI list for receivers; see decision 5). */
+    /** Inter-warehouse transfers on their way to the selected warehouse, from creation until they are received. */
     @GetMapping("/transfers/incoming")
     @PreAuthorize(WebAccess.WORKER)
     String incoming(Model model) {
         UUID warehouseId = warehouseContext.require();
         PageResponse<TransferSummaryResponse> result = transfers.search(
-                new TransferFilter(warehouseId, EnumSet.of(TransferStatus.IN_TRANSIT), null),
+                new TransferFilter(warehouseId, EnumSet.of(TransferStatus.PENDING, TransferStatus.IN_TRANSIT), null),
                 PageRequest.of(0, 100, Sort.by(Sort.Direction.DESC, "createdAt")));
         Map<UUID, String> names = warehouseNames();
-        model.addAttribute("rows", result.content().stream()
-                .filter(s -> warehouseId.equals(s.destinationWarehouseId()))
-                .map(s -> row(s, names)).toList());
+        List<IncomingRow> rows = result.content().stream()
+                .filter(s -> s.type() == TransferType.INTER_WAREHOUSE && warehouseId.equals(s.destinationWarehouseId()))
+                .map(s -> new IncomingRow(s, names.getOrDefault(s.sourceWarehouseId(), "-"), stage(s)))
+                .sorted(Comparator.comparing((IncomingRow r) -> r.stage().equals("IN_TRANSIT") ? 0 : 1))   // stable: newest first inside each group
+                .toList();
+        model.addAttribute("rows", rows);
         return "inventory/transfers-incoming";
+    }
+
+    private String stage(TransferSummaryResponse s) {
+        if (s.status() == TransferStatus.IN_TRANSIT) {
+            return "IN_TRANSIT";
+        }
+        boolean picking = taskService.findByReference(InventoryReferences.STOCK_TRANSFER, s.id()).stream()
+                .anyMatch(t -> t.status() == TaskStatus.IN_PROGRESS);
+        return picking ? "PICKING" : "WAITING";
     }
 
     private TransferRow row(TransferSummaryResponse s, Map<UUID, String> names) {
@@ -303,6 +316,7 @@ class TransferPageController {
         boolean inTransit = t.status() == TransferStatus.IN_TRANSIT;
         boolean inter = t.type() == TransferType.INTER_WAREHOUSE;
         boolean manager = isManager();
+        boolean sourceAccess = userContext.canAccessWarehouse(t.sourceWarehouseId());
 
         List<TransferLineRow> rows = t.lines().stream()
                 .map(l -> new TransferLineRow(l,
@@ -319,8 +333,8 @@ class TransferPageController {
                 warehouseService.getById(t.destinationWarehouseId()).name(),
                 rows, receiveLines,
                 taskService.findByReference(InventoryReferences.STOCK_TRANSFER, t.id()),
-                anyPending && isWorker(),
-                pending && inter && manager && anyPending,
+                anyPending && isWorker() && sourceAccess,
+                pending && inter && manager && anyPending && sourceAccess,
                 canReceive,
                 manager && (pending || (inTransit && !partiallyReceived)),
                 partiallyReceived));

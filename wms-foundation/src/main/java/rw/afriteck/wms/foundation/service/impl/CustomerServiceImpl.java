@@ -18,6 +18,7 @@ import rw.afriteck.wms.foundation.repository.CustomerRepository;
 import rw.afriteck.wms.foundation.service.CustomerService;
 import rw.afriteck.wms.common.support.Codes;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -73,6 +74,12 @@ public class CustomerServiceImpl implements CustomerService {
     @Override @Transactional(readOnly = true)
     public CustomerResponse getById(UUID id) {
         return PartnerMapper.toCustomer(find(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerResponse> findAllActive() {
+        return customers.findAllActiveOrdered().stream().map(PartnerMapper::toCustomer).toList();
     }
 
     private Customer find(UUID id) {
