@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reports')}">
+<head>
+    <title th:text="#{reporting.openPo.title}">Open purchase orders</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{reporting.openPo.title}">Open purchase orders</div>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/reports}">
+                            <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{reporting.back}">All reports</span>
+                        </a>
+                    </div>
+                    <hr>
+                    <p class="wms-muted" th:text="#{reporting.openPo.hint}"></p>
+
+                    <form id="openpo-filters" method="get" th:action="@{/reports/inbound/open-orders}"
+                          th:object="${filter}" th:hx-get="@{/reports/inbound/open-orders}"
+                          hx-trigger="input delay:400ms, submit" hx-target="#openpo-results" hx-swap="outerHTML"
+                          hx-push-url="true">
+                        <div class="form-group">
+                            <div class="icheck-material-white">
+                                <input type="checkbox" th:field="*{overdueOnly}">
+                                <label th:for="${#ids.prev('overdueOnly')}"
+                                       th:text="#{reporting.openPo.overdueOnly}">Only orders past their expected date</label>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="openpo-results" th:fragment="results" hx-target="#openpo-results" hx-swap="outerHTML"
+                         hx-push-url="true">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col" th:text="#{reporting.col.poNumber}">PO</th>
+                                    <th scope="col" th:text="#{reporting.col.supplier}">Supplier</th>
+                                    <th scope="col" th:text="#{reporting.col.status}">Status</th>
+                                    <th scope="col" th:text="#{reporting.col.orderDate}">Ordered</th>
+                                    <th scope="col" th:text="#{reporting.col.expectedDate}">Expected</th>
+                                    <th scope="col" th:text="#{reporting.col.late}">Late</th>
+                                    <th scope="col" class="text-right" th:text="#{reporting.col.linesDone}">Lines fulfilled</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="8" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                </tr>
+                                <tr th:each="r : ${page.content()}">
+                                    <td th:text="${r.poNumber()}">PO-000001</td>
+                                    <td th:text="${r.supplierName()}">Supplier</td>
+                                    <td th:text="#{'po.status.' + ${r.status()}}">Confirmed</td>
+                                    <td th:text="${@repFormat.date(r.orderDate())}">2026-10-01</td>
+                                    <td th:text="${@repFormat.date(r.expectedDate())}">2026-10-15</td>
+                                    <td>
+                                        <span class="badge badge-danger" th:if="${r.daysLate() != null}"
+                                              th:text="#{reporting.openPo.late(${r.daysLate()})}">3 d late</span>
+                                    </td>
+                                    <td class="text-right" th:text="${r.fulfilledLineCount() + ' / ' + r.lineCount()}">1 / 3</td>
+                                    <td class="text-right">
+                                        <a class="btn btn-sm btn-light" th:href="@{/purchase-orders/{id}(id=${r.id()})}">
+                                            <i class="zmdi zmdi-eye"></i> <span th:text="#{reporting.view}">View</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}"></small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

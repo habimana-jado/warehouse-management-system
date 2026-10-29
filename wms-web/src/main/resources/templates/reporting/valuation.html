@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reports')}">
+<head>
+    <title th:text="#{reporting.valuation.title}">Stock valuation</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{reporting.valuation.title}">Stock valuation</div>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/reports}">
+                            <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{reporting.back}">All reports</span>
+                        </a>
+                    </div>
+                    <hr>
+                    <p class="wms-muted" th:text="#{reporting.valuation.hint}"></p>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="wms-muted" th:text="#{reporting.valuation.total}">Total value (known costs)</div>
+                            <h5 th:text="${@repFormat.money(report.totalValue())} + ' ' + ${report.currency()}">0 RWF</h5>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="wms-muted" th:text="#{reporting.valuation.itemsValued}">Items valued</div>
+                            <h5 th:text="${report.itemsValued()}">0</h5>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="wms-muted" th:text="#{reporting.valuation.itemsUnknown}">Items without a known cost</div>
+                            <h5 th:text="${report.itemsWithoutCost()}">0</h5>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="wms-muted" th:text="#{reporting.valuation.unknownQty}">Quantity without a known cost</div>
+                            <h5 th:text="${@repFormat.qty(report.unknownCostQty())}">0</h5>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning" th:if="${report.itemsWithoutCost() > 0}"
+                         th:text="#{reporting.valuation.unknownNote(${report.itemsWithoutCost()})}"></div>
+                    <p><small class="wms-muted"
+                              th:text="#{reporting.valuation.asOf(${@uiFormat.dateTime(report.asOf())})}"></small></p>
+
+                    <form id="valuation-filters" method="get" th:action="@{/reports/valuation}"
+                          th:hx-get="@{/reports/valuation}" hx-trigger="input delay:400ms, submit"
+                          hx-target="#valuation-results" hx-swap="outerHTML" hx-push-url="true">
+                        <div class="form-group position-relative has-icon-right">
+                            <input type="text" name="q" class="form-control input-shadow" th:value="${filter.q}"
+                                   th:placeholder="#{reporting.search.item}">
+                            <div class="form-control-position"><i class="icon-magnifier"></i></div>
+                        </div>
+                    </form>
+
+                    <div id="valuation-results" th:fragment="results" hx-target="#valuation-results"
+                         hx-swap="outerHTML" hx-push-url="true">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col" th:text="#{reporting.col.sku}">SKU</th>
+                                    <th scope="col" th:text="#{reporting.col.item}">Item</th>
+                                    <th scope="col" th:text="#{reporting.col.uom}">Unit</th>
+                                    <th scope="col" class="text-right" th:text="#{reporting.col.onHand}">On hand</th>
+                                    <th scope="col" class="text-right" th:text="#{reporting.col.lastCost}">Last cost</th>
+                                    <th scope="col" th:text="#{reporting.col.costDate}">Cost date</th>
+                                    <th scope="col" class="text-right"
+                                        th:text="#{reporting.col.value(${report.currency()})}">Value</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="7" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                </tr>
+                                <tr th:each="r : ${page.content()}">
+                                    <td th:text="${r.itemSku()}">SKU</td>
+                                    <td th:text="${r.itemName()}">Item</td>
+                                    <td th:text="${r.baseUom()}">pcs</td>
+                                    <td class="text-right" th:text="${@repFormat.qty(r.onHand())}">0</td>
+                                    <td class="text-right">
+                                        <span th:if="${r.lastUnitCost() != null}"
+                                              th:text="${@repFormat.money(r.lastUnitCost())}">0</span>
+                                        <span class="badge badge-dark" th:if="${r.lastUnitCost() == null}"
+                                              th:text="#{reporting.valuation.noCost}">no cost</span>
+                                    </td>
+                                    <td th:text="${@uiFormat.dateTime(r.lastCostAt())}">date</td>
+                                    <td class="text-right" th:text="${@repFormat.money(r.value())}">0</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}"></small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

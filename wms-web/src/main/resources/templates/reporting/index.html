@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reports')}">
+<head>
+    <title th:text="#{reporting.index.title}">Reports</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-8">
+            <div class="card" th:each="g : ${groups}">
+                <div class="card-body">
+                    <div class="card-title" th:text="#{${g.key()}}">Group</div>
+                    <hr>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th scope="col" th:text="#{reporting.catalog.report}">Report</th>
+                                <th scope="col" th:text="#{reporting.catalog.shows}">What it shows</th>
+                                <th scope="col"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="e : ${g.entries()}">
+                                <td th:text="#{${e.key()}}">Report</td>
+                                <td class="wms-muted" th:text="#{${e.key() + '.desc'}}">Description</td>
+                                <td class="text-right">
+                                    <a class="btn btn-sm btn-light" th:href="@{${e.path()}}">
+                                        <i class="zmdi zmdi-eye"></i> <span th:text="#{reporting.open}">Open</span>
+                                    </a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title" th:text="#{reporting.export.title}">Downloads (CSV)</div>
+                    <hr>
+                    <form method="get" th:action="@{/reports/low-stock/export}" class="mb-4">
+                        <div class="wms-muted mb-2" th:text="#{reporting.export.lowStock}">Items below their reorder level</div>
+                        <button type="submit" class="btn btn-sm btn-light">
+                            <i class="zmdi zmdi-download"></i> <span th:text="#{reporting.export.download}">Download</span>
+                        </button>
+                    </form>
+                    <form method="get" th:action="@{/reports/ledger/export}">
+                        <div class="wms-muted mb-2" th:text="#{reporting.export.ledger}">Stock ledger of the selected warehouse</div>
+                        <div class="form-group">
+                            <label for="ledger-from" th:text="#{reporting.export.from}">From</label>
+                            <input id="ledger-from" type="date" name="from" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="ledger-to" th:text="#{reporting.export.to}">To (included)</label>
+                            <input id="ledger-to" type="date" name="to" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="ledger-type" th:text="#{reporting.export.type}">Movement type</label>
+                            <select id="ledger-type" name="type" class="form-control">
+                                <option value="" th:text="#{reporting.export.allTypes}">All types</option>
+                                <option th:each="t : ${movementTypes}" th:value="${t.name()}"
+                                        th:text="#{'reporting.movementType.' + ${t.name()}}">Type</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-light">
+                            <i class="zmdi zmdi-download"></i> <span th:text="#{reporting.export.download}">Download</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

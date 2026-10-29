@@ -160,6 +160,10 @@
                 <i class="zmdi zmdi-chart"></i> <span th:text="#{menu.productivity}">Productivity</span>
             </a>
         </li>
-
+        <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}">
+            <a th:href="@{/reports}" th:classappend="${active == 'reports'} ? 'active'">
+                <i class="zmdi zmdi-chart"></i> <span th:text="#{menu.reports}">Reports</span>
+            </a>
+        </li>
     </ul>
 </div>

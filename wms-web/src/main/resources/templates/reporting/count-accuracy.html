@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reports')}">
+<head>
+    <title th:text="#{reporting.countAccuracy.title}">Count accuracy</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{reporting.countAccuracy.title}">Count accuracy</div>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/reports}">
+                            <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{reporting.back}">All reports</span>
+                        </a>
+                    </div>
+                    <hr>
+                    <p class="wms-muted" th:text="#{reporting.countAccuracy.hint}"></p>
+
+                    <form id="countacc-filters" method="get" th:action="@{/reports/accuracy/counts}"
+                          th:object="${filter}" th:hx-get="@{/reports/accuracy/counts}"
+                          hx-trigger="change, submit" hx-target="#countacc-results" hx-swap="outerHTML"
+                          hx-push-url="true">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="from" th:text="#{reporting.range.from}">From</label>
+                                <input type="date" class="form-control" th:field="*{from}">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="to" th:text="#{reporting.range.to}">To (included)</label>
+                                <input type="date" class="form-control" th:field="*{to}">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="topItems" th:text="#{reporting.countAccuracy.topItems}">Top items shown</label>
+                                <select class="form-control" th:field="*{topItems}">
+                                    <option th:each="n : ${topItemChoices}" th:value="${n}" th:text="${n}">10</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="countacc-results" th:fragment="results" hx-target="#countacc-results"
+                         hx-swap="outerHTML" hx-push-url="true">
+                        <div class="alert alert-danger" th:if="${error != null}" th:text="${error}"></div>
+                        <th:block th:if="${error == null}">
+                            <p>
+                                <small class="wms-muted"
+                                       th:text="#{reporting.countAccuracy.range(${@repFormat.date(report.from())}, ${@repFormat.date(report.toExclusive().minusDays(1))})}"></small>
+                            </p>
+                            <div class="row mb-3">
+                                <div class="col-md-2">
+                                    <div class="wms-muted" th:text="#{reporting.countAccuracy.counts}">Counts completed</div>
+                                    <h5 th:text="${report.counts()}">0</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.countAccuracy.accuracy}">Line accuracy</div>
+                                    <h5 th:text="${@repFormat.percent(report.lineAccuracy())}">0 %</h5>
+                                    <small class="wms-muted"
+                                           th:text="${report.matchingLines() + ' / ' + report.lines()}"></small>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.countAccuracy.net}">Net variance</div>
+                                    <h5 th:text="${@repFormat.qty(report.netVariance())}">0</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.countAccuracy.abs}">Absolute variance</div>
+                                    <h5 th:text="${@repFormat.qty(report.absVariance())}">0</h5>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col" th:text="#{reporting.col.count}">Count</th>
+                                        <th scope="col" th:text="#{reporting.col.zone}">Zone</th>
+                                        <th scope="col" th:text="#{reporting.col.completed}">Completed</th>
+                                        <th scope="col" th:text="#{reporting.col.approvedBy}">Approved by</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.lines}">Lines</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.accuracy}">Accuracy</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.over}">Over</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.under}">Under</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.netVariance}">Net variance</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.absVariance}">Absolute variance</th>
+                                        <th scope="col"></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:if="${report.countList().isEmpty()}">
+                                        <td colspan="11" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                    </tr>
+                                    <tr th:each="c : ${report.countList()}">
+                                        <td th:text="${c.countNumber()}">CNT-000001</td>
+                                        <td th:text="${c.zoneCode() != null} ? ${c.zoneCode()} : #{reporting.countAccuracy.wholeWarehouse}">Zone</td>
+                                        <td th:text="${@uiFormat.dateTime(c.completedAt())}">date</td>
+                                        <td th:text="${c.approvedByName()}">Name</td>
+                                        <td class="text-right" th:text="${c.lines()}">0</td>
+                                        <td class="text-right" th:text="${@repFormat.percent(c.accuracy())}">0 %</td>
+                                        <td class="text-right" th:text="${c.overLines()}">0</td>
+                                        <td class="text-right" th:text="${c.underLines()}">0</td>
+                                        <td class="text-right" th:text="${@repFormat.qty(c.netVariance())}">0</td>
+                                        <td class="text-right" th:text="${@repFormat.qty(c.absVariance())}">0</td>
+                                        <td class="text-right">
+                                            <a class="btn btn-sm btn-light" th:href="@{/counts/{id}(id=${c.countId()})}">
+                                                <i class="zmdi zmdi-eye"></i> <span th:text="#{reporting.view}">View</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h6 class="mt-4" th:text="#{reporting.countAccuracy.topTitle}">Items with the largest differences</h6>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col" th:text="#{reporting.col.sku}">SKU</th>
+                                        <th scope="col" th:text="#{reporting.col.item}">Item</th>
+                                        <th scope="col" th:text="#{reporting.col.uom}">Unit</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.linesWithDiff}">Lines with a difference</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.netVariance}">Net variance</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.absVariance}">Absolute variance</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:if="${report.topVarianceItems().isEmpty()}">
+                                        <td colspan="6" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                    </tr>
+                                    <tr th:each="v : ${report.topVarianceItems()}">
+                                        <td th:text="${v.itemSku()}">SKU</td>
+                                        <td th:text="${v.itemName()}">Item</td>
+                                        <td th:text="${v.baseUom()}">pcs</td>
+                                        <td class="text-right" th:text="${v.lines()}">0</td>
+                                        <td class="text-right" th:text="${@repFormat.qty(v.netVariance())}">0</td>
+                                        <td class="text-right" th:text="${@repFormat.qty(v.absVariance())}">0</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

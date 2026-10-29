@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reports')}">
+<head>
+    <title th:text="#{reporting.adjustmentsReport.title}">Adjustments by reason</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{reporting.adjustmentsReport.title}">Adjustments by reason</div>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/reports}">
+                            <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{reporting.back}">All reports</span>
+                        </a>
+                    </div>
+                    <hr>
+                    <p class="wms-muted" th:text="#{reporting.adjustmentsReport.hint}"></p>
+
+                    <form id="adjrep-filters" method="get" th:action="@{/reports/accuracy/adjustments}"
+                          th:object="${filter}" th:hx-get="@{/reports/accuracy/adjustments}"
+                          hx-trigger="change, submit" hx-target="#adjrep-results" hx-swap="outerHTML"
+                          hx-push-url="true">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="from" th:text="#{reporting.range.from}">From</label>
+                                <input type="date" class="form-control" th:field="*{from}">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="to" th:text="#{reporting.range.to}">To (included)</label>
+                                <input type="date" class="form-control" th:field="*{to}">
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="adjrep-results" th:fragment="results" hx-target="#adjrep-results" hx-swap="outerHTML"
+                         hx-push-url="true">
+                        <div class="alert alert-danger" th:if="${error != null}" th:text="${error}"></div>
+                        <th:block th:if="${error == null}">
+                            <p>
+                                <small class="wms-muted"
+                                       th:text="#{reporting.adjustmentsReport.range(${@repFormat.date(report.from())}, ${@repFormat.date(report.toExclusive().minusDays(1))})}"></small>
+                            </p>
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.adjustmentsReport.posted}">Adjustments posted</div>
+                                    <h5 th:text="${report.postedAdjustments()}">0</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.adjustmentsReport.pending}">Waiting for approval now</div>
+                                    <h5 th:text="${report.pendingApprovals()}">0</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.adjustmentsReport.oldest}">Oldest waiting since</div>
+                                    <h5 th:text="${@uiFormat.dateTime(report.oldestPendingAt())}">date</h5>
+                                </div>
+                                <div class="col-md-3 align-self-end" th:if="${report.pendingApprovals() > 0}">
+                                    <a class="btn btn-sm btn-light" th:href="@{/adjustments(status='PENDING_APPROVAL')}">
+                                        <i class="zmdi zmdi-eye"></i>
+                                        <span th:text="#{reporting.adjustmentsReport.review}">Review pending</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col" th:text="#{reporting.col.reason}">Reason</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.adjustments}">Adjustments</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.lines}">Lines</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.increased}">Increased</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.decreased}">Decreased</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:if="${report.byReason().isEmpty()}">
+                                        <td colspan="5" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                    </tr>
+                                    <tr th:each="r : ${report.byReason()}">
+                                        <td>
+                                            <span th:text="${r.reasonName()}">Damaged</span>
+                                            <small class="wms-muted" th:text="${r.reasonCode()}">DAMAGED</small>
+                                        </td>
+                                        <td class="text-right" th:text="${r.adjustments()}">0</td>
+                                        <td class="text-right" th:text="${r.lines()}">0</td>
+                                        <td class="text-right" th:text="${@repFormat.qty(r.increasedQty())}">0</td>
+                                        <td class="text-right" th:text="${@repFormat.qty(r.decreasedQty())}">0</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <small class="wms-muted" th:text="#{reporting.adjustmentsReport.unitsNote}"></small>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

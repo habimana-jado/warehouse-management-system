@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reports')}">
+<head>
+    <title th:text="#{reporting.audit.title}">Audit log</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{reporting.audit.title}">Audit log</div>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/reports}">
+                            <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{reporting.back}">All reports</span>
+                        </a>
+                    </div>
+                    <hr>
+                    <p class="wms-muted" th:text="#{reporting.audit.hint}"></p>
+
+                    <form id="audit-filters" method="get" th:action="@{/reports/audit}" th:object="${filter}"
+                          th:hx-get="@{/reports/audit}" hx-trigger="change, submit" hx-target="#audit-results"
+                          hx-swap="outerHTML" hx-push-url="true">
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="from" th:text="#{reporting.range.from}">From</label>
+                                <input type="date" class="form-control" th:field="*{from}">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="to" th:text="#{reporting.range.to}">To (included)</label>
+                                <input type="date" class="form-control" th:field="*{to}">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="actorId" th:text="#{reporting.audit.person}">Person</label>
+                                <select class="form-control" th:field="*{actorId}">
+                                    <option value="" th:text="#{reporting.audit.anyone}">Everyone</option>
+                                    <option th:each="w : ${workers}" th:value="${w.id()}" th:text="${w.name()}">Name</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-5">
+                                <label th:text="#{reporting.audit.sources}">Sources</label>
+                                <div>
+                                    <div class="icheck-material-white d-inline-block mr-3" th:each="s : ${auditSources}">
+                                        <input type="checkbox" th:field="*{sources}" th:value="${s}">
+                                        <label th:for="${#ids.prev('sources')}"
+                                               th:text="#{'reporting.audit.source.' + ${s.name()}}">Source</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="audit-results" th:fragment="results" hx-target="#audit-results" hx-swap="outerHTML"
+                         hx-push-url="true">
+                        <div class="alert alert-danger" th:if="${error != null}" th:text="${error}"></div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col" th:text="#{reporting.col.when}">When</th>
+                                    <th scope="col" th:text="#{reporting.col.source}">Source</th>
+                                    <th scope="col" th:text="#{reporting.col.event}">Event</th>
+                                    <th scope="col" th:text="#{reporting.col.person}">Person</th>
+                                    <th scope="col" th:text="#{reporting.col.reference}">Reference</th>
+                                    <th scope="col" th:text="#{reporting.col.item}">Item</th>
+                                    <th scope="col" th:text="#{reporting.col.bin}">Bin</th>
+                                    <th scope="col" class="text-right" th:text="#{reporting.col.quantity}">Quantity</th>
+                                    <th scope="col" th:text="#{reporting.col.detail}">Detail</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${rows.isEmpty()}">
+                                    <td colspan="10" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                </tr>
+                                <tr th:each="r : ${rows}">
+                                    <td th:text="${@uiFormat.dateTime(r.event().occurredAt())}">date</td>
+                                    <td th:text="#{'reporting.audit.source.' + ${r.event().source().name()}}">Source</td>
+                                    <td th:text="${#messages.msgOrNull('reporting.audit.event.' + r.event().event()) ?: r.event().event()}">Event</td>
+                                    <td>
+                                        <span th:if="${r.event().actorId() == null}" class="wms-muted"
+                                              th:text="#{reporting.audit.system}">System</span>
+                                        <span th:if="${r.event().actorId() != null}"
+                                              th:text="${r.event().actorName()}">Name</span>
+                                    </td>
+                                    <td th:text="${r.event().referenceNumber()}">TSK-000001</td>
+                                    <td>
+                                        <span th:text="${r.event().itemSku()}">SKU</span>
+                                        <small class="wms-muted" th:text="${r.event().itemName()}">Item</small>
+                                    </td>
+                                    <td th:text="${r.event().locationCode()}">A-01</td>
+                                    <td class="text-right"
+                                        th:text="${r.event().quantity() != null} ? ${@repFormat.qty(r.event().quantity())} : ''">0</td>
+                                    <td th:text="${r.event().detail()}">note</td>
+                                    <td class="text-right">
+                                        <a class="btn btn-sm btn-light" th:if="${r.link() != null}" th:href="@{${r.link()}}">
+                                            <i class="zmdi zmdi-eye"></i> <span th:text="#{reporting.view}">View</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted" th:text="#{reporting.audit.page(${filter.page + 1})}">Page 1</small>
+                            <div>
+                                <a class="btn btn-sm btn-light" th:if="${filter.page > 0}"
+                                   th:with="prevUrl=@{/reports/audit(from=${filter.from}, to=${filter.to}, actorId=${filter.actorId}, sources=${filter.sources}, size=${filter.size}, page=${filter.page - 1})}"
+                                   th:href="${prevUrl}" th:hx-get="${prevUrl}">
+                                    <i class="zmdi zmdi-chevron-left"></i> <span th:text="#{reporting.audit.newer}">Previous</span>
+                                </a>
+                                <a class="btn btn-sm btn-light" th:if="${feed.hasMore()}"
+                                   th:with="nextUrl=@{/reports/audit(from=${filter.from}, to=${filter.to}, actorId=${filter.actorId}, sources=${filter.sources}, size=${filter.size}, page=${filter.page + 1})}"
+                                   th:href="${nextUrl}" th:hx-get="${nextUrl}">
+                                    <span th:text="#{reporting.audit.older}">Next</span> <i class="zmdi zmdi-chevron-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

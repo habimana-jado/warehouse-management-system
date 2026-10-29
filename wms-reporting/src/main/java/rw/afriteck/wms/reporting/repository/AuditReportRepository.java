@@ -22,7 +22,8 @@ public class AuditReportRepository {
 
     public record AuditRow(Instant occurredAt, String source, String event, UUID actorId, UUID itemId,
                            UUID locationId, BigDecimal quantity, String referenceType, UUID referenceId,
-                           String referenceNumber, String detail) {}
+                           String referenceNumber, String detail) {
+    }
 
     // Every branch returns the same 12 columns; the fragments are fixed text (no user input is concatenated).
     private static final String MOVEMENTS = """
@@ -83,12 +84,18 @@ public class AuditReportRepository {
                                  UUID actorId, int limit, long offset) {
         List<String> parts = new ArrayList<>();
         if (sources.contains(AuditSource.STOCK_MOVEMENT)) parts.add(MOVEMENTS);
-        if (sources.contains(AuditSource.ADJUSTMENT)) { parts.add(ADJ_REQUESTED); parts.add(ADJ_DECIDED); parts.add(ADJ_CANCELLED); }
+        if (sources.contains(AuditSource.ADJUSTMENT)) {
+            parts.add(ADJ_REQUESTED);
+            parts.add(ADJ_DECIDED);
+            parts.add(ADJ_CANCELLED);
+        }
         if (sources.contains(AuditSource.TASK)) parts.add(TASK_EVENTS);
         if (sources.contains(AuditSource.COUNT)) parts.add(COUNTS);
         if (parts.isEmpty()) return List.of();
 
-        String sql = "select * from (" + String.join(" union all ", parts) + ") u "
+        String sql = "select * from (" + String.join(" union all ", parts) + ") as u ("
+                + "occurred_at, source, event, actor_id, item_id, location_id, quantity, "
+                + "reference_type, reference_id, reference_number, detail, row_id) "
                 + (actorId != null ? "where u.actor_id = :actorId " : "")
                 + "order by u.occurred_at desc, u.source, u.event, u.row_id limit :limit offset :offset";
 

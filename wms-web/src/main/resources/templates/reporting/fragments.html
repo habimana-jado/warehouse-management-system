@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<span th:fragment="expiryStatus(status)" class="badge"
+      th:classappend="${status == 'EXPIRED'} ? 'badge-danger' : 'badge-warning'"
+      th:text="#{'reporting.expiry.status.' + ${status}}">Expiring</span>
+</body>
+</html>

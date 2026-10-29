@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reports')}">
+<head>
+    <title th:text="#{reporting.taskBacklog.title}">Task backlog</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{reporting.taskBacklog.title}">Task backlog</div>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/reports}">
+                            <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{reporting.back}">All reports</span>
+                        </a>
+                    </div>
+                    <hr>
+                    <p class="wms-muted" th:text="#{reporting.taskBacklog.hint}"></p>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th scope="col" th:text="#{reporting.col.taskType}">Task type</th>
+                                <th scope="col" class="text-right" th:text="#{reporting.col.open}">Open</th>
+                                <th scope="col" class="text-right" th:text="#{reporting.col.assigned}">Assigned</th>
+                                <th scope="col" class="text-right" th:text="#{reporting.col.inProgress}">In progress</th>
+                                <th scope="col" class="text-right" th:text="#{reporting.col.overdue}">Overdue</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:if="${report.byType().isEmpty()}">
+                                <td colspan="5" class="text-center wms-muted" th:text="#{reporting.taskBacklog.none}">No open tasks</td>
+                            </tr>
+                            <tr th:each="b : ${report.byType()}">
+                                <td th:text="#{'reporting.taskType.' + ${b.type()}}">Pick</td>
+                                <td class="text-right" th:text="${b.open()}">0</td>
+                                <td class="text-right" th:text="${b.assigned()}">0</td>
+                                <td class="text-right" th:text="${b.inProgress()}">0</td>
+                                <td class="text-right">
+                                    <span class="badge badge-danger" th:if="${b.overdue() > 0}" th:text="${b.overdue()}">2</span>
+                                    <span th:if="${b.overdue() == 0}">0</span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h6 th:text="#{reporting.taskBacklog.overdueTitle(${report.overdueTasks()})}">Overdue tasks</h6>
+
+                    <div id="taskbacklog-results" th:fragment="results" hx-target="#taskbacklog-results"
+                         hx-swap="outerHTML" hx-push-url="true">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col" th:text="#{reporting.col.task}">Task</th>
+                                    <th scope="col" th:text="#{reporting.col.taskType}">Task type</th>
+                                    <th scope="col" th:text="#{reporting.col.status}">Status</th>
+                                    <th scope="col" th:text="#{reporting.col.priority}">Priority</th>
+                                    <th scope="col" th:text="#{reporting.col.reference}">Reference</th>
+                                    <th scope="col" th:text="#{reporting.col.assignee}">Assigned to</th>
+                                    <th scope="col" th:text="#{reporting.col.due}">Due</th>
+                                    <th scope="col" th:text="#{reporting.col.overdueBy}">Overdue by</th>
+                                    <th scope="col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${page.content().isEmpty()}">
+                                    <td colspan="9" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                </tr>
+                                <tr th:each="t : ${page.content()}">
+                                    <td th:text="${t.taskNumber()}">TSK-000001</td>
+                                    <td th:text="#{'reporting.taskType.' + ${t.type()}}">Pick</td>
+                                    <td th:text="#{'reporting.taskStatus.' + ${t.status()}}">Open</td>
+                                    <td th:text="#{'reporting.taskPriority.' + ${t.priority()}}">Normal</td>
+                                    <td th:text="${t.referenceNumber()}">SO-000001</td>
+                                    <td th:text="${t.assigneeName()}">Name</td>
+                                    <td th:text="${@uiFormat.dateTime(t.dueAt())}">date</td>
+                                    <td th:text="${@repFormat.hours(t.hoursOverdue())}">5 h</td>
+                                    <td class="text-right">
+                                        <a class="btn btn-sm btn-light" th:href="@{/tasks/{id}(id=${t.id()})}">
+                                            <i class="zmdi zmdi-eye"></i> <span th:text="#{reporting.view}">View</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="wms-muted"
+                                   th:utext="#{common.showing(${page.from()}, ${page.to()}, ${page.totalElements()})}"></small>
+                            <div th:replace="~{fragments/pagination :: pager(${page})}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

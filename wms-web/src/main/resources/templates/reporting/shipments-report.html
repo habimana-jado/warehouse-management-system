@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reports')}">
+<head>
+    <title th:text="#{reporting.shipmentsDaily.title}">Shipments per day</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{reporting.shipmentsDaily.title}">Shipments per day</div>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/reports}">
+                            <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{reporting.back}">All reports</span>
+                        </a>
+                    </div>
+                    <hr>
+                    <p class="wms-muted" th:text="#{reporting.shipmentsDaily.hint}"></p>
+
+                    <form id="shipdaily-filters" method="get" th:action="@{/reports/outbound/shipments}"
+                          th:object="${filter}" th:hx-get="@{/reports/outbound/shipments}"
+                          hx-trigger="change, submit" hx-target="#shipdaily-results" hx-swap="outerHTML"
+                          hx-push-url="true">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="from" th:text="#{reporting.range.from}">From</label>
+                                <input type="date" class="form-control" th:field="*{from}">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="to" th:text="#{reporting.range.to}">To (included)</label>
+                                <input type="date" class="form-control" th:field="*{to}">
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="shipdaily-results" th:fragment="results" hx-target="#shipdaily-results"
+                         hx-swap="outerHTML" hx-push-url="true">
+                        <div class="alert alert-danger" th:if="${error != null}" th:text="${error}"></div>
+                        <th:block th:if="${error == null}">
+                            <p>
+                                <small class="wms-muted"
+                                       th:text="#{reporting.shipmentsDaily.range(${@repFormat.date(report.from())}, ${@repFormat.date(report.toExclusive().minusDays(1))})}"></small>
+                            </p>
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.shipmentsDaily.total}">Shipments</div>
+                                    <h5 th:text="${report.totalShipments()}">0</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.shipmentsDaily.packages}">Packages</div>
+                                    <h5 th:text="${report.totalPackages()}">0</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.shipmentsDaily.delivered}">Delivery confirmed</div>
+                                    <h5 th:text="${report.totalDelivered()}">0</h5>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col" th:text="#{reporting.col.day}">Day</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.shipments}">Shipments</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.packages}">Packages</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.delivered}">Delivered</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:if="${report.days().isEmpty()}">
+                                        <td colspan="4" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                    </tr>
+                                    <tr th:each="d : ${report.days()}">
+                                        <td th:text="${@repFormat.date(d.day())}">2026-10-01</td>
+                                        <td class="text-right" th:text="${d.shipments()}">0</td>
+                                        <td class="text-right" th:text="${d.packages()}">0</td>
+                                        <td class="text-right" th:text="${d.delivered()}">0</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

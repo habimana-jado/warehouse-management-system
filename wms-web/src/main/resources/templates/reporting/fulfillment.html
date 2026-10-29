@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'reports')}">
+<head>
+    <title th:text="#{reporting.fulfillment.title}">Order fulfilment</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0" th:text="#{reporting.fulfillment.title}">Order fulfilment</div>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/reports}">
+                            <i class="zmdi zmdi-arrow-left"></i> <span th:text="#{reporting.back}">All reports</span>
+                        </a>
+                    </div>
+                    <hr>
+                    <p class="wms-muted" th:text="#{reporting.fulfillment.hint}"></p>
+
+                    <form id="fulfillment-filters" method="get" th:action="@{/reports/outbound/fulfillment}"
+                          th:object="${filter}" th:hx-get="@{/reports/outbound/fulfillment}"
+                          hx-trigger="change, submit" hx-target="#fulfillment-results" hx-swap="outerHTML"
+                          hx-push-url="true">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label for="from" th:text="#{reporting.range.from}">From</label>
+                                <input type="date" class="form-control" th:field="*{from}">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="to" th:text="#{reporting.range.to}">To (included)</label>
+                                <input type="date" class="form-control" th:field="*{to}">
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="fulfillment-results" th:fragment="results" hx-target="#fulfillment-results"
+                         hx-swap="outerHTML" hx-push-url="true">
+                        <div class="alert alert-danger" th:if="${error != null}" th:text="${error}"></div>
+                        <th:block th:if="${error == null}">
+                            <p>
+                                <small class="wms-muted"
+                                       th:text="#{reporting.fulfillment.range(${@repFormat.date(report.from())}, ${@repFormat.date(report.toExclusive().minusDays(1))})}"></small>
+                            </p>
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.fulfillment.lineFill}">Line fill rate</div>
+                                    <h5 th:text="${@repFormat.percent(report.lineFillRate())}">0 %</h5>
+                                    <small class="wms-muted"
+                                           th:text="${report.fullyShippedLines() + ' / ' + report.finishedLines()}"></small>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.fulfillment.qtyFill}">Quantity fill rate</div>
+                                    <h5 th:text="${@repFormat.percent(report.qtyFillRate())}">0 %</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.fulfillment.onTime}">Shipped on time</div>
+                                    <h5 th:text="${@repFormat.percent(report.onTimeRate())}">0 %</h5>
+                                    <small class="wms-muted"
+                                           th:text="${report.onTimeOrders() + ' / ' + report.datedShippedOrders()}"></small>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="wms-muted" th:text="#{reporting.fulfillment.overdue}">Open orders past their required date</div>
+                                    <h5 th:text="${report.overdueOpenOrders()}">0</h5>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col" th:text="#{reporting.col.status}">Status</th>
+                                        <th scope="col" class="text-right" th:text="#{reporting.col.orders}">Orders</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:if="${report.ordersByStatus().isEmpty()}">
+                                        <td colspan="2" class="text-center wms-muted" th:text="#{common.noResults}">No results</td>
+                                    </tr>
+                                    <tr th:each="e : ${report.ordersByStatus()}">
+                                        <td th:text="#{'so.status.' + ${e.key}}">Shipped</td>
+                                        <td class="text-right" th:text="${e.value}">0</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>
