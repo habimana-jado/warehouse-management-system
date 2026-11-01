@@ -17,7 +17,7 @@ public class WebSecurityConfig {
                 .authenticationProvider(provider)
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/login", "/error", "/actuator/health/**",
-                                "/assets/**", "/favicon.ico").permitAll()
+                                "/assets/**", "/favicon.png").permitAll()
                         .anyRequest().authenticated())
                 .formLogin(f -> f.loginPage("/login").defaultSuccessUrl("/", false)
                         .failureUrl("/login?error").permitAll())

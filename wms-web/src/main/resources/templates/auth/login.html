@@ -6,7 +6,7 @@
     <div class="card card-authentication1 mx-auto my-5">
         <div class="card-body">
             <div class="card-content p-2">
-                <div class="text-center"><img th:src="@{/assets/images/logo-icon.png}" alt="logo"></div>
+                <div class="text-center"><img style="max-height: 60px;" th:src="@{/assets/images/logo-icon.png}" alt="logo"></div>
                 <div class="card-title text-uppercase text-center py-3" th:text="#{login.title}">Sign In</div>
 
                 <div class="alert alert-danger" th:if="${param.error}" th:text="#{login.error}">Invalid credentials
