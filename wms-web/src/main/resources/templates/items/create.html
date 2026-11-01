@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::content}, ~{}, 'items')}">
+<head><title th:text="#{items.new.title}">New Item</title></head>
+<body>
+<th:block th:fragment="content">
+    <div class="row mt-3">
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title" th:text="#{items.new.title}">New Item</div>
+                    <hr>
+                    <form th:action="@{/items}" th:object="${form}" method="post" novalidate>
+                        <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                            <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/form-fields :: input('sku', 'items.field.sku', 'text', true, 'off')}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/form-fields :: input('barcode', 'items.field.barcode', 'text', false, 'off')}"></div>
+                            </div>
+                        </div>
+                        <div th:replace="~{fragments/form-fields :: input('name', 'items.field.name', 'text', true, 'off')}"></div>
+
+                        <div class="form-group">
+                            <label for="description" th:text="#{items.field.description}">Description</label>
+                            <textarea id="description" class="form-control" rows="3" th:field="*{description}"
+                                      th:errorclass="is-invalid"></textarea>
+                            <div class="invalid-feedback" th:errors="*{description}">error</div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="categoryId" th:text="#{items.field.category}">Category</label>
+                                <select id="categoryId" class="form-control" th:field="*{categoryId}" th:errorclass="is-invalid">
+                                    <option value="" th:text="#{items.field.category.none}">No category</option>
+                                    <option th:each="c : ${categoryOptions}" th:value="${c.id()}" th:text="${c.name()}">Fasteners</option>
+                                </select>
+                                <div class="invalid-feedback" th:errors="*{categoryId}">error</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/form-fields :: input('baseUom', 'items.field.baseUom', 'text', true, 'off')}"></div>
+                            </div>
+                        </div>
+                        <small class="d-block mb-3 wms-muted" th:text="#{items.field.baseUom.hint}">The unit all quantities are stored in, for example EA or KG. It cannot be changed later.</small>
+
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/form-fields :: enumSelect('trackingType', 'items.field.tracking', ${trackingTypes}, 'item.tracking.')}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label th:text="#{items.field.expiry}">Expiry</label>
+                                    <div class="icheck-material-white">
+                                        <input type="checkbox" th:field="*{expiryTracked}"/>
+                                        <label th:for="${#ids.prev('expiryTracked')}" th:text="#{items.field.expiry.label}">Track expiry dates</label>
+                                    </div>
+                                    <div class="invalid-feedback d-block" th:errors="*{expiryTracked}">error</div>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="d-block mb-3 wms-muted" th:text="#{items.field.tracking.hint}">Tracking and expiry cannot be changed later. Expiry requires lot tracking.</small>
+
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/form-fields :: input('unitCost', 'items.field.unitCost', 'text', false, 'off')}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/form-fields :: input('weightKg', 'items.field.weightKg', 'text', false, 'off')}"></div>
+                            </div>
+                        </div>
+
+                        <h6 class="mt-2" th:text="#{items.units.title}">Units of measure</h6>
+                        <p class="wms-muted" th:text="#{items.units.hint}">Other units besides the base unit.</p>
+                        <div th:replace="~{items/uom-rows :: rows}"></div>
+
+                        <div class="form-group mt-3">
+                            <button type="submit" class="btn btn-light px-5"><i class="icon-lock"></i> <span th:text="#{items.save}">Save</span></button>
+                            <a class="btn btn-secondary px-4" th:href="@{/items}" th:text="#{common.cancel}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>
