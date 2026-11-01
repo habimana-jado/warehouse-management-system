@@ -1,169 +1,192 @@
-<!-- fragments/sidebar.html -->
 <div id="sidebar-wrapper" data-simplebar="" data-simplebar-auto-hide="true" th:fragment="sidebar(active)">
     <div class="brand-logo">
-        <a th:href="@{/}">
+        <a th:href="@{/modules}">
             <img th:src="@{/assets/images/logo-icon.png}" class="logo-icon" alt="logo">
             <h5 class="logo-text" th:text="#{app.name}">WMS</h5>
         </a>
     </div>
     <ul class="sidebar-menu do-nicescrol">
-        <li class="sidebar-header" th:text="#{menu.main}">MAIN NAVIGATION</li>
-        <li th:classappend="${active == 'dashboard'} ? 'active'">
-            <a th:href="@{/}"><i class="zmdi zmdi-view-dashboard"></i> <span
-                    th:text="#{menu.dashboard}">Dashboard</span></a>
+        <li>
+            <a th:href="@{/modules}"><i class="zmdi zmdi-apps"></i> <span th:text="#{nav.allModules}">All modules</span></a>
         </li>
-
-        <th:block th:if="${@uiUser.isAdmin()}">
-            <li class="sidebar-header" th:text="#{menu.admin}">ADMINISTRATION</li>
-            <li th:classappend="${active == 'users'} ? 'active'">
-                <a th:href="@{/users}"><i class="zmdi zmdi-accounts"></i> <span th:text="#{menu.users}">Users</span></a>
-            </li>
+        <th:block th:if="${nav != null and nav.module() != null}">
+            <li class="sidebar-header" th:text="#{${nav.module().labelKey()}}">MODULE</li>
+            <th:block th:each="sec : ${nav.sections()}">
+                <li class="sidebar-header" th:if="${sec.titleKey() != null}" th:text="#{${sec.titleKey()}}">SECTION</li>
+                <li th:each="link : ${sec.items()}" th:classappend="${link.active()} ? 'active'">
+                    <a th:href="@{${link.url()}}"><i th:class="${link.icon()}"></i> <span th:text="#{${link.labelKey()}}">Item</span></a>
+                </li>
+            </th:block>
         </th:block>
-
-        <th:block th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}">
-            <li class="sidebar-header" th:text="#{menu.masterData}">MASTER DATA</li>
-            <li th:if="${@uiUser.isAdmin()}" th:classappend="${active == 'warehouses'} ? 'active'">
-                <a th:href="@{/warehouses}"><i class="zmdi zmdi-store"></i> <span th:text="#{menu.warehouses}">Warehouses</span></a>
-            </li>
-            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"
-                th:classappend="${active == 'locations'} ? 'active'">
-                <a th:href="@{/locations}"><i class="zmdi zmdi-view-comfy"></i> <span th:text="#{menu.locations}">Locations</span></a>
-            </li>
-            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"
-                th:classappend="${active == 'categories'} ? 'active'">
-                <a th:href="@{/categories}"><i class="zmdi zmdi-labels"></i> <span th:text="#{menu.categories}">Categories</span></a>
-            </li>
-            <li th:classappend="${active == 'items'} ? 'active'">
-                <a th:href="@{/items}"><i class="zmdi zmdi-label"></i> <span th:text="#{menu.items}">Items</span></a>
-            </li>
-            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"
-                th:classappend="${active == 'suppliers'} ? 'active'">
-                <a th:href="@{/suppliers}"><i class="zmdi zmdi-truck"></i> <span
-                        th:text="#{menu.suppliers}">Suppliers</span></a>
-            </li>
-            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"
-                th:classappend="${active == 'customers'} ? 'active'">
-                <a th:href="@{/customers}"><i class="zmdi zmdi-account-box"></i> <span th:text="#{menu.customers}">Customers</span></a>
-            </li>
-        </th:block>
-        <li class="treeview" th:classappend="${#strings.contains('stock,movements,adjustments,my-adjustments,reasons,reorder,low-stock,transfers,incoming-transfers,new-transfer,counts', active)} ? 'active'">
-            <a href="javascript:void();" class="waves-effect">
-                <i class="zmdi zmdi-storage"></i> <span th:text="#{menu.inventory}">Inventory</span>
-                <i class="fa fa-angle-left float-right"></i>
-            </a>
-            <ul class="sidebar-submenu">
-                <li th:classappend="${active == 'stock'} ? 'active'">
-                    <a th:href="@{/stock}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.stock}">Stock on hand</span></a>
-                </li>
-                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
-                    th:classappend="${active == 'movements'} ? 'active'">
-                    <a th:href="@{/stock/movements}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.movements}">Stock movements</span></a>
-                </li>
-                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
-                    th:classappend="${active == 'adjustments'} ? 'active'">
-                    <a th:href="@{/adjustments}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.adjustments}">Adjustments</span></a>
-                </li>
-                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}"
-                    th:classappend="${active == 'my-adjustments'} ? 'active'">
-                    <a th:href="@{/adjustments/my}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.my-adjustments}">My adjustments</span></a>
-                </li>
-                <li th:if="${@uiUser.isAdmin()}" th:classappend="${active == 'reasons'} ? 'active'">
-                    <a th:href="@{/adjustment-reasons}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.reasons}">Adjustment reasons</span></a>
-                </li>
-                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
-                    th:classappend="${active == 'reorder'} ? 'active'">
-                    <a th:href="@{/reorder-policies}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.reorder}">Reorder policies</span></a>
-                </li>
-                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
-                    th:classappend="${active == 'low-stock'} ? 'active'">
-                    <a th:href="@{/reorder-policies/low-stock}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.low-stock}">Low stock</span></a>
-                </li>
-                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
-                    th:classappend="${active == 'transfers'} ? 'active'">
-                    <a th:href="@{/transfers}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.transfers}">Transfers</span></a>
-                </li>
-                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}"
-                    th:classappend="${active == 'incoming-transfers'} ? 'active'">
-                    <a th:href="@{/transfers/incoming}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.incoming-transfers}">Incoming transfers</span></a>
-                </li>
-                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}"
-                    th:classappend="${active == 'new-transfer'} ? 'active'">
-                    <a th:href="@{/transfers/new}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.new-transfer}">Move stock</span></a>
-                </li>
-                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"
-                    th:classappend="${active == 'counts'} ? 'active'">
-                    <a th:href="@{/counts}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.counts}">Cycle counts</span></a>
-                </li>
-            </ul>
-        </li>
-        <li class="treeview"
-            th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','RECEIVER')}"
-            th:classappend="${#strings.contains('purchase-orders,new-po,goods-receipts,putaway-board,customer-returns,new-return', active)} ? 'active'">
-            <a href="javascript:void();" class="waves-effect">
-                <i class="zmdi zmdi-truck"></i> <span th:text="#{menu.inbound}">Inbound</span>
-                <i class="fa fa-angle-left float-right"></i>
-            </a>
-            <ul class="sidebar-submenu">
-                <li th:classappend="${active == 'purchase-orders'} ? 'active'">
-                    <a th:href="@{/purchase-orders}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.purchase-orders}">Purchase orders</span></a>
-                </li>
-                <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER')}" th:classappend="${active == 'new-po'} ? 'active'">
-                    <a th:href="@{/purchase-orders/new}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.new-po}">New purchase order</span></a>
-                </li>
-                <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','RECEIVER')}" th:classappend="${active == 'goods-receipts'} ? 'active'">
-                    <a th:href="@{/goods-receipts}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.goods-receipts}">Goods receipts</span></a>
-                </li>
-                <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','RECEIVER')}" th:classappend="${active == 'putaway-board'} ? 'active'">
-                    <a th:href="@{/goods-receipts/awaiting-putaway}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.putaway-board}">Put-away board</span></a>
-                </li>
-                <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','RECEIVER')}" th:classappend="${active == 'customer-returns'} ? 'active'">
-                    <a th:href="@{/customer-returns}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.customer-returns}">Customer returns</span></a>
-                </li>
-                <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER')}" th:classappend="${active == 'new-return'} ? 'active'">
-                    <a th:href="@{/customer-returns/new}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.new-return}">New customer return</span></a>
-                </li>
-            </ul>
-        </li>
-        <li class="treeview" th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"
-            th:classappend="${#strings.contains('sales-orders,new-so,pick-lists,shipments', active)} ? 'active'">
-            <a href="javascript:void();" class="waves-effect">
-                <i class="zmdi zmdi-truck"></i> <span th:text="#{menu.outbound}">Outbound</span>
-                <i class="fa fa-angle-left float-right"></i>
-            </a>
-            <ul class="sidebar-submenu">
-                <li th:classappend="${active == 'sales-orders'} ? 'active'">
-                    <a th:href="@{/sales-orders}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.sales-orders}">Sales orders</span></a>
-                </li>
-                <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER')}" th:classappend="${active == 'new-so'} ? 'active'">
-                    <a th:href="@{/sales-orders/new}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.new-so}">New sales order</span></a>
-                </li>
-                <li th:classappend="${active == 'pick-lists'} ? 'active'">
-                    <a th:href="@{/pick-lists}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.pick-lists}">Pick lists</span></a>
-                </li>
-                <li th:classappend="${active == 'shipments'} ? 'active'">
-                    <a th:href="@{/shipments}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.shipments}">Shipments</span></a>
-                </li>
-            </ul>
-        </li>
-        <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}">
-            <a th:href="@{/tasks}" class="waves-effect">
-                <i class="zmdi zmdi-assignment"></i> <span th:text="#{menu.tasks}">Tasks</span>
-            </a>
-        </li>
-        <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}">
-            <a th:href="@{/tasks/my}" class="waves-effect">
-                <i class="zmdi zmdi-account-box"></i> <span th:text="#{menu.my-tasks}">My tasks</span>
-            </a>
-        </li>
-        <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER')}">
-            <a th:href="@{/tasks/productivity}" class="waves-effect">
-                <i class="zmdi zmdi-chart"></i> <span th:text="#{menu.productivity}">Productivity</span>
-            </a>
-        </li>
-        <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}">
-            <a th:href="@{/reports}" th:classappend="${active == 'reports'} ? 'active'">
-                <i class="zmdi zmdi-chart"></i> <span th:text="#{menu.reports}">Reports</span>
-            </a>
-        </li>
     </ul>
 </div>
+
+<!--&lt;!&ndash; fragments/sidebar.html &ndash;&gt;-->
+<!--<div id="sidebar-wrapper" data-simplebar="" data-simplebar-auto-hide="true" th:fragment="sidebar(active)">-->
+<!--    <div class="brand-logo">-->
+<!--        <a th:href="@{/}">-->
+<!--            <img th:src="@{/assets/images/logo-icon.png}" class="logo-icon" alt="logo">-->
+<!--            <h5 class="logo-text" th:text="#{app.name}">WMS</h5>-->
+<!--        </a>-->
+<!--    </div>-->
+<!--    <ul class="sidebar-menu do-nicescrol">-->
+<!--        <li class="sidebar-header" th:text="#{menu.main}">MAIN NAVIGATION</li>-->
+<!--        <li th:classappend="${active == 'dashboard'} ? 'active'">-->
+<!--            <a th:href="@{/}"><i class="zmdi zmdi-view-dashboard"></i> <span-->
+<!--                    th:text="#{menu.dashboard}">Dashboard</span></a>-->
+<!--        </li>-->
+
+<!--        <th:block th:if="${@uiUser.isAdmin()}">-->
+<!--            <li class="sidebar-header" th:text="#{menu.admin}">ADMINISTRATION</li>-->
+<!--            <li th:classappend="${active == 'users'} ? 'active'">-->
+<!--                <a th:href="@{/users}"><i class="zmdi zmdi-accounts"></i> <span th:text="#{menu.users}">Users</span></a>-->
+<!--            </li>-->
+<!--        </th:block>-->
+
+<!--        <th:block th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}">-->
+<!--            <li class="sidebar-header" th:text="#{menu.masterData}">MASTER DATA</li>-->
+<!--            <li th:if="${@uiUser.isAdmin()}" th:classappend="${active == 'warehouses'} ? 'active'">-->
+<!--                <a th:href="@{/warehouses}"><i class="zmdi zmdi-store"></i> <span th:text="#{menu.warehouses}">Warehouses</span></a>-->
+<!--            </li>-->
+<!--            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"-->
+<!--                th:classappend="${active == 'locations'} ? 'active'">-->
+<!--                <a th:href="@{/locations}"><i class="zmdi zmdi-view-comfy"></i> <span th:text="#{menu.locations}">Locations</span></a>-->
+<!--            </li>-->
+<!--            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"-->
+<!--                th:classappend="${active == 'categories'} ? 'active'">-->
+<!--                <a th:href="@{/categories}"><i class="zmdi zmdi-labels"></i> <span th:text="#{menu.categories}">Categories</span></a>-->
+<!--            </li>-->
+<!--            <li th:classappend="${active == 'items'} ? 'active'">-->
+<!--                <a th:href="@{/items}"><i class="zmdi zmdi-label"></i> <span th:text="#{menu.items}">Items</span></a>-->
+<!--            </li>-->
+<!--            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"-->
+<!--                th:classappend="${active == 'suppliers'} ? 'active'">-->
+<!--                <a th:href="@{/suppliers}"><i class="zmdi zmdi-truck"></i> <span-->
+<!--                        th:text="#{menu.suppliers}">Suppliers</span></a>-->
+<!--            </li>-->
+<!--            <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"-->
+<!--                th:classappend="${active == 'customers'} ? 'active'">-->
+<!--                <a th:href="@{/customers}"><i class="zmdi zmdi-account-box"></i> <span th:text="#{menu.customers}">Customers</span></a>-->
+<!--            </li>-->
+<!--        </th:block>-->
+<!--        <li class="treeview" th:classappend="${#strings.contains('stock,movements,adjustments,my-adjustments,reasons,reorder,low-stock,transfers,incoming-transfers,new-transfer,counts', active)} ? 'active'">-->
+<!--            <a href="javascript:void();" class="waves-effect">-->
+<!--                <i class="zmdi zmdi-storage"></i> <span th:text="#{menu.inventory}">Inventory</span>-->
+<!--                <i class="fa fa-angle-left float-right"></i>-->
+<!--            </a>-->
+<!--            <ul class="sidebar-submenu">-->
+<!--                <li th:classappend="${active == 'stock'} ? 'active'">-->
+<!--                    <a th:href="@{/stock}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.stock}">Stock on hand</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"-->
+<!--                    th:classappend="${active == 'movements'} ? 'active'">-->
+<!--                    <a th:href="@{/stock/movements}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.movements}">Stock movements</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"-->
+<!--                    th:classappend="${active == 'adjustments'} ? 'active'">-->
+<!--                    <a th:href="@{/adjustments}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.adjustments}">Adjustments</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}"-->
+<!--                    th:classappend="${active == 'my-adjustments'} ? 'active'">-->
+<!--                    <a th:href="@{/adjustments/my}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.my-adjustments}">My adjustments</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.isAdmin()}" th:classappend="${active == 'reasons'} ? 'active'">-->
+<!--                    <a th:href="@{/adjustment-reasons}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.reasons}">Adjustment reasons</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"-->
+<!--                    th:classappend="${active == 'reorder'} ? 'active'">-->
+<!--                    <a th:href="@{/reorder-policies}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.reorder}">Reorder policies</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"-->
+<!--                    th:classappend="${active == 'low-stock'} ? 'active'">-->
+<!--                    <a th:href="@{/reorder-policies/low-stock}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.low-stock}">Low stock</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"-->
+<!--                    th:classappend="${active == 'transfers'} ? 'active'">-->
+<!--                    <a th:href="@{/transfers}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.transfers}">Transfers</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}"-->
+<!--                    th:classappend="${active == 'incoming-transfers'} ? 'active'">-->
+<!--                    <a th:href="@{/transfers/incoming}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.incoming-transfers}">Incoming transfers</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}"-->
+<!--                    th:classappend="${active == 'new-transfer'} ? 'active'">-->
+<!--                    <a th:href="@{/transfers/new}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.new-transfer}">Move stock</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}"-->
+<!--                    th:classappend="${active == 'counts'} ? 'active'">-->
+<!--                    <a th:href="@{/counts}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.counts}">Cycle counts</span></a>-->
+<!--                </li>-->
+<!--            </ul>-->
+<!--        </li>-->
+<!--        <li class="treeview"-->
+<!--            th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','RECEIVER')}"-->
+<!--            th:classappend="${#strings.contains('purchase-orders,new-po,goods-receipts,putaway-board,customer-returns,new-return', active)} ? 'active'">-->
+<!--            <a href="javascript:void();" class="waves-effect">-->
+<!--                <i class="zmdi zmdi-truck"></i> <span th:text="#{menu.inbound}">Inbound</span>-->
+<!--                <i class="fa fa-angle-left float-right"></i>-->
+<!--            </a>-->
+<!--            <ul class="sidebar-submenu">-->
+<!--                <li th:classappend="${active == 'purchase-orders'} ? 'active'">-->
+<!--                    <a th:href="@{/purchase-orders}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.purchase-orders}">Purchase orders</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER')}" th:classappend="${active == 'new-po'} ? 'active'">-->
+<!--                    <a th:href="@{/purchase-orders/new}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.new-po}">New purchase order</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','RECEIVER')}" th:classappend="${active == 'goods-receipts'} ? 'active'">-->
+<!--                    <a th:href="@{/goods-receipts}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.goods-receipts}">Goods receipts</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','RECEIVER')}" th:classappend="${active == 'putaway-board'} ? 'active'">-->
+<!--                    <a th:href="@{/goods-receipts/awaiting-putaway}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.putaway-board}">Put-away board</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER','RECEIVER')}" th:classappend="${active == 'customer-returns'} ? 'active'">-->
+<!--                    <a th:href="@{/customer-returns}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.customer-returns}">Customer returns</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER')}" th:classappend="${active == 'new-return'} ? 'active'">-->
+<!--                    <a th:href="@{/customer-returns/new}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.new-return}">New customer return</span></a>-->
+<!--                </li>-->
+<!--            </ul>-->
+<!--        </li>-->
+<!--        <li class="treeview" th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}"-->
+<!--            th:classappend="${#strings.contains('sales-orders,new-so,pick-lists,shipments', active)} ? 'active'">-->
+<!--            <a href="javascript:void();" class="waves-effect">-->
+<!--                <i class="zmdi zmdi-truck"></i> <span th:text="#{menu.outbound}">Outbound</span>-->
+<!--                <i class="fa fa-angle-left float-right"></i>-->
+<!--            </a>-->
+<!--            <ul class="sidebar-submenu">-->
+<!--                <li th:classappend="${active == 'sales-orders'} ? 'active'">-->
+<!--                    <a th:href="@{/sales-orders}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.sales-orders}">Sales orders</span></a>-->
+<!--                </li>-->
+<!--                <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER')}" th:classappend="${active == 'new-so'} ? 'active'">-->
+<!--                    <a th:href="@{/sales-orders/new}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.new-so}">New sales order</span></a>-->
+<!--                </li>-->
+<!--                <li th:classappend="${active == 'pick-lists'} ? 'active'">-->
+<!--                    <a th:href="@{/pick-lists}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.pick-lists}">Pick lists</span></a>-->
+<!--                </li>-->
+<!--                <li th:classappend="${active == 'shipments'} ? 'active'">-->
+<!--                    <a th:href="@{/shipments}"><i class="zmdi zmdi-long-arrow-right"></i> <span th:text="#{menu.shipments}">Shipments</span></a>-->
+<!--                </li>-->
+<!--            </ul>-->
+<!--        </li>-->
+<!--        <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('VIEWER')}">-->
+<!--            <a th:href="@{/tasks}" class="waves-effect">-->
+<!--                <i class="zmdi zmdi-assignment"></i> <span th:text="#{menu.tasks}">Tasks</span>-->
+<!--            </a>-->
+<!--        </li>-->
+<!--        <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER') or @uiUser.hasRole('RECEIVER') or @uiUser.hasRole('PICKER')}">-->
+<!--            <a th:href="@{/tasks/my}" class="waves-effect">-->
+<!--                <i class="zmdi zmdi-account-box"></i> <span th:text="#{menu.my-tasks}">My tasks</span>-->
+<!--            </a>-->
+<!--        </li>-->
+<!--        <li th:if="${@uiUser.isAdmin() or @uiUser.hasRole('WAREHOUSE_MANAGER')}">-->
+<!--            <a th:href="@{/tasks/productivity}" class="waves-effect">-->
+<!--                <i class="zmdi zmdi-chart"></i> <span th:text="#{menu.productivity}">Productivity</span>-->
+<!--            </a>-->
+<!--        </li>-->
+<!--        <li th:if="${@uiUser.hasAnyRole('ADMIN','WAREHOUSE_MANAGER','VIEWER')}">-->
+<!--            <a th:href="@{/reports}" th:classappend="${active == 'reports'} ? 'active'">-->
+<!--                <i class="zmdi zmdi-chart"></i> <span th:text="#{menu.reports}">Reports</span>-->
+<!--            </a>-->
+<!--        </li>-->
+<!--    </ul>-->
+<!--</div>-->

@@ -16,7 +16,7 @@
     </div>
 </div>
 
-<div id="wrapper">
+<div id="wrapper" th:classappend="${launcher} ? 'toggled'">
     <div th:replace="~{fragments/sidebar :: sidebar(${menu})}"></div>
     <header th:replace="~{fragments/topbar :: topbar}"></header>
     <div class="clearfix"></div>

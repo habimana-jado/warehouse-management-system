@@ -1,3 +1,7 @@
+.wms-tile-icon {
+    font-size: 3rem;
+}
+
 .wms-toast-area {
     position: fixed;
     top: 70px;

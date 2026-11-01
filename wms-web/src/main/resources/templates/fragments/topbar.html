@@ -5,6 +5,19 @@
             <li class="nav-item">
                 <a class="nav-link toggle-menu" href="javascript:void(0);"><i class="icon-menu menu-icon"></i></a>
             </li>
+            <li class="nav-item dropdown" th:if="${nav != null and nav.modules().size() > 1}">
+                <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" data-toggle="dropdown" href="#">
+                    <i class="zmdi zmdi-apps mr-1"></i>
+                    <span th:text="${nav.module() != null} ? #{${nav.module().labelKey()}} : #{nav.allModules}">Modules</span>
+                    <i class="fa fa-angle-down ml-1"></i>
+                </a>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" th:each="m : ${nav.modules()}" th:href="@{${m.homeUrl()}}">
+                        <i th:class="${m.icon()}"></i> <span th:text="#{${m.labelKey()}}">Inbound</span></a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" th:href="@{/modules}" th:text="#{nav.allModules}">All modules</a>
+                </div>
+            </li>
             <li class="nav-item dropdown" th:with="sel=${@warehouseContext.selection()}">
                 <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" data-toggle="dropdown" href="#">
                     <i class="zmdi zmdi-store mr-1"></i>
