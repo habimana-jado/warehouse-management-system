@@ -110,11 +110,20 @@
     </div>
 
     <div class="mt-3" th:if="${view.canApprove() or view.canCancel()}">
-        <button type="button" class="btn btn-success" th:if="${view.canApprove()}"
-                th:attr="hx-post=@{/adjustments/{id}/approve(id=${a.id()})}, hx-confirm=#{inventory.adjustment.approve.confirm}"
-                hx-target="#adjustment-panel" hx-swap="outerHTML">
-            <i class="zmdi zmdi-check"></i> <span th:text="#{inventory.adjustment.approve}">Approve</span>
-        </button>
+        <form method="post" class="d-inline"
+              th:action="@{/adjustments/{id}/approve(id=${a.id()})}"
+              th:hx-post="@{/adjustments/{id}/approve(id=${a.id()})}"
+              th:hx-confirm="#{inventory.adjustment.approve.confirm}"
+              hx-target="#po-panel" hx-swap="outerHTML">
+            <button type="submit" class="btn btn-success">
+                <i class="zmdi zmdi-check"></i> <span th:text="#{inbound.po.confirm}">Confirm order</span>
+            </button>
+        </form>
+<!--        <button type="button" class="btn btn-success" th:if="${view.canApprove()}"-->
+<!--                th:attr="hx-post=@{/adjustments/{id}/approve(id=${a.id()})}, hx-confirm=#{inventory.adjustment.approve.confirm}"-->
+<!--                hx-target="#adjustment-panel" hx-swap="outerHTML">-->
+<!--            <i class="zmdi zmdi-check"></i> <span th:text="#{inventory.adjustment.approve}">Approve</span>-->
+<!--        </button>-->
         <button type="button" class="btn btn-secondary" th:if="${view.canCancel()}"
                 th:attr="hx-post=@{/adjustments/{id}/cancel(id=${a.id()})}, hx-confirm=#{inventory.adjustment.cancel.confirm}"
                 hx-target="#adjustment-panel" hx-swap="outerHTML">

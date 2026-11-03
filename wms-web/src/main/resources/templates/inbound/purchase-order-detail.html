@@ -39,12 +39,21 @@
                        th:href="@{/purchase-orders/{id}/edit(id=${po.id()})}">
                         <i class="zmdi zmdi-edit"></i> <span th:text="#{inbound.action.edit}">Edit</span>
                     </a>
-                    <button type="button" class="btn btn-success" th:if="${view.canConfirm()}"
-                            th:hx-post="@{/purchase-orders/{id}/confirm(id=${po.id()})}"
-                            th:hx-confirm="#{inbound.po.confirm.confirm}"
-                            hx-target="#po-panel" hx-swap="outerHTML">
-                        <i class="zmdi zmdi-check"></i> <span th:text="#{inbound.po.confirm}">Confirm order</span>
-                    </button>
+                    <form method="post" class="d-inline"
+                          th:action="@{/purchase-orders/{id}/confirm(id=${po.id()})}"
+                          th:hx-post="@{/purchase-orders/{id}/confirm(id=${po.id()})}"
+                          th:hx-confirm="#{inbound.po.confirm.confirm}"
+                          hx-target="#po-panel" hx-swap="outerHTML">
+                        <button type="submit" class="btn btn-success">
+                            <i class="zmdi zmdi-check"></i> <span th:text="#{inbound.po.confirm}">Confirm order</span>
+                        </button>
+                    </form>
+<!--                    <button type="button" class="btn btn-success" th:if="${view.canConfirm()}"-->
+<!--                            th:hx-post="@{/purchase-orders/{id}/confirm(id=${po.id()})}"-->
+<!--                            th:hx-confirm="#{inbound.po.confirm.confirm}"-->
+<!--                            hx-target="#po-panel" hx-swap="outerHTML">-->
+<!--                        <i class="zmdi zmdi-check"></i> <span th:text="#{inbound.po.confirm}">Confirm order</span>-->
+<!--                    </button>-->
                     <a class="btn btn-primary" th:if="${view.canStartReceiving()}"
                        th:href="@{/purchase-orders/{id}/receive(id=${po.id()})}">
                         <i class="zmdi zmdi-download"></i> <span th:text="#{inbound.po.receive}">Receive goods</span>

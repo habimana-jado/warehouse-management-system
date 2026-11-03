@@ -6,7 +6,8 @@
     <title th:replace="${title}">WMS</title>
     <th:block th:replace="~{fragments/head :: styles(true)}"/>
 </head>
-<body class="bg-theme bg-theme1">
+<body class="bg-theme bg-theme1"
+      th:attr='hx-headers=|{"${_csrf.headerName}":"${_csrf.token}"}|'>
 
 <div id="pageloader-overlay" class="visible incoming">
     <div class="loader-wrapper-outer">
